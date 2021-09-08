@@ -17,6 +17,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="@string/init_duration"
+        android:visibility="gone"
         android:textColor="@android:color/white"
         android:textSize="8pt"
         app:layout_constraintBottom_toBottomOf="parent"

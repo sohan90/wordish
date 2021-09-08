@@ -13,6 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#dfdfdf"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -24,6 +25,7 @@
             android:layout_height="wrap_content"
             android:padding="@dimen/_2sdp"
             app:flexWrap="wrap"
+            android:visibility="gone"
             app:justifyContent="center"/>
 
     </ScrollView>
@@ -56,7 +58,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                tools:text="Text"
                 android:textColor="#683102"
                 android:textSize="@dimen/_18ssp"
                 android:textStyle="bold"/>
@@ -73,7 +74,7 @@
         </TextSwitcher>
     </FrameLayout>
 
-    <com.aar.app.wsp.custom.LetterBoard
+    <com.conversant.app.wordish.custom.LetterBoard
         android:id="@+id/letter_board"
         app:gridColumnCount="10"
         app:gridHeight="@dimen/_31sdp"
@@ -81,26 +82,26 @@
         app:gridRowCount="10"
         app:gridWidth="@dimen/_31sdp"
         app:streakWidth="@dimen/_16sdp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:letterColor="@android:color/black"
+        app:letterColor="@android:color/white"
         app:letterSize="@dimen/_14ssp"
-        app:lineColor="@color/gridLine"
-        app:lineWidth="1px"
+        app:lineColor="@android:color/white"
+        app:lineWidth="2dp"
         app:snapToGrid="START_END"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:background="@color/colorAccent"
         android:layout_marginBottom="@dimen/_4sdp"
         android:visibility="visible"/>
 
     <TextView
         android:id="@+id/text_popup_correct_word"
-        app:layout_constraintBottom_toBottomOf="@id/letter_board"
         app:layout_constraintLeft_toLeftOf="@id/letter_board"
         app:layout_constraintRight_toRightOf="@id/letter_board"
-        app:layout_constraintTop_toTopOf="@id/letter_board"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.20"
         tools:text="Popup"
         android:layout_width="wrap_content"

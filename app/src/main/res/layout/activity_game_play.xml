@@ -8,11 +8,12 @@
     android:animateLayoutChanges="true"
     android:background="@android:color/white"
     android:orientation="vertical"
-    tools:context="com.aar.app.wsp.features.gameplay.GamePlayActivity">
+    tools:context="com.conversant.app.wordish.features.gameplay.GamePlayActivity">
 
     <include
         android:id="@+id/layout1"
         layout="@layout/partial_game_header"
+        android:visibility="visible"
         app:layout_constraintTop_toTopOf="parent"/>
 
     <FrameLayout
