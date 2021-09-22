@@ -10,6 +10,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.custom.TouchProcessor.OnTouchProcessed
@@ -245,7 +246,7 @@ class StreakView @JvmOverloads constructor(
             val rowIdx = grid?.getRowIndex(event.y.toInt()).orZero()
             line.endIndex.set(rowIdx, colIdx)
 
-            if (snapToGridType == SnapType.ALWAYS_SNAP) {
+            if (snapToGridType == SnapType.NONE) {
                 val centerCol = grid?.getCenterColFromIndex(colIdx)?.toFloat() ?: 0f
                 val centerRow = grid?.getCenterRowFromIndex(rowIdx)?.toFloat() ?: 0f
                 line.end.set(centerCol, centerRow)
@@ -253,7 +254,9 @@ class StreakView @JvmOverloads constructor(
                 val halfWidth = streakLineWidth / 2
                 val x = max(min(event.x, width - halfWidth.toFloat()), halfWidth.toFloat())
                 val y = max(min(event.y, height - halfWidth.toFloat()), halfWidth.toFloat())
-                line.end.set(x, y)
+                Log.d("StreakViewActualXandY", "${event.x} ${event.y}")
+                Log.d("StreakViewXandY", "${x} ${y}")
+                line.end.set(event.x, event.y)
             }
 
             interactionListener?.onTouchDrag(line)
@@ -274,6 +277,11 @@ class StreakView @JvmOverloads constructor(
         var startIndex: GridIndex = GridIndex(-1, -1)
         var endIndex: GridIndex = GridIndex(-1, -1)
         var color = Color.RED
+
+
+        override fun toString(): String {
+            return "start $start end $end startIndex $startIndex endIndex  $endIndex"
+        }
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package com.conversant.app.wordish.commons
 
+import android.util.Log
 import kotlin.math.abs
 
 /**
@@ -33,7 +34,9 @@ enum class Direction(
         @JvmStatic
         fun fromLine(start: GridIndex, end: GridIndex): Direction {
             // Horizontal
+            Log.d("adjacent", "Start row ${start.row} StartCol ${start.col} EndRow ${end.row} EndCol ${end.col}")
             if (start.row == end.row && start.col != end.col) {
+                Log.d("Horizontal", "Start Row ${start.row} $$ Start Col ${start.col} End col ${end.col}")
                 return if (start.col < end.col) EAST else WEST
             }
 
@@ -45,6 +48,7 @@ enum class Direction(
             // Diagonal
             val diffX = abs(start.col - end.col)
             val diffY = abs(start.row - end.row)
+            Log.d("dialgonal", "Diff x $diffX Diff Y $diffY")
             if (diffX == diffY && diffX != 0) {
                 if (start.col < end.col && start.row < end.row) return SOUTH_EAST
                 if (start.col > end.col && start.row > end.row) return NORTH_WEST

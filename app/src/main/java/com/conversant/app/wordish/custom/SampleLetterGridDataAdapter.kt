@@ -17,5 +17,19 @@ internal class SampleLetterGridDataAdapter(
     override fun getLetter(row: Int, col: Int): Char {
         return 'A'
     }
+    override fun hasFire(row: Int, col: Int): Boolean {
+       return false
+    }
+
+    override fun hasWaterDrop(row: Int, col: Int): Boolean {
+       return false
+    }
+
+    override fun initWaterDrop(row: Int, col: Int, hasWater:Boolean) {
+    }
+
+    override fun initFire(row: Int, col: Int, hasFire: Boolean) {
+
+    }
 
 }

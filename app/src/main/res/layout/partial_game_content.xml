@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_layout"
@@ -14,19 +13,19 @@
         android:layout_height="0dp"
         android:background="#dfdfdf"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/layout_current_selected_word"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/layout_current_selected_word">
+        app:layout_constraintTop_toTopOf="parent">
 
         <com.google.android.flexbox.FlexboxLayout
             android:id="@+id/flexbox_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="@dimen/_2sdp"
-            app:flexWrap="wrap"
             android:visibility="gone"
-            app:justifyContent="center"/>
+            app:flexWrap="wrap"
+            app:justifyContent="center" />
 
     </ScrollView>
 
@@ -46,7 +45,7 @@
             android:indeterminate="false"
             android:indeterminateOnly="false"
             android:progress="0"
-            android:progressDrawable="@drawable/bg_progress_2"/>
+            android:progressDrawable="@drawable/bg_progress_2" />
 
         <TextSwitcher
             android:id="@+id/text_current_selected_word"
@@ -60,70 +59,141 @@
                 android:layout_gravity="center"
                 android:textColor="#683102"
                 android:textSize="@dimen/_18ssp"
-                android:textStyle="bold"/>
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                tools:text="Text 2"
                 android:textColor="#683102"
                 android:textSize="@dimen/_18ssp"
-                android:textStyle="bold"/>
+                android:textStyle="bold"
+                tools:text="Text 2" />
 
         </TextSwitcher>
     </FrameLayout>
 
     <com.conversant.app.wordish.custom.LetterBoard
         android:id="@+id/letter_board"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginBottom="@dimen/_4sdp"
+        android:background="@color/colorAccent"
+        android:visibility="visible"
         app:gridColumnCount="10"
         app:gridHeight="@dimen/_31sdp"
         app:gridLineVisibility="true"
         app:gridRowCount="10"
         app:gridWidth="@dimen/_31sdp"
-        app:streakWidth="@dimen/_16sdp"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:letterColor="@android:color/white"
         app:letterSize="@dimen/_14ssp"
         app:lineColor="@android:color/white"
         app:lineWidth="2dp"
         app:snapToGrid="START_END"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:background="@color/colorAccent"
-        android:layout_marginBottom="@dimen/_4sdp"
-        android:visibility="visible"/>
+        app:streakWidth="@dimen/_16sdp" />
 
     <TextView
         android:id="@+id/text_popup_correct_word"
-        app:layout_constraintLeft_toLeftOf="@id/letter_board"
-        app:layout_constraintRight_toRightOf="@id/letter_board"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.20"
-        tools:text="Popup"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingBottom="@dimen/_6sdp"
         android:paddingLeft="@dimen/_12sdp"
-        android:paddingRight="@dimen/_12sdp"
         android:paddingTop="@dimen/_6sdp"
+        android:paddingRight="@dimen/_12sdp"
+        android:paddingBottom="@dimen/_6sdp"
         android:textAllCaps="false"
         android:textColor="@color/colorAccent"
         android:textSize="@dimen/_28ssp"
         android:textStyle="bold"
-        android:visibility="visible">
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="@id/letter_board"
+        app:layout_constraintRight_toRightOf="@id/letter_board"
+        app:layout_constraintVertical_bias="0.20"
+        tools:text="Popup">
 
     </TextView>
 
     <View
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/scrollView2"
         android:layout_width="0dp"
         android:layout_height="1px"
-        android:background="#bababa"/>
+        android:background="#bababa"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/scrollView2" />
+
+
+    <ImageView
+        android:id="@+id/iv_fire"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:layout_marginBottom="20dp"
+        android:src="@drawable/ic_baseline_local_fire_department_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/iv_bomb"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_fire_count"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/round_rect"
+        android:backgroundTint="@color/colorAccent"
+        android:text="3"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/iv_fire"
+        app:layout_constraintEnd_toEndOf="@+id/iv_fire"
+        app:layout_constraintStart_toStartOf="@+id/iv_fire"
+        app:layout_constraintTop_toTopOf="@+id/iv_fire" />
+
+    <ImageView
+        android:id="@+id/iv_bomb"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="5dp"
+        android:paddingEnd="2dp"
+        android:src="@drawable/ic_bomb"
+        app:layout_constraintBottom_toBottomOf="@id/iv_fire"
+        app:layout_constraintEnd_toStartOf="@+id/iv_water"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_fire" />
+
+    <ImageView
+        android:id="@+id/iv_water"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:src="@drawable/ic_baseline_water_drop_24"
+        app:layout_constraintBottom_toBottomOf="@id/iv_bomb"
+        app:layout_constraintEnd_toStartOf="@+id/iv_fire_plus"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_bomb" />
+
+    <ImageView
+        android:id="@+id/iv_fire_plus"
+        android:layout_width="49dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:src="@drawable/ic_baseline_local_fire_department_24"
+        app:layout_constraintBottom_toBottomOf="@id/iv_water"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_water" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

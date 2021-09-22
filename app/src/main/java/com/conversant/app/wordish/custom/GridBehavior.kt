@@ -111,4 +111,5 @@ abstract class GridBehavior @JvmOverloads constructor(
         private const val DEFAULT_GRID_WIDTH_PIXEL = 50
         private const val DEFAULT_GRID_HEIGHT_PIXEL = 50
     }
+
 }

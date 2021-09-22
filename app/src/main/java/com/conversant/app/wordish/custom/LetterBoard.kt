@@ -12,6 +12,10 @@ import com.conversant.app.wordish.custom.StreakView.OnInteractionListener
 import com.conversant.app.wordish.custom.StreakView.SnapType.Companion.fromId
 import com.conversant.app.wordish.custom.StreakView.StreakLine
 import com.conversant.app.wordish.custom.layout.CenterLayout
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 
 /**
@@ -29,6 +33,8 @@ class LetterBoard @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
 ) : CenterLayout(context, attrs), Observer {
+
+    private var shrinkFire: Boolean = false
 
     val gridLineBackground: GridLine = GridLine(context)
     val streakView: StreakView = StreakView(context)
@@ -88,6 +94,14 @@ class LetterBoard @JvmOverloads constructor(
                 letterGrid.dataAdapter = _dataAdapter
                 gridLineBackground.setColCount(_dataAdapter.getColCount())
                 gridLineBackground.setRowCount(_dataAdapter.getRowCount())
+
+                CoroutineScope(Dispatchers.Main).launch {
+                    while (true) {
+                        delay(100)
+                        letterGrid.fireGifIndex += 1
+                        letterGrid.invalidate()
+                    }
+                }
             }
         }
 
@@ -118,7 +132,8 @@ class LetterBoard @JvmOverloads constructor(
     }
 
     private fun setGridLineVisibility(visible: Boolean) {
-        if (!visible) gridLineBackground.visibility = INVISIBLE else gridLineBackground.visibility = VISIBLE
+        if (!visible) gridLineBackground.visibility = INVISIBLE else gridLineBackground.visibility =
+            VISIBLE
     }
 
     private fun setGridLineColor(color: Int) {
@@ -165,7 +180,8 @@ class LetterBoard @JvmOverloads constructor(
             letterColor = a.getColor(R.styleable.LetterBoard_letterColor, letterColor)
             streakWidth = a.getDimensionPixelSize(R.styleable.LetterBoard_streakWidth, streakWidth)
             snapToGrid = a.getInteger(R.styleable.LetterBoard_snapToGrid, snapToGrid)
-            gridLineVisibility = a.getBoolean(R.styleable.LetterBoard_gridLineVisibility, gridLineVisibility)
+            gridLineVisibility =
+                a.getBoolean(R.styleable.LetterBoard_gridLineVisibility, gridLineVisibility)
             setGridWidth(gridWidth)
             setGridHeight(gridHeight)
             setGridLineColor(lineColor)
@@ -198,6 +214,10 @@ class LetterBoard @JvmOverloads constructor(
         addView(letterGrid, layoutParams)
     }
 
+    fun shrinkFireWithWater(b: Boolean) {
+        this.shrinkFire = b
+    }
+
     private inner class StreakViewInteraction : OnInteractionListener {
         private fun getStringInRange(start: GridIndex, end: GridIndex): String {
             val dir = fromLine(start, end)
@@ -205,7 +225,8 @@ class LetterBoard @JvmOverloads constructor(
             val count = getIndexLength(start, end)
             val buff = CharArray(count)
             for (i in 0 until count) {
-                buff[i] = _dataAdapter.getLetter(start.row + dir.yOffset * i, start.col + dir.xOffset * i)
+                buff[i] =
+                    _dataAdapter.getLetter(start.row + dir.yOffset * i, start.col + dir.xOffset * i)
             }
             return String(buff)
         }
@@ -214,6 +235,28 @@ class LetterBoard @JvmOverloads constructor(
             selectionListener?.let {
                 val idx = streakLine.startIndex
                 val str = _dataAdapter.getLetter(idx.row, idx.col).toString()
+
+                val hasFire = _dataAdapter.hasFire(idx.row, idx.col)
+                if (hasFire && shrinkFire) { // shrink fire with water
+                    dataAdapter.initWaterDrop(idx.row, idx.col, true)
+
+                    CoroutineScope(Dispatchers.Main).launch {
+                        var i = 0
+                        while (i < 2000) {
+                            delay(100)
+                            i += 100;
+                            if (i >= 1000) {// shrink the fire in the halfway
+                                dataAdapter.initFire(idx.row, idx.col, false)
+                            }
+                            letterGrid.waterGifIndex += 1
+                            letterGrid.invalidate()
+                        }
+                        dataAdapter.initWaterDrop(idx.row, idx.col, false)
+                        letterGrid.invalidate()
+                        it.onSelectionFireCell(streakLine,true)
+                    }
+
+                }
                 it.onSelectionBegin(streakLine, str)
             }
         }
@@ -237,6 +280,7 @@ class LetterBoard @JvmOverloads constructor(
         fun onSelectionBegin(streakLine: StreakLine, str: String)
         fun onSelectionDrag(streakLine: StreakLine, str: String)
         fun onSelectionEnd(streakLine: StreakLine, str: String)
+        fun onSelectionFireCell(streakLine:StreakLine, hasFire: Boolean)
     }
 
     companion object {

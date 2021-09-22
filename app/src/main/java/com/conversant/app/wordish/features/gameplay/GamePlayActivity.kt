@@ -42,6 +42,8 @@ import kotlinx.android.synthetic.main.partial_game_header.*
 import javax.inject.Inject
 
 class GamePlayActivity : FullscreenActivity() {
+    private var clickedState: Boolean = false
+
     @Inject
     lateinit var soundPlayer: SoundPlayer
 
@@ -83,8 +85,36 @@ class GamePlayActivity : FullscreenActivity() {
 
         initViews()
         initViewModel()
+        initClickListener()
 
         loadOrGenerateNewGame()
+    }
+
+    private fun initClickListener() {
+        iv_water.setOnClickListener {
+            clickedState = if (!clickedState) {
+                disableOrEnableOtherPowerUps(0.4f)
+                true
+            } else {
+                disableOrEnableOtherPowerUps(1f)
+                false
+            }
+        }
+    }
+
+    private fun disableOrEnableOtherPowerUps(alphaVal: Float) {
+        if (alphaVal == 1f) {
+            iv_water.animate().scaleX(1.0f).scaleY(1.0f).start()
+            letter_board.shrinkFireWithWater(false)
+            clickedState = false
+        } else{
+            iv_water.animate().scaleX(1.2f).scaleY(1.2f).start()
+            letter_board.shrinkFireWithWater(true)
+            clickedState = true
+        }
+        iv_fire.alpha = alphaVal
+        iv_bomb.alpha = alphaVal
+        iv_fire_plus.alpha = alphaVal
     }
 
     private fun initViews() {
@@ -94,6 +124,7 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.streakView.setOverrideStreakLineColor(resources.getColor(R.color.gray))
         letter_board.selectionListener = object : OnLetterSelectionListener {
             override fun onSelectionBegin(streakLine: StreakLine, str: String) {
+
                 streakLine.color = Util.getRandomColorWithAlpha(170)
                 text_selection_layout.visible()
                 text_selection.text = str
@@ -104,9 +135,20 @@ class GamePlayActivity : FullscreenActivity() {
             }
 
             override fun onSelectionEnd(streakLine: StreakLine, str: String) {
-                viewModel.answerWord(str, STREAK_LINE_MAPPER.revMap(streakLine), preferences.reverseMatching())
+                viewModel.answerWord(
+                    str,
+                    STREAK_LINE_MAPPER.revMap(streakLine),
+                    preferences.reverseMatching()
+                )
                 text_selection_layout.gone()
                 text_selection.text = str
+            }
+
+            override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
+                updateFireCountTxt(letterAdapter!!.fireList)
+                if (hasFire){
+                    disableOrEnableOtherPowerUps(1f)
+                }
             }
         }
 
@@ -133,14 +175,20 @@ class GamePlayActivity : FullscreenActivity() {
     private fun initViewModel() {
         viewModel.onTimer.observe(this, Observer { duration: Int -> showDuration(duration) })
         viewModel.onCountDown.observe(this, Observer { countDown: Int -> showCountDown(countDown) })
-        viewModel.onGameState.observe(this, Observer { gameState: GameState -> onGameStateChanged(gameState) })
-        viewModel.onAnswerResult.observe(this, Observer { answerResult: AnswerResult -> onAnswerResult(answerResult) })
+        viewModel.onGameState.observe(
+            this,
+            Observer { gameState: GameState -> onGameStateChanged(gameState) })
+        viewModel.onAnswerResult.observe(
+            this,
+            Observer { answerResult: AnswerResult -> onAnswerResult(answerResult) })
         viewModel.onCurrentWordChanged.observe(this, Observer { usedWord: UsedWord ->
             text_current_selected_word.setText(usedWord.string)
             progress_word_duration.max = usedWord.maxDuration * 100
             animateProgress(progress_word_duration, usedWord.remainingDuration * 100)
         })
-        viewModel.onCurrentWordCountDown.observe(this, Observer { duration: Int -> animateProgress(progress_word_duration, duration * 100) })
+        viewModel.onCurrentWordCountDown.observe(
+            this,
+            Observer { duration: Int -> animateProgress(progress_word_duration, duration * 100) })
     }
 
     private fun loadOrGenerateNewGame() {
@@ -241,7 +289,7 @@ class GamePlayActivity : FullscreenActivity() {
             layout_complete_popup.visible()
             text_complete_popup.setText(R.string.lbl_game_over)
         }
-        showLetterGrid(gameData.grid!!.array)
+        showLetterGrid(gameData.grid!!.array, gameData.grid!!.fireArray, gameData.grid!!.waterDrop)
         showDuration(gameData.duration)
         showUsedWords(gameData.usedWords, gameData)
         showWordsCount(gameData.usedWords.size)
@@ -306,15 +354,33 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun showLetterGrid(grid: Array<CharArray>) {
+    private fun showLetterGrid(
+        grid: Array<CharArray>,
+        fireArray: Array<BooleanArray>,
+        waterDrop: Array<BooleanArray>
+    ) {
         if (letterAdapter == null) {
-            letterAdapter = ArrayLetterGridDataAdapter(grid)
+            letterAdapter = ArrayLetterGridDataAdapter(grid, fireArray, waterDrop)
             letterAdapter?.let {
                 letter_board.dataAdapter = it
             }
         } else {
             letterAdapter?.grid = grid
         }
+
+        updateFireCountTxt(fireArray)
+    }
+
+    private fun updateFireCountTxt(fireArray: Array<BooleanArray>) {
+        var count = 0
+        fireArray.map {
+            for (b in it) {
+                if (b){
+                    count ++
+                }
+            }
+        }
+        tv_fire_count.text = count.toString()
     }
 
     private fun showDuration(duration: Int) {
@@ -352,7 +418,10 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationEnd(animation: Animation) {
                 Handler().postDelayed({
                     val intent = Intent(this@GamePlayActivity, GameOverActivity::class.java)
-                    intent.putExtra(GameOverActivity.EXTRA_GAME_ROUND_ID, state.gameData?.id.orZero())
+                    intent.putExtra(
+                        GameOverActivity.EXTRA_GAME_ROUND_ID,
+                        state.gameData?.id.orZero()
+                    )
                     startActivity(intent)
                     finish()
                 }, 800)
