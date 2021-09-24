@@ -1,5 +1,6 @@
 package com.conversant.app.wordish.features.gameplay
 
+import android.animation.Animator
 import android.animation.ObjectAnimator
 import android.content.Intent
 import android.graphics.Color
@@ -41,11 +42,22 @@ import kotlinx.android.synthetic.main.partial_game_content.*
 import kotlinx.android.synthetic.main.partial_game_header.*
 import javax.inject.Inject
 
+import android.animation.AnimatorSet
+import android.widget.ImageView
+
+
 class GamePlayActivity : FullscreenActivity() {
+
+    private var row: Int = 0
+
+    private var col: Int = 0
+
+    private var pairListIndex: Int = 0
     private var clickedState: Boolean = false
 
     @Inject
     lateinit var soundPlayer: SoundPlayer
+
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
@@ -86,8 +98,42 @@ class GamePlayActivity : FullscreenActivity() {
         initViews()
         initViewModel()
         initClickListener()
-
         loadOrGenerateNewGame()
+        Handler().postDelayed({
+            animateFireMove()
+        }, 600)
+
+    }
+
+    private fun animateFireMove(v: ImageView, targetX: Float, targetY: Float) {
+        val animSetXY = AnimatorSet()
+        val x: ObjectAnimator = ObjectAnimator.ofFloat(v, "x", v.x, targetX)
+
+        val y: ObjectAnimator = ObjectAnimator.ofFloat(v, "y", v.y, targetY)
+
+        animSetXY.playTogether(x, y)
+        animSetXY.duration = 500
+        animSetXY.start()
+
+        animSetXY.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator?) {
+
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                letterAdapter!!.fireList[row][col] = true
+                animateFireMove()
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+
+            }
+
+            override fun onAnimationRepeat(animation: Animator?) {
+
+            }
+
+        })
     }
 
     private fun initClickListener() {
@@ -102,12 +148,31 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
+    private fun animateFireMove() {
+        if(pairListIndex <= 4) {
+
+            val list = (0..5).shuffled().take(2)
+            row = list[0]
+            col = list[1]
+
+            val cellX = letter_board.streakView.grid?.getCenterColFromIndex(col)!!.toFloat()
+            val cellY = letter_board.streakView.grid?.getCenterRowFromIndex(row)!!.toFloat()
+
+            animateFireMove(iv_anim_fire, cellX-30, cellY-40)
+
+            pairListIndex++
+
+        } else{
+            iv_anim_fire.visibility = View.GONE
+        }
+    }
+
     private fun disableOrEnableOtherPowerUps(alphaVal: Float) {
         if (alphaVal == 1f) {
             iv_water.animate().scaleX(1.0f).scaleY(1.0f).start()
             letter_board.shrinkFireWithWater(false)
             clickedState = false
-        } else{
+        } else {
             iv_water.animate().scaleX(1.2f).scaleY(1.2f).start()
             letter_board.shrinkFireWithWater(true)
             clickedState = true
@@ -115,6 +180,7 @@ class GamePlayActivity : FullscreenActivity() {
         iv_fire.alpha = alphaVal
         iv_bomb.alpha = alphaVal
         iv_fire_plus.alpha = alphaVal
+        tv_fire_count.alpha = alphaVal
     }
 
     private fun initViews() {
@@ -146,11 +212,17 @@ class GamePlayActivity : FullscreenActivity() {
 
             override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
                 updateFireCountTxt(letterAdapter!!.fireList)
-                if (hasFire){
+                if (hasFire) {
                     disableOrEnableOtherPowerUps(1f)
                 }
             }
+
+            override fun onFirePlacement(x: Float, y: Float) {
+
+            }
         }
+
+        letter_board.letterGrid.setListener(letter_board.selectionListener!!)
 
         if (!preferences.showGridLine()) {
             letter_board.gridLineBackground.visibility = View.VISIBLE
@@ -340,7 +412,7 @@ class GamePlayActivity : FullscreenActivity() {
             loadingText.gone()
             if (content_layout.visibility == View.GONE) {
                 content_layout.visible()
-                content_layout.scaleY = .5f
+                content_layout.scaleY = 1f
                 content_layout.alpha = 0f
                 content_layout.animate()
                     .scaleY(1f)
@@ -375,8 +447,8 @@ class GamePlayActivity : FullscreenActivity() {
         var count = 0
         fireArray.map {
             for (b in it) {
-                if (b){
-                    count ++
+                if (b) {
+                    count++
                 }
             }
         }

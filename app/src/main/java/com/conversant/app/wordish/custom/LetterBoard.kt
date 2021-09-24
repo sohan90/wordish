@@ -38,7 +38,7 @@ class LetterBoard @JvmOverloads constructor(
 
     val gridLineBackground: GridLine = GridLine(context)
     val streakView: StreakView = StreakView(context)
-    private val letterGrid: LetterGrid = LetterGrid(context)
+    val letterGrid: LetterGrid = LetterGrid(context)
     private var initialized = false
     private lateinit var _dataAdapter: LetterGridDataAdapter
 
@@ -95,15 +95,18 @@ class LetterBoard @JvmOverloads constructor(
                 gridLineBackground.setColCount(_dataAdapter.getColCount())
                 gridLineBackground.setRowCount(_dataAdapter.getRowCount())
 
-                CoroutineScope(Dispatchers.Main).launch {
-                    while (true) {
-                        delay(100)
-                        letterGrid.fireGifIndex += 1
-                        letterGrid.invalidate()
-                    }
-                }
+                startFireAnim()
             }
         }
+
+    private fun startFireAnim() {
+        CoroutineScope(Dispatchers.Main).launch {
+            while (true) {
+                delay(100)
+                letterGrid.startFireAnim()
+            }
+        }
+    }
 
     fun addStreakLines(streakLines: List<StreakLine>) {
         streakView.addStreakLines(streakLines, false)
@@ -214,6 +217,7 @@ class LetterBoard @JvmOverloads constructor(
         addView(letterGrid, layoutParams)
     }
 
+
     fun shrinkFireWithWater(b: Boolean) {
         this.shrinkFire = b
     }
@@ -248,8 +252,7 @@ class LetterBoard @JvmOverloads constructor(
                             if (i >= 1000) {// shrink the fire in the halfway
                                 dataAdapter.initFire(idx.row, idx.col, false)
                             }
-                            letterGrid.waterGifIndex += 1
-                            letterGrid.invalidate()
+                            letterGrid.startWaterDropAnim()
                         }
                         dataAdapter.initWaterDrop(idx.row, idx.col, false)
                         letterGrid.invalidate()
@@ -281,6 +284,7 @@ class LetterBoard @JvmOverloads constructor(
         fun onSelectionDrag(streakLine: StreakLine, str: String)
         fun onSelectionEnd(streakLine: StreakLine, str: String)
         fun onSelectionFireCell(streakLine:StreakLine, hasFire: Boolean)
+        fun onFirePlacement(x:Float, y:Float)
     }
 
     companion object {

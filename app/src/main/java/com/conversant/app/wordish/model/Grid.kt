@@ -27,16 +27,9 @@ class Grid(rowCount: Int, colCount: Int) {
         fireArray = Array(rowCount) { BooleanArray(colCount) }
         waterDrop = Array(rowCount) { BooleanArray(colCount) }
         reset()
-        initFire()
+
     }
 
-    private fun initFire() {
-        for (i in 0..5){
-            val randomRow = Util.randomInt % rowCount
-            val randomCol = Util.randomInt % colCount
-            fireArray[randomRow][randomCol] = true
-        }
-    }
 
     private fun at(row: Int, col: Int): Char = array[row][col]
 

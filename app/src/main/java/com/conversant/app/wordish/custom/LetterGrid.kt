@@ -4,16 +4,10 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import androidx.appcompat.content.res.AppCompatResources
-import androidx.core.graphics.decodeBitmap
 import androidx.core.graphics.drawable.toBitmap
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.commons.orZero
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * Created by abdularis on 22/06/17.
@@ -22,16 +16,12 @@ import kotlin.collections.ArrayList
  */
 class LetterGrid @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null
+    attrs: AttributeSet? = null, var letterBoardListener: LetterBoard.OnLetterSelectionListener? = null
 ) : GridBehavior(context, attrs), Observer {
 
+    private var firstLayoutPass: Boolean = false
+
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-    private val fireBitmap = AppCompatResources.getDrawable(
-        context,
-        R.drawable.ic_baseline_local_fire_department_24
-    )?.toBitmap()
-
 
     private val fireGif = mutableListOf<Bitmap>()
 
@@ -47,7 +37,7 @@ class LetterGrid @JvmOverloads constructor(
         R.drawable.ic_baseline_water_drop_24
     )?.toBitmap()
 
-    val rect = Rect(0, 0, 0, 0)
+    private var rect = Rect(0, 0, 0, 0)
 
     private val charBounds: Rect = Rect()
 
@@ -87,6 +77,22 @@ class LetterGrid @JvmOverloads constructor(
             }
         }
 
+    fun setListener(selectionListener: LetterBoard.OnLetterSelectionListener){
+        letterBoardListener = selectionListener
+    }
+
+    fun startFireAnim(){
+         fireGifIndex+=1
+         rect = Rect(0, 0, 0, 0)
+         invalidate()
+    }
+
+    fun startWaterDropAnim(){
+        waterGifIndex+=1
+        rect = Rect(0, 0, 0, 0)
+        invalidate()
+    }
+
     override fun getColCount(): Int {
         return gridDataAdapter?.getColCount().orZero()
     }
@@ -117,13 +123,16 @@ class LetterGrid @JvmOverloads constructor(
         var y = halfHeight + paddingTop
 
         var waterY = 0
-        var waterX = 0
+        var waterX:Int
+
+        firstLayoutPass = halfWidth == 55
 
         // iterate and render all letters found in grid data adapter
         for (i in 0 until gridRowCount) {
             x = halfWidth + paddingLeft
             waterX = 0
             for (j in 0 until gridColCount) {
+
                 val letter = gridDataAdapter?.getLetter(i, j)
                 paint.getTextBounds(letter.toString(), 0, 1, charBounds)
 
@@ -133,6 +142,13 @@ class LetterGrid @JvmOverloads constructor(
                     rect.right = rect.left + 100
                     rect.bottom = rect.top + 100
                     canvas.drawBitmap(fireGif[fireGifIndex % 4], null, rect, paint)
+
+                    if (!firstLayoutPass) {
+                        letterBoardListener?.onFirePlacement(
+                            rect.left.toFloat(),
+                            rect.top.toFloat()
+                        )
+                    }
                 }
 
 
@@ -140,7 +156,7 @@ class LetterGrid @JvmOverloads constructor(
                     rect.left = waterX + (halfWidth - waterDropBitmap!!.width)
                     rect.top = waterY
                     rect.right = rect.left + 150
-                    rect.bottom = rect.top + 150
+                    rect.bottom = rect.top + 200
                     canvas.drawBitmap(waterGif[waterGifIndex % 5], null, rect, paint)
                 }
 
@@ -149,6 +165,7 @@ class LetterGrid @JvmOverloads constructor(
                     letter.toString(),
                     x - charBounds.exactCenterX(), y - charBounds.exactCenterY(), paint
                 )
+
                 x += gridWidth
                 waterX += gridWidth
             }
@@ -172,11 +189,17 @@ class LetterGrid @JvmOverloads constructor(
         fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_2_delay))
         fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_3_delay))
 
-        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.water_02_delay))
-        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.water_03_delay))
-        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.water_04_delay))
-        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.water_05_delay))
-        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.water_06_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_01_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_02_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_03_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_04_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_05_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_06_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_07_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_08_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_09_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_10_delay))
+        waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_11_delay))
 
     }
 

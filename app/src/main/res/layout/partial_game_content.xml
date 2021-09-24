@@ -79,7 +79,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginBottom="@dimen/_4sdp"
-        android:background="@color/colorAccent"
+        android:background="@android:color/black"
         android:visibility="visible"
         app:gridColumnCount="10"
         app:gridHeight="@dimen/_31sdp"
@@ -190,10 +190,25 @@
         android:background="@drawable/round_rect"
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
+        android:visibility="visible"
         android:src="@drawable/ic_baseline_local_fire_department_24"
         app:layout_constraintBottom_toBottomOf="@id/iv_water"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/iv_water" />
+
+    <ImageView
+        android:id="@+id/iv_anim_fire"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:visibility="visible"
+        android:src="@drawable/frame_0_delay"
+        app:layout_constraintBottom_toBottomOf="@id/iv_water"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_water"
+        app:layout_constraintTop_toTopOf="@+id/iv_fire_plus" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

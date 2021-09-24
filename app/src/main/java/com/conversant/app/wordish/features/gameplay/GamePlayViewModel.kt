@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.conversant.app.wordish.commons.SingleLiveEvent
 import com.conversant.app.wordish.commons.Timer
 import com.conversant.app.wordish.commons.Timer.OnTimeoutListener
@@ -19,6 +20,7 @@ import io.reactivex.*
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.max
@@ -90,10 +92,12 @@ class GamePlayViewModel @Inject constructor(
     }
 
     fun stopGame() {
-        usedWordDataSource.removeAll()
-        currentGameData = null
-        timer.stop()
-        resetLiveData()
+        viewModelScope.launch {
+            usedWordDataSource.removeAll()
+            currentGameData = null
+            timer.stop()
+            resetLiveData()
+        }
     }
 
     fun pauseGame() {
