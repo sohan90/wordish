@@ -43,16 +43,25 @@ import kotlinx.android.synthetic.main.partial_game_header.*
 import javax.inject.Inject
 
 import android.animation.AnimatorSet
+import android.animation.ValueAnimator
+import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.ImageView
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.animation.doOnEnd
+import androidx.core.content.ContextCompat
 
 
 class GamePlayActivity : FullscreenActivity() {
+
+    private lateinit var beginStreakLine: StreakLine
 
     private var row: Int = 0
 
     private var col: Int = 0
 
-    private var pairListIndex: Int = 0
+    private var fireAddedOnTilesCount: Int = 0
+
     private var clickedState: Boolean = false
 
     @Inject
@@ -121,8 +130,13 @@ class GamePlayActivity : FullscreenActivity() {
             }
 
             override fun onAnimationEnd(animation: Animator?) {
-                letterAdapter!!.fireList[row][col] = true
-                animateFireMove()
+                if (iv_bomb.scaleX != 1.2f) {
+                    letterAdapter!!.fireList[row][col] = true
+                    animateFireMove()
+                } else {
+                    // bomb activated
+                    explodeBomb()
+                }
             }
 
             override fun onAnimationCancel(animation: Animator?) {
@@ -136,20 +150,77 @@ class GamePlayActivity : FullscreenActivity() {
         })
     }
 
+    private fun explodeBomb() {
+        val params: ConstraintLayout.LayoutParams =
+            bomb.layoutParams as ConstraintLayout.LayoutParams
+        params.width = WRAP_CONTENT
+        params.height = WRAP_CONTENT
+        bomb.layoutParams = params
+
+        val valueAnimator = ValueAnimator.ofInt(0, 12)
+        valueAnimator.addUpdateListener {
+            val i = it.animatedValue as Int
+            val imageName = "frame_bomb_${i}_delay"
+            val res = resources.getIdentifier(imageName, "drawable", packageName);
+            val drawableImg = ContextCompat.getDrawable(this, res)
+            bomb.setImageDrawable(drawableImg)
+
+            if (i == 4) {
+                letter_board.explodeCells(streakLine = beginStreakLine)
+            }
+        }
+        valueAnimator.doOnEnd {
+            bomb.alpha = 1f
+            bomb.animate().withEndAction {
+                resetBombImage()
+
+            }.alpha(0f)
+                .setDuration(300)
+                .start()
+        }
+        valueAnimator.duration = 1000
+        valueAnimator.start()
+    }
+
+    private fun resetBombImage() {
+        bomb.visibility = View.GONE
+        bomb.alpha = 1f
+        bomb.x = iv_bomb.x
+        bomb.y = iv_bomb.y
+
+        val params: ConstraintLayout.LayoutParams =
+            bomb.layoutParams as ConstraintLayout.LayoutParams
+        params.width = resources.getDimension(R.dimen.bomb_width_height).toInt()
+        params.height = resources.getDimension(R.dimen.bomb_width_height).toInt()
+        bomb.layoutParams = params
+
+        bomb.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_bomb))
+
+    }
+
     private fun initClickListener() {
         iv_water.setOnClickListener {
             clickedState = if (!clickedState) {
-                disableOrEnableOtherPowerUps(0.4f)
+                disableOrEnableOtherPowerUps(0.4f, it)
                 true
             } else {
-                disableOrEnableOtherPowerUps(1f)
+                disableOrEnableOtherPowerUps(1f, it)
+                false
+            }
+        }
+        iv_bomb.setOnClickListener {
+            clickedState = if (!clickedState) {
+                disableOrEnableOtherPowerUps(0.4f, it)
+                true
+            } else {
+                disableOrEnableOtherPowerUps(1f, it)
                 false
             }
         }
     }
 
     private fun animateFireMove() {
-        if(pairListIndex <= 4) {
+        if (fireAddedOnTilesCount <= 4) {
 
             val list = (0..5).shuffled().take(2)
             row = list[0]
@@ -158,29 +229,34 @@ class GamePlayActivity : FullscreenActivity() {
             val cellX = letter_board.streakView.grid?.getCenterColFromIndex(col)!!.toFloat()
             val cellY = letter_board.streakView.grid?.getCenterRowFromIndex(row)!!.toFloat()
 
-            animateFireMove(iv_anim_fire, cellX-30, cellY-40)
+            animateFireMove(iv_anim_fire, cellX - 30, cellY - 40)
 
-            pairListIndex++
+            fireAddedOnTilesCount++
 
-        } else{
+        } else {
             iv_anim_fire.visibility = View.GONE
         }
     }
 
-    private fun disableOrEnableOtherPowerUps(alphaVal: Float) {
+    private fun disableOrEnableOtherPowerUps(alphaVal: Float, view: View) {
+        iv_fire.alpha = alphaVal
+        iv_bomb.alpha = alphaVal
+        iv_water.alpha = alphaVal
+        iv_fire_plus.alpha = alphaVal
+        tv_fire_count.alpha = alphaVal
+
         if (alphaVal == 1f) {
-            iv_water.animate().scaleX(1.0f).scaleY(1.0f).start()
+            view.animate().scaleX(1.0f).scaleY(1.0f).start()
             letter_board.shrinkFireWithWater(false)
             clickedState = false
         } else {
-            iv_water.animate().scaleX(1.2f).scaleY(1.2f).start()
-            letter_board.shrinkFireWithWater(true)
+            view.animate().scaleX(1.2f).scaleY(1.2f).start()
+            if (view.id == iv_water.id) {
+                letter_board.shrinkFireWithWater(true)
+            }
             clickedState = true
         }
-        iv_fire.alpha = alphaVal
-        iv_bomb.alpha = alphaVal
-        iv_fire_plus.alpha = alphaVal
-        tv_fire_count.alpha = alphaVal
+        view.alpha = 1f
     }
 
     private fun initViews() {
@@ -190,7 +266,8 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.streakView.setOverrideStreakLineColor(resources.getColor(R.color.gray))
         letter_board.selectionListener = object : OnLetterSelectionListener {
             override fun onSelectionBegin(streakLine: StreakLine, str: String) {
-
+                beginStreakLine = streakLine
+                animateBombIfActivated(streakLine)
                 streakLine.color = Util.getRandomColorWithAlpha(170)
                 text_selection_layout.visible()
                 text_selection.text = str
@@ -213,12 +290,8 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
                 updateFireCountTxt(letterAdapter!!.fireList)
                 if (hasFire) {
-                    disableOrEnableOtherPowerUps(1f)
+                    disableOrEnableOtherPowerUps(1f, iv_water)
                 }
-            }
-
-            override fun onFirePlacement(x: Float, y: Float) {
-
             }
         }
 
@@ -242,6 +315,21 @@ class GamePlayActivity : FullscreenActivity() {
                 text_popup_correct_word.text = ""
             }
         })
+    }
+
+    private fun animateBombIfActivated(streakLine: StreakLine) {
+        if (iv_bomb.scaleX == 1.2f) {
+
+            bomb.visibility = View.VISIBLE
+
+            val row = streakLine.startIndex.row
+            val col = streakLine.startIndex.col
+
+            val X = letter_board.streakView.grid?.getCenterColFromIndex(col)?.toFloat()
+            val Y = letter_board.streakView.grid?.getCenterRowFromIndex(row)?.toFloat()
+
+            animateFireMove(bomb, X!!, Y!!)
+        }
     }
 
     private fun initViewModel() {

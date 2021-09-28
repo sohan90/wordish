@@ -171,6 +171,19 @@
         app:layout_constraintStart_toEndOf="@+id/iv_fire" />
 
     <ImageView
+        android:id="@+id/bomb"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="2dp"
+        android:visibility="invisible"
+        android:src="@drawable/ic_bomb"
+        app:layout_constraintBottom_toBottomOf="@id/iv_fire"
+        app:layout_constraintEnd_toStartOf="@+id/iv_water"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_fire" />
+
+    <ImageView
         android:id="@+id/iv_water"
         android:layout_width="50dp"
         android:layout_height="50dp"

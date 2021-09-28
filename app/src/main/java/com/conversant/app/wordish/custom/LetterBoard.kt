@@ -1,8 +1,12 @@
 package com.conversant.app.wordish.custom
 
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
+import android.util.Log
+import androidx.core.animation.doOnEnd
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.commons.Direction
 import com.conversant.app.wordish.commons.Direction.Companion.fromLine
@@ -29,6 +33,10 @@ import java.util.*
  * - LetterGrid sebagai foreground yang menampilkan letters (huruf-huruf)
  * yang akan dirender paling atas
  */
+
+const val LEFT: Int = 0
+const val RIGHT: Int = 100
+
 class LetterBoard @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -236,7 +244,7 @@ class LetterBoard @JvmOverloads constructor(
         }
 
         override fun onTouchBegin(streakLine: StreakLine) {
-            selectionListener?.let {
+            selectionListener?.let { it ->
                 val idx = streakLine.startIndex
                 val str = _dataAdapter.getLetter(idx.row, idx.col).toString()
 
@@ -249,17 +257,21 @@ class LetterBoard @JvmOverloads constructor(
                         while (i < 2000) {
                             delay(100)
                             i += 100;
-                            if (i >= 1000) {// shrink the fire in the halfway
+                            if (i >= 1500) { // shrink the fire in the halfway
                                 dataAdapter.initFire(idx.row, idx.col, false)
                             }
                             letterGrid.startWaterDropAnim()
                         }
                         dataAdapter.initWaterDrop(idx.row, idx.col, false)
                         letterGrid.invalidate()
-                        it.onSelectionFireCell(streakLine,true)
+                        it.onSelectionFireCell(streakLine, true)
                     }
+                } else {
+
+                    //explodeCells(streakLine)
 
                 }
+
                 it.onSelectionBegin(streakLine, str)
             }
         }
@@ -279,12 +291,79 @@ class LetterBoard @JvmOverloads constructor(
         }
     }
 
+    fun explodeCells(streakLine: StreakLine) {
+        val list = generateBombCells(streakLine)
+
+        val valueAnimator =
+            ValueAnimator.ofPropertyValuesHolder(*list.toTypedArray())
+
+        val col = streakLine.startIndex.col
+        val colEnd = if (col == 0) col + 1 else col
+
+        valueAnimator.doOnEnd {
+            //todo update cells with new data
+        }
+        valueAnimator.addUpdateListener { animIt ->
+
+            var propertyNameIndex = 0
+            for (i in 0..5) {
+                for (j in colEnd - 1..colEnd) {
+
+                    propertyNameIndex++
+                    val value: Float = animIt.getAnimatedValue("$propertyNameIndex") as Float
+
+                    letterGrid.bombCell[i][j].animate = true
+                    letterGrid.bombCell[i][j].xAxix = value
+                    letterGrid.explodeCells()
+                }
+            }
+        }
+        valueAnimator.duration = 500
+        valueAnimator.start()
+    }
+
+    private fun generateBombCells(streakLine: StreakLine): List<PropertyValuesHolder> {
+        val col = streakLine.startIndex.col
+
+        val colEnd = if (col == 0) col + 1 else col
+        var animationDir: Int
+
+        val propertyValueList = arrayListOf<PropertyValuesHolder>()
+        var propertyNameIndex = 0
+
+        for (i in 0..5) {
+
+            animationDir = 0
+
+            for (j in colEnd - 1..colEnd) {
+
+                propertyNameIndex++
+
+                val xAxis = if (animationDir == 0) {
+                    animationDir = 1
+                    -100f
+                } else {
+                    width.toFloat()
+                }
+
+                val cellX = streakView.grid!!.getCenterColFromIndex(j).toFloat()
+                val propertyAnim = PropertyValuesHolder.ofFloat("$propertyNameIndex", cellX, xAxis)
+                propertyValueList.add(propertyAnim)
+
+                letterGrid.bombCell[i][j].animate = true
+                letterGrid.bombCell[i][j].xAxix = xAxis
+            }
+        }
+
+        return propertyValueList
+
+    }
+
     interface OnLetterSelectionListener {
         fun onSelectionBegin(streakLine: StreakLine, str: String)
         fun onSelectionDrag(streakLine: StreakLine, str: String)
         fun onSelectionEnd(streakLine: StreakLine, str: String)
-        fun onSelectionFireCell(streakLine:StreakLine, hasFire: Boolean)
-        fun onFirePlacement(x:Float, y:Float)
+        fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean)
     }
 
     companion object {

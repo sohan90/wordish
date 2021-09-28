@@ -16,10 +16,17 @@ import java.util.*
  */
 class LetterGrid @JvmOverloads constructor(
     context: Context,
-    attrs: AttributeSet? = null, var letterBoardListener: LetterBoard.OnLetterSelectionListener? = null
+    attrs: AttributeSet? = null,
+    var letterBoardListener: LetterBoard.OnLetterSelectionListener? = null
 ) : GridBehavior(context, attrs), Observer {
 
-    private var firstLayoutPass: Boolean = false
+    var bombCell = Array(6) { Array(6) { BombCell( 0f, false) } }
+
+    private var explodeXValue: Float = 0f
+
+    private var bombCellRow: Int = -1
+
+    private var bombCellCol: Int = -1
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -77,18 +84,22 @@ class LetterGrid @JvmOverloads constructor(
             }
         }
 
-    fun setListener(selectionListener: LetterBoard.OnLetterSelectionListener){
+    fun explodeCells() {
+        invalidate()
+    }
+
+    fun setListener(selectionListener: LetterBoard.OnLetterSelectionListener) {
         letterBoardListener = selectionListener
     }
 
-    fun startFireAnim(){
-         fireGifIndex+=1
-         rect = Rect(0, 0, 0, 0)
-         invalidate()
+    fun startFireAnim() {
+        fireGifIndex += 1
+        rect = Rect(0, 0, 0, 0)
+        invalidate()
     }
 
-    fun startWaterDropAnim(){
-        waterGifIndex+=1
+    fun startWaterDropAnim() {
+        waterGifIndex += 1
         rect = Rect(0, 0, 0, 0)
         invalidate()
     }
@@ -123,9 +134,7 @@ class LetterGrid @JvmOverloads constructor(
         var y = halfHeight + paddingTop
 
         var waterY = 0
-        var waterX:Int
-
-        firstLayoutPass = halfWidth == 55
+        var waterX: Int
 
         // iterate and render all letters found in grid data adapter
         for (i in 0 until gridRowCount) {
@@ -143,14 +152,7 @@ class LetterGrid @JvmOverloads constructor(
                     rect.bottom = rect.top + 100
                     canvas.drawBitmap(fireGif[fireGifIndex % 4], null, rect, paint)
 
-                    if (!firstLayoutPass) {
-                        letterBoardListener?.onFirePlacement(
-                            rect.left.toFloat(),
-                            rect.top.toFloat()
-                        )
-                    }
                 }
-
 
                 if (gridDataAdapter?.hasWaterDrop(i, j) == true) {
                     rect.left = waterX + (halfWidth - waterDropBitmap!!.width)
@@ -160,11 +162,17 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawBitmap(waterGif[waterGifIndex % 5], null, rect, paint)
                 }
 
-
-                canvas.drawText(
-                    letter.toString(),
-                    x - charBounds.exactCenterX(), y - charBounds.exactCenterY(), paint
-                )
+                if (bombCell[i][j].animate) {
+                    canvas.drawText(
+                        letter.toString(),
+                        bombCell[i][j].xAxix, y - charBounds.exactCenterY(), paint
+                    )
+                } else {
+                    canvas.drawText(
+                        letter.toString(),
+                        x - charBounds.exactCenterX(), y - charBounds.exactCenterY(), paint
+                    )
+                }
 
                 x += gridWidth
                 waterX += gridWidth

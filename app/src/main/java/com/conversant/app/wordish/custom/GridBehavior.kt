@@ -107,6 +107,8 @@ abstract class GridBehavior @JvmOverloads constructor(
         setMeasuredDimension(measuredWidth, measuredHeight)
     }
 
+
+
     companion object {
         private const val DEFAULT_GRID_WIDTH_PIXEL = 50
         private const val DEFAULT_GRID_HEIGHT_PIXEL = 50
