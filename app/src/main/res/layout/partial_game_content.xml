@@ -5,6 +5,7 @@
     android:id="@+id/content_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/wordish_bck"
     android:orientation="vertical">
 
     <ScrollView
@@ -81,10 +82,10 @@
         android:layout_marginBottom="@dimen/_4sdp"
         android:background="@android:color/black"
         android:visibility="visible"
-        app:gridColumnCount="10"
+        app:gridColumnCount="6"
         app:gridHeight="@dimen/_31sdp"
         app:gridLineVisibility="true"
-        app:gridRowCount="10"
+        app:gridRowCount="6"
         app:gridWidth="@dimen/_31sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -105,7 +106,7 @@
         android:paddingRight="@dimen/_12sdp"
         android:paddingBottom="@dimen/_6sdp"
         android:textAllCaps="false"
-        android:textColor="@color/colorAccent"
+        android:textColor="@android:color/white"
         android:textSize="@dimen/_28ssp"
         android:textStyle="bold"
         android:visibility="invisible"
@@ -147,7 +148,7 @@
         android:layout_height="20dp"
         android:layout_marginStart="30dp"
         android:background="@drawable/round_rect"
-        android:backgroundTint="@color/colorAccent"
+        android:backgroundTint="@color/colorPrimaryDark"
         android:text="3"
         android:gravity="center"
         android:textColor="@android:color/white"

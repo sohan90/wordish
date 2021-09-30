@@ -5,7 +5,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Color
 import android.util.AttributeSet
-import android.util.Log
+import android.view.animation.BounceInterpolator
 import androidx.core.animation.doOnEnd
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.commons.Direction
@@ -250,7 +250,9 @@ class LetterBoard @JvmOverloads constructor(
 
                 val hasFire = _dataAdapter.hasFire(idx.row, idx.col)
                 if (hasFire && shrinkFire) { // shrink fire with water
+
                     dataAdapter.initWaterDrop(idx.row, idx.col, true)
+                    it.onSelectionFireCell(streakLine, true)
 
                     CoroutineScope(Dispatchers.Main).launch {
                         var i = 0
@@ -264,12 +266,8 @@ class LetterBoard @JvmOverloads constructor(
                         }
                         dataAdapter.initWaterDrop(idx.row, idx.col, false)
                         letterGrid.invalidate()
-                        it.onSelectionFireCell(streakLine, true)
+                        it.onSelectionFireCell(streakLine, false)
                     }
-                } else {
-
-                    //explodeCells(streakLine)
-
                 }
 
                 it.onSelectionBegin(streakLine, str)
@@ -284,9 +282,13 @@ class LetterBoard @JvmOverloads constructor(
         }
 
         override fun onTouchEnd(streakLine: StreakLine) {
-            selectionListener?.let {
-                val str = getStringInRange(streakLine.startIndex, streakLine.endIndex)
-                it.onSelectionEnd(streakLine, str)
+            if (!shrinkFire) {
+                selectionListener?.let {
+                    val str = getStringInRange(streakLine.startIndex, streakLine.endIndex)
+                    it.onSelectionEnd(streakLine, str)
+                }
+            } else{
+                popStreakLine()
             }
         }
     }
@@ -319,6 +321,7 @@ class LetterBoard @JvmOverloads constructor(
             }
         }
         valueAnimator.duration = 500
+        valueAnimator.interpolator = BounceInterpolator()
         valueAnimator.start()
     }
 
@@ -369,7 +372,7 @@ class LetterBoard @JvmOverloads constructor(
     companion object {
         private const val DEFAULT_GRID_WIDTH_PIXEL = 50
         private const val DEFAULT_GRID_HEIGHT_PIXEL = 50
-        private const val DEFAULT_GRID_SIZE = 8
+        private const val DEFAULT_GRID_SIZE = 6
         private const val DEFAULT_LINE_WIDTH_PIXEL = 2
         private const val DEFAULT_LETTER_SIZE_PIXEL = 32.0f
         private const val DEFAULT_STREAK_WIDTH_PIXEL = 35

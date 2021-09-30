@@ -1,7 +1,9 @@
 package com.conversant.app.wordish.features.gameplay
 
 import android.animation.Animator
+import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Paint
@@ -10,13 +12,18 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.DisplayMetrics
 import android.view.View
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.viewModels
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.animation.doOnEnd
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.conversant.app.wordish.R
@@ -28,28 +35,17 @@ import com.conversant.app.wordish.commons.orZero
 import com.conversant.app.wordish.commons.visible
 import com.conversant.app.wordish.custom.LetterBoard.OnLetterSelectionListener
 import com.conversant.app.wordish.custom.StreakView.StreakLine
+import com.conversant.app.wordish.data.room.WordDataSource
 import com.conversant.app.wordish.features.FullscreenActivity
 import com.conversant.app.wordish.features.SoundPlayer
 import com.conversant.app.wordish.features.gameover.GameOverActivity
 import com.conversant.app.wordish.features.gameplay.GamePlayViewModel.*
-import com.conversant.app.wordish.model.Difficulty
-import com.conversant.app.wordish.model.GameData
-import com.conversant.app.wordish.model.GameMode
-import com.conversant.app.wordish.model.UsedWord
+import com.conversant.app.wordish.model.*
 import kotlinx.android.synthetic.main.activity_game_play.*
 import kotlinx.android.synthetic.main.partial_game_complete.*
 import kotlinx.android.synthetic.main.partial_game_content.*
 import kotlinx.android.synthetic.main.partial_game_header.*
 import javax.inject.Inject
-
-import android.animation.AnimatorSet
-import android.animation.ValueAnimator
-import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import android.widget.ImageView
-import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.animation.doOnEnd
-import androidx.core.content.ContextCompat
 
 
 class GamePlayActivity : FullscreenActivity() {
@@ -67,12 +63,16 @@ class GamePlayActivity : FullscreenActivity() {
     @Inject
     lateinit var soundPlayer: SoundPlayer
 
+    @Inject
+    lateinit var wordDataSource: WordDataSource
 
     @Inject
     lateinit var viewModelFactory: ViewModelProvider.Factory
+
     private val viewModel: GamePlayViewModel by viewModels { viewModelFactory }
 
     private var letterAdapter: ArrayLetterGridDataAdapter? = null
+
     private var popupTextAnimation: Animation? = null
 
     private val extraGameMode: GameMode by lazy {
@@ -99,6 +99,8 @@ class GamePlayActivity : FullscreenActivity() {
         intent.extras?.getInt(EXTRA_GAME_DATA_ID).orZero()
     }
 
+    private var rowColListPair = arrayListOf<Pair<Int, Int>>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_play)
@@ -108,10 +110,21 @@ class GamePlayActivity : FullscreenActivity() {
         initViewModel()
         initClickListener()
         loadOrGenerateNewGame()
+        createRowColListForFireMoveAnim()
         Handler().postDelayed({
-            animateFireMove()
-        }, 600)
+             animateFireMove()
+        }, 2000)
 
+    }
+
+    private fun createRowColListForFireMoveAnim() {
+        for (i in 0..2) {
+            val first = (0..5).shuffled().take(1)[0]
+            val second = (0..5).shuffled().take(1)[0]
+            val pair = Pair(first, second)
+            rowColListPair.add(pair)
+        }
+        updateFireTxt(rowColListPair.size)
     }
 
     private fun animateFireMove(v: ImageView, targetX: Float, targetY: Float) {
@@ -131,11 +144,12 @@ class GamePlayActivity : FullscreenActivity() {
 
             override fun onAnimationEnd(animation: Animator?) {
                 if (iv_bomb.scaleX != 1.2f) {
-                    letterAdapter!!.fireList[row][col] = true
-                    animateFireMove()
+                     letterAdapter!!.fireList[row][col] = true
+                     animateFireMove()
                 } else {
                     // bomb activated
                     explodeBomb()
+                    soundPlayer.play(SoundPlayer.Sound.Bomb)
                 }
             }
 
@@ -220,11 +234,12 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun animateFireMove() {
-        if (fireAddedOnTilesCount <= 4) {
+        if (fireAddedOnTilesCount < rowColListPair.size) {
 
-            val list = (0..5).shuffled().take(2)
-            row = list[0]
-            col = list[1]
+            val pair = rowColListPair[fireAddedOnTilesCount]
+
+            row =   pair.first
+            col =   pair.second
 
             val cellX = letter_board.streakView.grid?.getCenterColFromIndex(col)!!.toFloat()
             val cellY = letter_board.streakView.grid?.getCenterRowFromIndex(row)!!.toFloat()
@@ -288,8 +303,12 @@ class GamePlayActivity : FullscreenActivity() {
             }
 
             override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
-                updateFireCountTxt(letterAdapter!!.fireList)
                 if (hasFire) {
+                  if (iv_water.scaleX == 1.2f){// water droplets enabled
+                      soundPlayer.play(SoundPlayer.Sound.WaterDroplets)
+                  }
+                } else{
+                    updateFireCountTxt(letterAdapter!!.fireList)
                     disableOrEnableOtherPowerUps(1f, iv_water)
                 }
             }
@@ -355,14 +374,18 @@ class GamePlayActivity : FullscreenActivity() {
         if (shouldOpenExistingGameData()) {
             viewModel.loadGameRound(extraGameId)
         } else {
-            viewModel.generateNewGameRound(
-                rowCount = extraRowCount,
-                colCount = extraColumnCount,
-                gameThemeId = extraGameThemeId,
-                gameMode = extraGameMode,
-                difficulty = extraDifficulty
-            )
+            generateNewGame()
         }
+    }
+
+    private fun generateNewGame() {
+        viewModel.generateNewGameRound(
+            rowCount = extraRowCount,
+            colCount = extraColumnCount,
+            gameThemeId = extraGameThemeId,
+            gameMode = extraGameMode,
+            difficulty = extraDifficulty
+        )
     }
 
     private fun shouldOpenExistingGameData(): Boolean {
@@ -449,7 +472,11 @@ class GamePlayActivity : FullscreenActivity() {
             layout_complete_popup.visible()
             text_complete_popup.setText(R.string.lbl_game_over)
         }
-        showLetterGrid(gameData.grid!!.array, gameData.grid!!.fireArray, gameData.grid!!.waterDrop)
+        showLetterGrid(
+            gameData.grid!!.array,
+            gameData.grid!!.fireArray,
+            gameData.grid!!.waterDrop
+        )
         showDuration(gameData.duration)
         showUsedWords(gameData.usedWords, gameData)
         showWordsCount(gameData.usedWords.size)
@@ -500,7 +527,7 @@ class GamePlayActivity : FullscreenActivity() {
             loadingText.gone()
             if (content_layout.visibility == View.GONE) {
                 content_layout.visible()
-                content_layout.scaleY = 1f
+                content_layout.scaleY = 0.5f
                 content_layout.alpha = 0f
                 content_layout.animate()
                     .scaleY(1f)
@@ -527,8 +554,6 @@ class GamePlayActivity : FullscreenActivity() {
         } else {
             letterAdapter?.grid = grid
         }
-
-        updateFireCountTxt(fireArray)
     }
 
     private fun updateFireCountTxt(fireArray: Array<BooleanArray>) {
@@ -540,7 +565,7 @@ class GamePlayActivity : FullscreenActivity() {
                 }
             }
         }
-        tv_fire_count.text = count.toString()
+        updateFireTxt(count)
     }
 
     private fun showDuration(duration: Int) {
@@ -564,6 +589,10 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun showWordsCount(count: Int) {
         text_words_count.text = count.toString()
+    }
+
+    private fun updateFireTxt(count: Int) {
+        tv_fire_count.text = count.toString()
     }
 
     private fun showFinishGame(state: Finished) {
@@ -607,7 +636,10 @@ class GamePlayActivity : FullscreenActivity() {
                 usedWord.answerLine?.color = resources.getColor(R.color.gray)
             }
 
-            view.background.setColorFilter(usedWord.answerLine!!.color, PorterDuff.Mode.MULTIPLY)
+            view.background.setColorFilter(
+                usedWord.answerLine!!.color,
+                PorterDuff.Mode.MULTIPLY
+            )
             str.text = usedWord.string
             str.setTextColor(Color.WHITE)
             str.paintFlags = str.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG

@@ -145,13 +145,13 @@ class GamePlayViewModel @Inject constructor(
         gameMode: GameMode,
         difficulty: Difficulty
     ) {
+
         if (currentState is Generating) return
 
         val gameName = gameDataName
         setGameState(Generating(rowCount, colCount, gameName))
         val maxChar = max(rowCount, colCount)
-        val flowableWords: Flowable<List<Word>>
-        flowableWords = if (gameThemeId == GameTheme.NONE.id) {
+        val flowableWords: Flowable<List<Word>> = if (gameThemeId == GameTheme.NONE.id) {
             wordDataSource.getWords(maxChar)
         } else {
             wordDataSource.getWords(gameThemeId, maxChar)

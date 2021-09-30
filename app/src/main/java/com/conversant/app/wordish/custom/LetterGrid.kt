@@ -22,12 +22,6 @@ class LetterGrid @JvmOverloads constructor(
 
     var bombCell = Array(6) { Array(6) { BombCell( 0f, false) } }
 
-    private var explodeXValue: Float = 0f
-
-    private var bombCellRow: Int = -1
-
-    private var bombCellCol: Int = -1
-
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     private val fireGif = mutableListOf<Bitmap>()
@@ -212,7 +206,7 @@ class LetterGrid @JvmOverloads constructor(
     }
 
     companion object {
-        private const val DEFAULT_LETTER_GRID_SAMPLE_SIZE = 8
+        private const val DEFAULT_LETTER_GRID_SAMPLE_SIZE = 6
         private const val DEFAULT_TEXT_SIZE = 32f
     }
 }

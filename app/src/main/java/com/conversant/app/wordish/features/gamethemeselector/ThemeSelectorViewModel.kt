@@ -72,8 +72,8 @@ class ThemeSelectorViewModel @Inject constructor(
 
     fun checkWordAvailability(themeId: Int, rowCount: Int, colCount: Int): Single<Boolean> {
         val maxChar = max(rowCount, colCount)
-        val singleSource: Single<Int>
-        singleSource = if (themeId == GameTheme.NONE.id) wordDataSource.getWordsCount(maxChar) else wordDataSource.getWordsCount(themeId, maxChar)
+        val singleSource: Single<Int> = if (themeId == GameTheme.NONE.id) wordDataSource.getWordsCount(maxChar)
+        else wordDataSource.getWordsCount(themeId, maxChar)
         return singleSource
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
