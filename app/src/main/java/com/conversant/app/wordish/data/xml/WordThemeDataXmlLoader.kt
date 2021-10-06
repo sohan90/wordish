@@ -70,7 +70,7 @@ class WordThemeDataXmlLoader(context: Context) {
         }
 
     companion object {
-        private const val ASSET_BASE_FOLDER = "words"
+        private const val ASSET_BASE_FOLDER = "dictionary"
     }
 
 }

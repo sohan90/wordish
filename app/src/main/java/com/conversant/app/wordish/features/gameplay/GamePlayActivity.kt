@@ -28,11 +28,8 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordSearchApp
+import com.conversant.app.wordish.commons.*
 import com.conversant.app.wordish.commons.DurationFormatter.fromInteger
-import com.conversant.app.wordish.commons.Util
-import com.conversant.app.wordish.commons.gone
-import com.conversant.app.wordish.commons.orZero
-import com.conversant.app.wordish.commons.visible
 import com.conversant.app.wordish.custom.LetterBoard.OnLetterSelectionListener
 import com.conversant.app.wordish.custom.StreakView.StreakLine
 import com.conversant.app.wordish.data.room.WordDataSource
@@ -49,6 +46,8 @@ import javax.inject.Inject
 
 
 class GamePlayActivity : FullscreenActivity() {
+
+    private lateinit var endStreakLine: StreakLine
 
     private lateinit var beginStreakLine: StreakLine
 
@@ -117,12 +116,45 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
+    private fun animateNewWord(newCharList: List<Char>, colCount:Int) {
+        val animation = AnimationUtils.loadAnimation(this, R.anim.new_words_text)
+        new_word_tv.visible()
+        animation.interpolator = DecelerateInterpolator()
+        animation.duration = 1000
+        new_word_tv.startAnimation(animation)
+        animation.setAnimationListener(object : AnimationListener {
+            override fun onAnimationStart(animation: Animation?) {}
+            override fun onAnimationRepeat(animation: Animation?) {}
+            override fun onAnimationEnd(animation: Animation?) {
+                new_word_tv.gone()
+
+                val col = endStreakLine.endIndex.col
+                val colEnd = if (col == 0) col + 1 else col
+
+                if (colCount == 1) {
+                    Util.replaceNewWordForRow(newCharList, colEnd - 1,
+                        letter_board.letterGrid, letterAdapter!!.backedGrid)
+
+                    resetNewCharacters(2)
+                } else {
+                    Util.replaceNewWordForRow(newCharList, colEnd,
+                        letter_board.letterGrid, letterAdapter!!.backedGrid)
+                }
+
+            }
+        })
+
+    }
+
     private fun createRowColListForFireMoveAnim() {
+        val list = mutableListOf(0,1,2,3,4,5)
         for (i in 0..2) {
-            val first = (0..5).shuffled().take(1)[0]
-            val second = (0..5).shuffled().take(1)[0]
+            val first = list.shuffled().take(1)[0]
+            val second = list.shuffled().take(1)[0]
             val pair = Pair(first, second)
             rowColListPair.add(pair)
+
+            list.remove(first)// to get unique random number
         }
         updateFireTxt(rowColListPair.size)
     }
@@ -134,33 +166,23 @@ class GamePlayActivity : FullscreenActivity() {
         val y: ObjectAnimator = ObjectAnimator.ofFloat(v, "y", v.y, targetY)
 
         animSetXY.playTogether(x, y)
-        animSetXY.duration = 500
+        animSetXY.duration = 1000
         animSetXY.start()
 
         animSetXY.addListener(object : Animator.AnimatorListener {
-            override fun onAnimationStart(animation: Animator?) {
-
-            }
-
+            override fun onAnimationStart(animation: Animator?) {}
+            override fun onAnimationCancel(animation: Animator?) {}
+            override fun onAnimationRepeat(animation: Animator?) {}
             override fun onAnimationEnd(animation: Animator?) {
                 if (iv_bomb.scaleX != 1.2f) {
-                     letterAdapter!!.fireList[row][col] = true
-                     animateFireMove()
+                    letterAdapter!!.fireList[row][col] = true
+                    animateFireMove()
                 } else {
                     // bomb activated
                     explodeBomb()
                     soundPlayer.play(SoundPlayer.Sound.Bomb)
                 }
             }
-
-            override fun onAnimationCancel(animation: Animator?) {
-
-            }
-
-            override fun onAnimationRepeat(animation: Animator?) {
-
-            }
-
         })
     }
 
@@ -187,6 +209,7 @@ class GamePlayActivity : FullscreenActivity() {
             bomb.alpha = 1f
             bomb.animate().withEndAction {
                 resetBombImage()
+                resetNewCharacters(1)
 
             }.alpha(0f)
                 .setDuration(300)
@@ -194,6 +217,15 @@ class GamePlayActivity : FullscreenActivity() {
         }
         valueAnimator.duration = 1000
         valueAnimator.start()
+    }
+
+    private fun resetNewCharacters(colCount: Int) {
+      /* Util.replaceNewWordForExplode(endStreakLine.endIndex.col, letterAdapter!!.backedGrid,
+           letterGrid = letter_board.letterGrid)*/
+
+        val newCharList = Util.getNewCharList()
+        new_word_tv.text = newCharList.joinToString(separator = ",")
+        animateNewWord(newCharList, colCount)
     }
 
     private fun resetBombImage() {
@@ -293,11 +325,13 @@ class GamePlayActivity : FullscreenActivity() {
             }
 
             override fun onSelectionEnd(streakLine: StreakLine, str: String) {
-                viewModel.answerWord(
+               /* viewModel.answerWord(
                     str,
                     STREAK_LINE_MAPPER.revMap(streakLine),
                     preferences.reverseMatching()
-                )
+                )*/
+                endStreakLine = streakLine
+                viewModel.answerWord(str, streakLine, preferences.reverseMatching())
                 text_selection_layout.gone()
                 text_selection.text = str
             }
@@ -337,7 +371,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun animateBombIfActivated(streakLine: StreakLine) {
-        if (iv_bomb.scaleX == 1.2f) {
+        if (iv_bomb.scaleX == 1.2f) {//is active
 
             bomb.visibility = View.VISIBLE
 
@@ -360,6 +394,10 @@ class GamePlayActivity : FullscreenActivity() {
         viewModel.onAnswerResult.observe(
             this,
             Observer { answerResult: AnswerResult -> onAnswerResult(answerResult) })
+
+        viewModel.onAnswerResultWord.observe(this, {
+            onAnswerResult(it)
+        })
         viewModel.onCurrentWordChanged.observe(this, Observer { usedWord: UsedWord ->
             text_current_selected_word.setText(usedWord.string)
             progress_word_duration.max = usedWord.maxDuration * 100
@@ -435,6 +473,23 @@ class GamePlayActivity : FullscreenActivity() {
             showAnsweredWordsCount(answerResult.totalAnsweredWord)
             soundPlayer.play(SoundPlayer.Sound.Correct)
         } else {
+            letter_board.popStreakLine()
+            soundPlayer.play(SoundPlayer.Sound.Wrong)
+        }
+    }
+
+
+    private fun onAnswerResult(onAnswerWord: AnswerResultWord){
+        if (onAnswerWord.correct) {
+            text_popup_correct_word.visible()
+            text_popup_correct_word.text = onAnswerWord.correctWord
+            text_popup_correct_word.startAnimation(popupTextAnimation)
+            soundPlayer.play(SoundPlayer.Sound.Correct)
+
+            Util.replaceNewWordForCorrectWord(onAnswerWord.streakLine, letterAdapter!!.backedGrid)
+            letter_board.popStreakLine()
+
+        } else{
             letter_board.popStreakLine()
             soundPlayer.play(SoundPlayer.Sound.Wrong)
         }

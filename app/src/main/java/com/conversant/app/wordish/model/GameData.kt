@@ -12,7 +12,8 @@ class GameData @JvmOverloads constructor(
     var duration: Int = 0,
     var gameMode: GameMode = GameMode.Normal,
     var grid: Grid? = null,
-    private val _usedWords: MutableList<UsedWord> = ArrayList()
+    private val _usedWords: MutableList<UsedWord> = ArrayList(),
+    private val _wordsList: MutableList<Word> = ArrayList()
 ) {
 
     var maxDuration = 0
@@ -22,6 +23,10 @@ class GameData @JvmOverloads constructor(
             _usedWords.clear()
             _usedWords.addAll(usedWords)
         }
+
+    val wordsList:List<Word>
+    get() = _wordsList
+
 
     val answeredWordsCount: Int
         get() {
@@ -52,5 +57,9 @@ class GameData @JvmOverloads constructor(
 
     fun addUsedWords(usedWords: List<UsedWord>) {
         _usedWords.addAll(usedWords)
+    }
+
+    fun addAllWords(wordsList:List<Word>){
+        _wordsList.addAll(wordsList)
     }
 }

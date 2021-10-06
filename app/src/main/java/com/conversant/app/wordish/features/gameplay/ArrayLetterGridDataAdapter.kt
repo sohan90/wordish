@@ -6,7 +6,7 @@ import com.conversant.app.wordish.custom.LetterGridDataAdapter
  * Created by abdularis on 09/07/17.
  */
 class ArrayLetterGridDataAdapter internal constructor(
-    private var backedGrid: Array<CharArray>,
+    var backedGrid: Array<CharArray>,
     val fireList:Array<BooleanArray> = emptyArray(),
     private val waterDrop:Array<BooleanArray> = emptyArray(),
 

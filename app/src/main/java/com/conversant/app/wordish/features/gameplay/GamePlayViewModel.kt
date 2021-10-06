@@ -10,6 +10,7 @@ import com.conversant.app.wordish.commons.Timer
 import com.conversant.app.wordish.commons.Timer.OnTimeoutListener
 import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.commons.orZero
+import com.conversant.app.wordish.custom.StreakView
 import com.conversant.app.wordish.data.room.UsedWordDataSource
 import com.conversant.app.wordish.data.room.WordDataSource
 import com.conversant.app.wordish.data.sqlite.GameDataSource
@@ -50,6 +51,12 @@ class GamePlayViewModel @Inject constructor(
         var totalAnsweredWord: Int
     )
 
+    class AnswerResultWord(
+        var correct: Boolean,
+        var correctWord:String?,
+        val streakLine: StreakView.StreakLine
+    )
+
     private val gameDataCreator: GameDataCreator = GameDataCreator()
     private var currentGameData: GameData? = null
     private val timer: Timer = Timer(TIMER_TIMEOUT.toLong())
@@ -62,6 +69,7 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var onCurrentWordCountDownLiveData: MutableLiveData<Int>
     private lateinit var onGameStateLiveData: MutableLiveData<GameState>
     private lateinit var onAnswerResultLiveData: SingleLiveEvent<AnswerResult>
+    private lateinit var onAnswerResultWordLiveData: SingleLiveEvent<AnswerResultWord>
     private lateinit var onCurrentWordChangedLiveData: MutableLiveData<UsedWord>
 
     val onTimer: LiveData<Int>
@@ -75,6 +83,9 @@ class GamePlayViewModel @Inject constructor(
 
     val onAnswerResult: LiveData<AnswerResult>
         get() = onAnswerResultLiveData
+
+    val onAnswerResultWord: LiveData<AnswerResultWord>
+        get() = onAnswerResultWordLiveData
 
     val onCurrentWordChanged: LiveData<UsedWord>
         get() = onCurrentWordChangedLiveData
@@ -237,6 +248,28 @@ class GamePlayViewModel @Inject constructor(
         }
     }
 
+    fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean){
+        var correctWord:String? = null
+        var correct = false
+
+        val answerStrRev = Util.getReverseString(answerStr)
+        for (word in currentGameData?.wordsList.orEmpty()) {
+
+            val dictionaryWord = word.string
+            if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
+                dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching) {
+                correctWord = dictionaryWord
+                correct = true
+                break
+            }
+        }
+
+        onAnswerResultWordLiveData.value  = AnswerResultWord(correct, correctWord, streakLine)
+
+    }
+
+
+
     private fun setGameState(state: GameState) {
         currentState = state
         onGameStateLiveData.value = currentState
@@ -358,6 +391,7 @@ class GamePlayViewModel @Inject constructor(
         onCountDownLiveData = MutableLiveData()
         onGameStateLiveData = MutableLiveData()
         onAnswerResultLiveData = SingleLiveEvent()
+        onAnswerResultWordLiveData = SingleLiveEvent()
         onCurrentWordChangedLiveData = MutableLiveData()
         onCurrentWordCountDownLiveData = MutableLiveData()
     }

@@ -29,6 +29,7 @@ class GameDataCreator {
             grid = grid
         ).apply {
             addUsedWords(buildUsedWordFromWord(usedWords))
+            addAllWords(words)
         }
     }
 

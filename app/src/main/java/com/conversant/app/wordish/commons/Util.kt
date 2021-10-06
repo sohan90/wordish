@@ -1,6 +1,8 @@
 package com.conversant.app.wordish.commons
 
 import android.graphics.Color
+import com.conversant.app.wordish.custom.LetterGrid
+import com.conversant.app.wordish.custom.StreakView
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.max
@@ -75,5 +77,81 @@ object Util {
                 if (gridArr[i][j] == NULL_CHAR) gridArr[i][j] = randomChar
             }
         }
+    }
+
+    fun replaceNewWordForCorrectWord(
+        streakView: StreakView.StreakLine,
+        adapterData: Array<CharArray>
+    ) {
+        val startRow = streakView.startIndex.row
+        val endRow = streakView.endIndex.row
+        val startCol = streakView.startIndex.col
+        val endCol = streakView.endIndex.col
+
+        val rowProgression: IntProgression = if (startRow > endRow) {
+            startRow.downTo(endRow)
+        } else {
+            startRow..endRow
+        }
+
+        val colProgression: IntProgression = if (startCol > endCol) {
+            startCol.downTo(endCol)
+        } else {
+            startCol..endCol
+        }
+
+        val rowIterator = rowProgression.iterator()
+        val colIterator = colProgression.iterator()
+
+        val rowSize = rowProgression.size()
+        val colSize = colProgression.size()
+
+        val maxSize = rowSize.coerceAtLeast(colSize)
+
+        var count = 0
+        var row = 0
+        var col = 0
+
+        while (count < maxSize) {
+            row = if (rowIterator.hasNext()) rowIterator.nextInt() else row
+            col = if (colIterator.hasNext()) colIterator.nextInt() else col
+            adapterData[row][col] = randomChar
+            count++
+        }
+    }
+
+    fun replaceNewWordForExplode(col:Int, adapterData: Array<CharArray>, letterGrid: LetterGrid){
+        val colEnd = if (col == 0) col + 1 else col
+        for (i in 0..5){
+            for (j in colEnd - 1 .. colEnd){
+                letterGrid.bombCell[i][j].animate = false
+                letterGrid.bombCell[i][j].xAxix = 0f
+                adapterData[i][j] = randomChar
+            }
+        }
+    }
+
+    fun getNewCharList():List<Char>{
+        val list = mutableListOf<Char>()
+        for (i in 0..5){
+            list.add(randomChar)
+        }
+        return list
+    }
+
+    fun replaceNewWordForRow(list:List<Char>, col: Int, letterGrid: LetterGrid, adapterData: Array<CharArray>){
+        for (i in list.indices) {
+            letterGrid.bombCell[i][col].animate = false
+            letterGrid.bombCell[i][col].xAxix = 0f
+            adapterData[i][col] = list[i]
+        }
+    }
+
+    fun IntProgression.size(): Int {
+        var size = 0
+        for (i in this) {
+            size++
+        }
+        return size
     }
 }
