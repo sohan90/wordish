@@ -312,6 +312,10 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.streakView.setEnableOverrideStreakLineColor(preferences.grayscale())
         letter_board.streakView.setOverrideStreakLineColor(resources.getColor(R.color.gray))
         letter_board.selectionListener = object : OnLetterSelectionListener {
+
+            override fun onSelectionWord() {
+                soundPlayer.play(SoundPlayer.Sound.Highlight)
+            }
             override fun onSelectionBegin(streakLine: StreakLine, str: String) {
                 beginStreakLine = streakLine
                 animateBombIfActivated(streakLine)
@@ -321,6 +325,7 @@ class GamePlayActivity : FullscreenActivity() {
             }
 
             override fun onSelectionDrag(streakLine: StreakLine, str: String) {
+                text_selection_layout.visible()
                 text_selection.text = if (str.isEmpty()) "..." else str
             }
 
@@ -349,12 +354,6 @@ class GamePlayActivity : FullscreenActivity() {
         }
 
         letter_board.letterGrid.setListener(letter_board.selectionListener!!)
-
-        if (!preferences.showGridLine()) {
-            letter_board.gridLineBackground.visibility = View.VISIBLE
-        } else {
-            letter_board.gridLineBackground.visible()
-        }
         letter_board.streakView.isSnapToGrid = preferences.snapToGrid
         text_game_finished.gone()
         popupTextAnimation = AnimationUtils.loadAnimation(this, R.anim.popup_text)
@@ -530,6 +529,7 @@ class GamePlayActivity : FullscreenActivity() {
         showLetterGrid(
             gameData.grid!!.array,
             gameData.grid!!.fireArray,
+            gameData.grid!!.highlight,
             gameData.grid!!.waterDrop
         )
         showDuration(gameData.duration)
@@ -599,10 +599,11 @@ class GamePlayActivity : FullscreenActivity() {
     private fun showLetterGrid(
         grid: Array<CharArray>,
         fireArray: Array<BooleanArray>,
+        highlight: Array<BooleanArray>,
         waterDrop: Array<BooleanArray>
     ) {
         if (letterAdapter == null) {
-            letterAdapter = ArrayLetterGridDataAdapter(grid, fireArray, waterDrop)
+            letterAdapter = ArrayLetterGridDataAdapter(grid, fireArray,highlight,  waterDrop)
             letterAdapter?.let {
                 letter_board.dataAdapter = it
             }

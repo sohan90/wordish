@@ -3,15 +3,13 @@ package com.conversant.app.wordish.custom
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Context
+import android.graphics.Canvas
 import android.graphics.Color
 import android.util.AttributeSet
 import android.view.animation.BounceInterpolator
 import androidx.core.animation.doOnEnd
 import com.conversant.app.wordish.R
-import com.conversant.app.wordish.commons.Direction
-import com.conversant.app.wordish.commons.Direction.Companion.fromLine
 import com.conversant.app.wordish.commons.GridIndex
-import com.conversant.app.wordish.commons.Util.getIndexLength
 import com.conversant.app.wordish.custom.StreakView.OnInteractionListener
 import com.conversant.app.wordish.custom.StreakView.SnapType.Companion.fromId
 import com.conversant.app.wordish.custom.StreakView.StreakLine
@@ -21,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
 /**
  * Created by abdularis on 26/06/17.
@@ -42,6 +41,9 @@ class LetterBoard @JvmOverloads constructor(
     attrs: AttributeSet? = null
 ) : CenterLayout(context, attrs), Observer {
 
+    private var isSameTile: Boolean = false
+    private var hashMap = LinkedHashMap<String, Int>()
+    private var endGridIndex: GridIndex = GridIndex(-1, -1)
     private var shrinkFire: Boolean = false
 
     val gridLineBackground: GridLine = GridLine(context)
@@ -53,8 +55,10 @@ class LetterBoard @JvmOverloads constructor(
     var selectionListener: OnLetterSelectionListener? = null
 
     init {
+
         init(context, attrs)
     }
+
 
     override fun update(observable: Observable, arg: Any) {
         if (observable == _dataAdapter) {
@@ -232,14 +236,41 @@ class LetterBoard @JvmOverloads constructor(
 
     private inner class StreakViewInteraction : OnInteractionListener {
         private fun getStringInRange(start: GridIndex, end: GridIndex): String {
-            val dir = fromLine(start, end)
-            if (dir === Direction.NONE) return ""
-            val count = getIndexLength(start, end)
-            val buff = CharArray(count)
-            for (i in 0 until count) {
-                buff[i] =
-                    _dataAdapter.getLetter(start.row + dir.yOffset * i, start.col + dir.xOffset * i)
+            if (end.row == endGridIndex.row && end.col == endGridIndex.col) {
+                isSameTile = true
+            } else {
+                isSameTile = false
+                endGridIndex = end.copy()
+                selectionListener?.onSelectionWord()
             }
+
+            val filterMap: Map<String, Int>?
+
+            val hashKey = "${end.row},${end.col}"
+
+            if (hashMap.containsKey(hashKey)) {
+                val value = hashMap[hashKey]!!
+                val inc = value + 1
+                hashMap[hashKey] = inc
+            } else {
+                hashMap[hashKey] = 1
+            }
+
+            filterMap = hashMap.filter { it.value > 3}
+            var buffCount = 0
+            val buff = CharArray(filterMap.size)
+
+            filterMap.forEach {
+                val rowCol = it.key.split(",")
+                if (buffCount == 0) {
+                    buff[buffCount] = _dataAdapter.getLetter(start.row, start.col)
+                }
+                val letter = _dataAdapter.getLetter(rowCol[0].toInt(), rowCol[1].toInt())
+                dataAdapter.initHighlight(rowCol[0].toInt(), rowCol[1].toInt(), true)
+                buff[buffCount] = letter
+                buffCount++
+            }
+
             return String(buff)
         }
 
@@ -270,7 +301,13 @@ class LetterBoard @JvmOverloads constructor(
                     }
                 }
 
+
                 it.onSelectionBegin(streakLine, str)
+
+                //reset the highlight tiles on release
+                val hashKey = "${idx.row},${idx.col}"
+                hashMap[hashKey] = 1
+                dataAdapter.initHighlight(idx.row, idx.col, true)
             }
         }
 
@@ -279,6 +316,8 @@ class LetterBoard @JvmOverloads constructor(
                 streakLine,
                 getStringInRange(streakLine.startIndex, streakLine.endIndex)
             )
+
+
         }
 
         override fun onTouchEnd(streakLine: StreakLine) {
@@ -287,9 +326,21 @@ class LetterBoard @JvmOverloads constructor(
                     val str = getStringInRange(streakLine.startIndex, streakLine.endIndex)
                     it.onSelectionEnd(streakLine, str)
                 }
-            } else{
+            } else {
                 popStreakLine()
             }
+
+
+            for (entry in hashMap) {
+                val rowCol = entry.key.split(",")
+                val row = rowCol[0].toInt()
+                val col = rowCol[1].toInt()
+                dataAdapter.initHighlight(row, col, false)
+            }
+
+            hashMap.clear()
+            endGridIndex.row = -1
+            endGridIndex.col = -1
         }
     }
 
@@ -367,6 +418,7 @@ class LetterBoard @JvmOverloads constructor(
         fun onSelectionDrag(streakLine: StreakLine, str: String)
         fun onSelectionEnd(streakLine: StreakLine, str: String)
         fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean)
+        fun onSelectionWord()
     }
 
     companion object {
@@ -376,5 +428,10 @@ class LetterBoard @JvmOverloads constructor(
         private const val DEFAULT_LINE_WIDTH_PIXEL = 2
         private const val DEFAULT_LETTER_SIZE_PIXEL = 32.0f
         private const val DEFAULT_STREAK_WIDTH_PIXEL = 35
+    }
+
+    override fun onDraw(canvas: Canvas?) {
+        super.onDraw(canvas)
+
     }
 }

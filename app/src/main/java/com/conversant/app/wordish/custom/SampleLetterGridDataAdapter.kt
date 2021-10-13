@@ -32,4 +32,11 @@ internal class SampleLetterGridDataAdapter(
 
     }
 
+    override fun highLight(row: Int, col: Int): Boolean {
+       return false
+    }
+
+    override fun initHighlight(row: Int, col: Int, select: Boolean) {
+
+    }
 }

@@ -1,22 +1,18 @@
 package com.conversant.app.wordish.custom
 
+import android.animation.ValueAnimator
 import android.content.Context
-import com.conversant.app.wordish.commons.math.Vec2.Companion.sub
-import com.conversant.app.wordish.commons.math.Vec2.Companion.normalize
-import android.graphics.RectF
-import android.view.MotionEvent
-import com.conversant.app.wordish.commons.math.Vec2
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
+import android.view.MotionEvent
 import android.view.View
+import android.view.animation.AccelerateInterpolator
 import com.conversant.app.wordish.R
-import com.conversant.app.wordish.custom.TouchProcessor.OnTouchProcessed
 import com.conversant.app.wordish.commons.GridIndex
+import com.conversant.app.wordish.commons.math.Vec2
+import com.conversant.app.wordish.commons.math.Vec2.Companion.normalize
 import com.conversant.app.wordish.commons.orZero
-import java.lang.IllegalArgumentException
+import com.conversant.app.wordish.custom.TouchProcessor.OnTouchProcessed
 import java.util.*
 import kotlin.math.acos
 import kotlin.math.max
@@ -47,9 +43,12 @@ class StreakView @JvmOverloads constructor(
         }
     }
 
+    private  var valueAnimator: ValueAnimator = ValueAnimator.ofInt(255, 0)
+    private var path: Path
     private val rect: RectF = RectF()
     private var streakLineWidth = DEFAULT_STREAK_LINE_WIDTH_PIXEL
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val linePaint: Paint = Paint()
     private var gridId = -1
     private var snapToGridType: SnapType = SnapType.NONE
     private val touchProcessor: TouchProcessor = TouchProcessor(OnTouchProcessedListener(), 3.0f)
@@ -87,6 +86,11 @@ class StreakView @JvmOverloads constructor(
             isRememberStreakLine = a.getBoolean(R.styleable.StreakView_rememberStreakLine, isRememberStreakLine)
             a.recycle()
         }
+        linePaint.color = Color.RED
+        linePaint.isAntiAlias = true
+        linePaint.strokeWidth = 5f
+        linePaint.style = Paint.Style.STROKE
+        path = Path()
     }
 
     fun setEnableOverrideStreakLineColor(enableOverrideStreakLineColor: Boolean) {
@@ -168,7 +172,8 @@ class StreakView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        for (line in lines) {
+        canvas.drawPath(path, linePaint)
+       /*  for (line in lines) {
             val v = sub(line.end, line.start)
             val length = v.length()
             var rot = Math.toDegrees(getRotation(v, Vec2.Right).toDouble())
@@ -182,9 +187,9 @@ class StreakView @JvmOverloads constructor(
                 paint.color = line.color
             }
             rect[line.start.x - halfWidth, line.start.y - halfWidth, line.start.x + length + halfWidth] = line.start.y + halfWidth
-            canvas.drawRoundRect(rect, halfWidth.toFloat(), halfWidth.toFloat(), paint)
+           // canvas.drawRoundRect(rect, halfWidth.toFloat(), halfWidth.toFloat(), paint)
             canvas.restore()
-        }
+        }*/
     }
 
     private fun getRotation(p1: Vec2, p2: Vec2): Float {
@@ -206,15 +211,12 @@ class StreakView @JvmOverloads constructor(
             line.startIndex.set(rowIdx, colIdx)
 
             if (snapToGridType != SnapType.NONE) {
-                val centerCol = grid?.getCenterColFromIndex(colIdx)?.toFloat() ?: 0f
-                val centerRow = grid?.getCenterRowFromIndex(rowIdx)?.toFloat() ?: 0f
 
-                line.start.set(centerCol, centerRow)
-                line.end.set(line.start.x, line.start.y)
             } else {
                 line.start.set(event.x, event.y)
                 line.end.set(event.x, event.y)
             }
+            path.moveTo(event.x, event.y)
             interactionListener?.onTouchBegin(line)
             invalidate()
         }
@@ -234,6 +236,7 @@ class StreakView @JvmOverloads constructor(
                 line.end.set(event.x, event.y)
             }
 
+            path.reset()
             interactionListener?.onTouchEnd(line)
             invalidate()
         }
@@ -246,7 +249,7 @@ class StreakView @JvmOverloads constructor(
             val rowIdx = grid?.getRowIndex(event.y.toInt()).orZero()
             line.endIndex.set(rowIdx, colIdx)
 
-            if (snapToGridType == SnapType.NONE) {
+            if (snapToGridType != SnapType.NONE) {
                 val centerCol = grid?.getCenterColFromIndex(colIdx)?.toFloat() ?: 0f
                 val centerRow = grid?.getCenterRowFromIndex(rowIdx)?.toFloat() ?: 0f
                 line.end.set(centerCol, centerRow)
@@ -254,13 +257,34 @@ class StreakView @JvmOverloads constructor(
                 val halfWidth = streakLineWidth / 2
                 val x = max(min(event.x, width - halfWidth.toFloat()), halfWidth.toFloat())
                 val y = max(min(event.y, height - halfWidth.toFloat()), halfWidth.toFloat())
-                Log.d("StreakViewActualXandY", "${event.x} ${event.y}")
-                Log.d("StreakViewXandY", "${x} ${y}")
                 line.end.set(event.x, event.y)
             }
-
+            if (!path.isEmpty) {
+                path.lineTo(event.x, event.y)
+            } else{
+                path.moveTo(event.x, event.y)
+                path.lineTo(event.x, event.y)
+            }
+            startPaintAnimation()
             interactionListener?.onTouchDrag(line)
             invalidate()
+        }
+    }
+
+    private fun startPaintAnimation() {
+        if (!valueAnimator.isRunning) {
+            valueAnimator.addUpdateListener {
+                val i = it.animatedValue as Int
+                linePaint.alpha = i
+                invalidate()
+                if (i == 0) {
+                    path.reset()
+                }
+            }
+
+            valueAnimator.duration = 2000
+            valueAnimator.interpolator = AccelerateInterpolator()
+            valueAnimator.start()
         }
     }
 

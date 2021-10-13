@@ -13,4 +13,6 @@ abstract class LetterGridDataAdapter : Observable() {
     abstract fun hasWaterDrop(row: Int, col: Int): Boolean
     abstract fun initWaterDrop(row: Int, col: Int, hasWater: Boolean)
     abstract fun initFire(row: Int, col: Int, hasFire:Boolean)
+    abstract fun highLight(row: Int, col: Int):Boolean
+    abstract fun initHighlight(row: Int, col: Int, select:Boolean)
 }

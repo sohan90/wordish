@@ -14,7 +14,7 @@ import javax.inject.Inject
 class SoundPlayer @Inject constructor(context: Context, private val mPreferences: Preferences) {
 
     enum class Sound {
-        Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets
+        Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight
     }
 
     private var soundPool: SoundPool = SoundPool(2, AudioManager.STREAM_MUSIC, 0)
@@ -58,6 +58,11 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
         soundPoolMap.put(
             Sound.Fire.ordinal,
             soundPool.load(context, R.raw.matches_fire, 1)
+        )
+
+        soundPoolMap.put(
+            Sound.Highlight.ordinal,
+            soundPool.load(context, R.raw.cell_highlight, 1)
         )
     }
 }

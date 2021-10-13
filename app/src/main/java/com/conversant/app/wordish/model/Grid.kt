@@ -1,7 +1,5 @@
 package com.conversant.app.wordish.model
 
-import com.conversant.app.wordish.commons.Util
-
 /**
  * Created by abdularis on 08/07/17.
  */
@@ -10,6 +8,9 @@ class Grid(rowCount: Int, colCount: Int) {
         private set
 
     var fireArray: Array<BooleanArray>
+        private set
+
+    var highlight: Array<BooleanArray>
         private set
 
     var waterDrop: Array<BooleanArray>
@@ -26,6 +27,7 @@ class Grid(rowCount: Int, colCount: Int) {
         array = Array(rowCount) { CharArray(colCount) }
         fireArray = Array(rowCount) { BooleanArray(colCount) }
         waterDrop = Array(rowCount) { BooleanArray(colCount) }
+        highlight = Array(rowCount) { BooleanArray(colCount) }
         reset()
 
     }

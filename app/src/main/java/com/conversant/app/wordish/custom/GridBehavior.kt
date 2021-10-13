@@ -72,7 +72,8 @@ abstract class GridBehavior @JvmOverloads constructor(
      * @return index column, dimana column >= 0 dan column < jumlah horizontal grid - 1
      */
     fun getColIndex(screenPos: Int): Int {
-        return max(min((screenPos - paddingLeft) / gridWidth, getColCount() - 1), 0)
+        val width = gridWidth
+        return max(min((screenPos - paddingLeft) / width, getColCount() - 1), 0)
     }
 
     /**
@@ -82,7 +83,8 @@ abstract class GridBehavior @JvmOverloads constructor(
      * @return index row, dimana row >= 0 dan row < jumlah vertical grid - 1
      */
     fun getRowIndex(screenPos: Int): Int {
-        return max(min((screenPos - paddingTop) / gridHeight, getRowCount() - 1), 0)
+        val heigh = gridHeight
+        return max(min((screenPos - paddingTop) / heigh, getRowCount() - 1), 0)
     }
 
     open fun getCenterColFromIndex(cIdx: Int): Int {

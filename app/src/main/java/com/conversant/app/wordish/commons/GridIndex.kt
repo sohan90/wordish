@@ -3,7 +3,7 @@ package com.conversant.app.wordish.commons
 /**
  * Created by abdularis on 29/06/17.
  */
-class GridIndex @JvmOverloads constructor(
+data class GridIndex @JvmOverloads constructor(
     @JvmField var row: Int = 0,
     @JvmField var col: Int = 0
 ) {

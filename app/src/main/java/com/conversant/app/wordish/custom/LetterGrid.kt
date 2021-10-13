@@ -2,7 +2,9 @@ package com.conversant.app.wordish.custom
 
 import android.content.Context
 import android.graphics.*
+import android.os.Build
 import android.util.AttributeSet
+import androidx.annotation.RequiresApi
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import com.conversant.app.wordish.R
@@ -23,6 +25,10 @@ class LetterGrid @JvmOverloads constructor(
     var bombCell = Array(6) { Array(6) { BombCell( 0f, false) } }
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private val roundCorner: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    private val highlightPaint = Paint()
 
     private val fireGif = mutableListOf<Bitmap>()
 
@@ -49,6 +55,17 @@ class LetterGrid @JvmOverloads constructor(
 
     init {
         init(context, attrs)
+        initPaintObject()
+    }
+
+    private fun initPaintObject() {
+        highlightPaint.color = Color.RED
+        highlightPaint.style = Paint.Style.FILL
+        highlightPaint.isAntiAlias = true
+
+        roundCorner.color = Color.GREEN
+        roundCorner.style = Paint.Style.STROKE
+
     }
 
     var letterSize: Float
@@ -119,6 +136,7 @@ class LetterGrid @JvmOverloads constructor(
         requestLayout()
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onDraw(canvas: Canvas) {
         val gridColCount = getColCount()
         val gridRowCount = getRowCount()
@@ -130,10 +148,14 @@ class LetterGrid @JvmOverloads constructor(
         var waterY = 0
         var waterX: Int
 
+        var cornerX = 0
+        var cornerY = 0
+
         // iterate and render all letters found in grid data adapter
         for (i in 0 until gridRowCount) {
             x = halfWidth + paddingLeft
             waterX = 0
+            cornerX = 0
             for (j in 0 until gridColCount) {
 
                 val letter = gridDataAdapter?.getLetter(i, j)
@@ -156,6 +178,13 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawBitmap(waterGif[waterGifIndex % 5], null, rect, paint)
                 }
 
+                val selected = gridDataAdapter?.highLight(i, j)
+                if (selected!!) {
+                    canvas.drawCircle(x.toFloat(), y.toFloat(), 50f, highlightPaint)
+                }
+
+
+
                 if (bombCell[i][j].animate) {
                     canvas.drawText(
                         letter.toString(),
@@ -168,11 +197,16 @@ class LetterGrid @JvmOverloads constructor(
                     )
                 }
 
+               /* canvas.drawRoundRect(cornerX.toFloat(), cornerY.toFloat(), gridWidth.toFloat(),
+                    gridHeight.toFloat(), 50f, 50f, roundCorner)*/
+
                 x += gridWidth
                 waterX += gridWidth
+                cornerX += gridWidth
             }
             y += gridHeight
             waterY += gridHeight
+            cornerY += gridHeight
 
         }
     }

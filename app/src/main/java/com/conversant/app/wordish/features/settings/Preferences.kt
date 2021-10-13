@@ -14,7 +14,7 @@ class Preferences @Inject constructor(
     private val preferences: SharedPreferences
 ) {
     fun showGridLine(): Boolean {
-        return preferences.getBoolean(KEY_SHOW_GRID_LINE, true)
+        return preferences.getBoolean(KEY_SHOW_GRID_LINE, false)
     }
 
     val snapToGrid: SnapType
