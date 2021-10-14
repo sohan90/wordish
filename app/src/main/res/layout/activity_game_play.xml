@@ -7,6 +7,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:animateLayoutChanges="true"
     android:orientation="vertical"
+    android:background="@drawable/wordish_bck"
     tools:context="com.conversant.app.wordish.features.gameplay.GamePlayActivity">
 
     <include
@@ -17,7 +18,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="match_parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout1">
 
@@ -41,6 +42,7 @@
                 tools:text="Loading Text..."/>
         </LinearLayout>
 
+
         <include layout="@layout/partial_game_content"/>
 
         <include
@@ -48,5 +50,198 @@
             android:visibility="gone"/>
 
     </FrameLayout>
+
+    <TextView
+        android:id="@+id/tv_turn_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/layout1"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textStyle="bold"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:text="Turns: "/>
+
+    <TextView
+        android:id="@+id/tv_turn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/tv_turn_title"
+        app:layout_constraintStart_toEndOf="@id/tv_turn_title"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_marginStart="10dp"
+        android:textColor="@android:color/white"
+        android:text="0"/>
+
+    <TextView
+        android:id="@+id/tv_word_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tv_turn_title"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textStyle="bold"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:text="Words:"/>
+
+    <TextView
+        android:id="@+id/tv_word"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/tv_word_title"
+        app:layout_constraintStart_toEndOf="@id/tv_word_title"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_marginStart="10dp"
+        android:textColor="@android:color/white"
+        android:text="0"/>
+
+    <TextView
+        android:id="@+id/tv_coin_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/tv_word_title"
+        app:layout_constraintStart_toStartOf="parent"
+        android:textStyle="bold"
+        android:layout_marginTop="10dp"
+        android:textSize="18sp"
+        android:textColor="@android:color/white"
+        android:text="Coins: "/>
+
+    <TextView
+        android:id="@+id/tv_coin"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@id/tv_coin_title"
+        app:layout_constraintStart_toEndOf="@id/tv_coin_title"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:layout_marginStart="10dp"
+        android:textColor="@android:color/white"
+        android:text="0"/>
+
+    <ImageView
+        android:id="@+id/iv_setting"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_baseline_settings_24"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_turn_title"
+        app:layout_constraintTop_toBottomOf="@id/layout1" />
+
+    <ImageView
+        android:id="@+id/iv_fire"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:layout_marginBottom="20dp"
+        android:src="@drawable/ic_baseline_local_fire_department_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/iv_bomb"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_fire_count"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/round_rect"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:text="3"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/iv_fire"
+        app:layout_constraintEnd_toEndOf="@+id/iv_fire"
+        app:layout_constraintStart_toStartOf="@+id/iv_fire"
+        app:layout_constraintTop_toTopOf="@+id/iv_fire" />
+
+    <ImageView
+        android:id="@+id/iv_bomb"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="5dp"
+        android:paddingEnd="2dp"
+        android:src="@drawable/ic_bomb"
+        app:layout_constraintBottom_toBottomOf="@id/iv_fire"
+        app:layout_constraintEnd_toStartOf="@+id/iv_water"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_fire" />
+
+    <ImageView
+        android:id="@+id/bomb"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="2dp"
+        android:visibility="invisible"
+        android:src="@drawable/ic_bomb"
+        app:layout_constraintBottom_toBottomOf="@id/iv_fire"
+        app:layout_constraintEnd_toStartOf="@+id/iv_water"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_fire" />
+
+    <ImageView
+        android:id="@+id/iv_water"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:src="@drawable/ic_baseline_water_drop_24"
+        app:layout_constraintBottom_toBottomOf="@id/iv_bomb"
+        app:layout_constraintEnd_toStartOf="@+id/iv_fire_plus"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_bomb" />
+
+    <ImageView
+        android:id="@+id/iv_fire_plus"
+        android:layout_width="49dp"
+        android:layout_height="50dp"
+        android:background="@drawable/round_rect"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:visibility="visible"
+        android:src="@drawable/ic_baseline_local_fire_department_24"
+        app:layout_constraintBottom_toBottomOf="@id/iv_water"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_water" />
+
+    <ImageView
+        android:id="@+id/iv_anim_fire"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:visibility="visible"
+        android:src="@drawable/frame_0_delay"
+        app:layout_constraintBottom_toBottomOf="@id/iv_water"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/iv_water"
+        app:layout_constraintTop_toTopOf="@+id/iv_fire_plus" />
+
+
+    <TextView
+        android:id="@+id/new_word_tv"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="new word"
+        android:textAllCaps="true"
+        android:textSize="@dimen/_28ssp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="@android:color/white"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

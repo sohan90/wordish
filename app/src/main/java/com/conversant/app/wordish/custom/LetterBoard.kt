@@ -46,7 +46,7 @@ class LetterBoard @JvmOverloads constructor(
     private var endGridIndex: GridIndex = GridIndex(-1, -1)
     private var shrinkFire: Boolean = false
 
-    val gridLineBackground: GridLine = GridLine(context)
+    private val gridLineBackground: GridLine = GridLine(context)
     val streakView: StreakView = StreakView(context)
     val letterGrid: LetterGrid = LetterGrid(context)
     private var initialized = false

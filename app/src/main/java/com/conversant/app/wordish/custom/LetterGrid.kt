@@ -26,7 +26,7 @@ class LetterGrid @JvmOverloads constructor(
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    private val roundCorner: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val roundCorner: Paint = Paint()
 
     private val highlightPaint = Paint()
 
@@ -65,6 +65,8 @@ class LetterGrid @JvmOverloads constructor(
 
         roundCorner.color = Color.GREEN
         roundCorner.style = Paint.Style.STROKE
+        roundCorner.strokeWidth = 5f
+        roundCorner.isAntiAlias = true
 
     }
 
@@ -161,6 +163,42 @@ class LetterGrid @JvmOverloads constructor(
                 val letter = gridDataAdapter?.getLetter(i, j)
                 paint.getTextBounds(letter.toString(), 0, 1, charBounds)
 
+                val selected = gridDataAdapter?.highLight(i, j)
+                if (selected!!) {
+                    //canvas.drawCircle(x.toFloat(), y.toFloat(), 50f, highlightPaint)
+                    highlightPaint.color = Color.RED
+                    canvas.drawRoundRect(
+                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
+                        cornerY +gridHeight.toFloat(), 30f, 30f, highlightPaint
+                    )
+                } else{
+
+                    highlightPaint.color = Color.BLACK//Color.parseColor("#D8BD96")
+                    canvas.drawRoundRect(
+                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
+                        cornerY +gridHeight.toFloat(), 30f, 30f, highlightPaint
+                    )
+                }
+
+
+                //border color
+                canvas.drawRoundRect(
+                    cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
+                    cornerY +gridHeight.toFloat(), 30f, 30f, roundCorner
+                )
+
+                if (bombCell[i][j].animate) {
+                    canvas.drawText(
+                        letter.toString(),
+                        bombCell[i][j].xAxix, y - charBounds.exactCenterY(), paint
+                    )
+                } else {
+                    canvas.drawText(
+                        letter.toString(),
+                        x - charBounds.exactCenterX(), y - charBounds.exactCenterY(), paint
+                    )
+                }
+
                 if (gridDataAdapter?.hasFire(i, j) == true) {
                     rect.left = x
                     rect.top = y - 20
@@ -178,31 +216,11 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawBitmap(waterGif[waterGifIndex % 5], null, rect, paint)
                 }
 
-                val selected = gridDataAdapter?.highLight(i, j)
-                if (selected!!) {
-                    canvas.drawCircle(x.toFloat(), y.toFloat(), 50f, highlightPaint)
-                }
-
-
-
-                if (bombCell[i][j].animate) {
-                    canvas.drawText(
-                        letter.toString(),
-                        bombCell[i][j].xAxix, y - charBounds.exactCenterY(), paint
-                    )
-                } else {
-                    canvas.drawText(
-                        letter.toString(),
-                        x - charBounds.exactCenterX(), y - charBounds.exactCenterY(), paint
-                    )
-                }
-
-               /* canvas.drawRoundRect(cornerX.toFloat(), cornerY.toFloat(), gridWidth.toFloat(),
-                    gridHeight.toFloat(), 50f, 50f, roundCorner)*/
-
                 x += gridWidth
                 waterX += gridWidth
                 cornerX += gridWidth
+
+
             }
             y += gridHeight
             waterY += gridHeight

@@ -5,7 +5,6 @@
     android:id="@+id/content_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/wordish_bck"
     android:orientation="vertical">
 
     <ScrollView
@@ -81,16 +80,16 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginBottom="@dimen/_4sdp"
-        android:background="@android:color/black"
         android:visibility="visible"
         app:gridColumnCount="6"
         app:gridHeight="@dimen/_31sdp"
-        app:gridLineVisibility="true"
+        app:gridLineVisibility="false"
         app:gridRowCount="6"
-        app:gridWidth="@dimen/_31sdp"
+        app:gridWidth="@dimen/_35sdp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:letterColor="@android:color/white"
         app:letterSize="@dimen/_14ssp"
         app:lineColor="@android:color/white"
@@ -128,116 +127,6 @@
         app:layout_constraintTop_toBottomOf="@id/scrollView2" />
 
 
-    <ImageView
-        android:id="@+id/iv_fire"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:background="@drawable/round_rect"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:layout_marginBottom="20dp"
-        android:src="@drawable/ic_baseline_local_fire_department_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/iv_bomb"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintHorizontal_chainStyle="spread"
-        app:layout_constraintStart_toStartOf="parent" />
 
-    <TextView
-        android:id="@+id/tv_fire_count"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="30dp"
-        android:background="@drawable/round_rect"
-        android:backgroundTint="@color/colorPrimaryDark"
-        android:text="3"
-        android:gravity="center"
-        android:textColor="@android:color/white"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/iv_fire"
-        app:layout_constraintEnd_toEndOf="@+id/iv_fire"
-        app:layout_constraintStart_toStartOf="@+id/iv_fire"
-        app:layout_constraintTop_toTopOf="@+id/iv_fire" />
-
-    <ImageView
-        android:id="@+id/iv_bomb"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:background="@drawable/round_rect"
-        android:paddingStart="5dp"
-        android:paddingEnd="2dp"
-        android:src="@drawable/ic_bomb"
-        app:layout_constraintBottom_toBottomOf="@id/iv_fire"
-        app:layout_constraintEnd_toStartOf="@+id/iv_water"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/iv_fire" />
-
-    <ImageView
-        android:id="@+id/bomb"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:paddingStart="5dp"
-        android:paddingEnd="2dp"
-        android:visibility="invisible"
-        android:src="@drawable/ic_bomb"
-        app:layout_constraintBottom_toBottomOf="@id/iv_fire"
-        app:layout_constraintEnd_toStartOf="@+id/iv_water"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/iv_fire" />
-
-    <ImageView
-        android:id="@+id/iv_water"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:background="@drawable/round_rect"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:src="@drawable/ic_baseline_water_drop_24"
-        app:layout_constraintBottom_toBottomOf="@id/iv_bomb"
-        app:layout_constraintEnd_toStartOf="@+id/iv_fire_plus"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/iv_bomb" />
-
-    <ImageView
-        android:id="@+id/iv_fire_plus"
-        android:layout_width="49dp"
-        android:layout_height="50dp"
-        android:background="@drawable/round_rect"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:visibility="visible"
-        android:src="@drawable/ic_baseline_local_fire_department_24"
-        app:layout_constraintBottom_toBottomOf="@id/iv_water"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/iv_water" />
-
-    <ImageView
-        android:id="@+id/iv_anim_fire"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:visibility="visible"
-        android:src="@drawable/frame_0_delay"
-        app:layout_constraintBottom_toBottomOf="@id/iv_water"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/iv_water"
-        app:layout_constraintTop_toTopOf="@+id/iv_fire_plus" />
-
-
-    <TextView
-        android:id="@+id/new_word_tv"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="new word"
-        android:textAllCaps="true"
-        android:textSize="@dimen/_28ssp"
-        android:visibility="invisible"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:textColor="@android:color/white"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -17,7 +17,6 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
-import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.viewModels
@@ -159,7 +158,7 @@ class GamePlayActivity : FullscreenActivity() {
         updateFireTxt(rowColListPair.size)
     }
 
-    private fun animateFireMove(v: ImageView, targetX: Float, targetY: Float) {
+    private fun animateFireMove(v: View, targetX: Float, targetY: Float) {
         val animSetXY = AnimatorSet()
         val x: ObjectAnimator = ObjectAnimator.ofFloat(v, "x", v.x, targetX)
 
@@ -274,7 +273,7 @@ class GamePlayActivity : FullscreenActivity() {
             col =   pair.second
 
             val cellX = letter_board.streakView.grid?.getCenterColFromIndex(col)!!.toFloat()
-            val cellY = letter_board.streakView.grid?.getCenterRowFromIndex(row)!!.toFloat()
+            val cellY = letter_board.streakView.grid?.getCenterRowFromIndex(row)!!.toFloat() + letter_board.y
 
             animateFireMove(iv_anim_fire, cellX - 30, cellY - 40)
 
@@ -378,9 +377,9 @@ class GamePlayActivity : FullscreenActivity() {
             val col = streakLine.startIndex.col
 
             val X = letter_board.streakView.grid?.getCenterColFromIndex(col)?.toFloat()
-            val Y = letter_board.streakView.grid?.getCenterRowFromIndex(row)?.toFloat()
+            val Y = letter_board.streakView.grid?.getCenterRowFromIndex(row)?.toFloat()!! + letter_board.y
 
-            animateFireMove(bomb, X!!, Y!!)
+            animateFireMove(bomb, X!! - 50, Y - 100)
         }
     }
 

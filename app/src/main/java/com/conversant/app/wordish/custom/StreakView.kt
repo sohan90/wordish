@@ -10,11 +10,9 @@ import android.view.animation.AccelerateInterpolator
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.commons.GridIndex
 import com.conversant.app.wordish.commons.math.Vec2
-import com.conversant.app.wordish.commons.math.Vec2.Companion.normalize
 import com.conversant.app.wordish.commons.orZero
 import com.conversant.app.wordish.custom.TouchProcessor.OnTouchProcessed
 import java.util.*
-import kotlin.math.acos
 import kotlin.math.max
 import kotlin.math.min
 
@@ -173,28 +171,6 @@ class StreakView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         canvas.drawPath(path, linePaint)
-       /*  for (line in lines) {
-            val v = sub(line.end, line.start)
-            val length = v.length()
-            var rot = Math.toDegrees(getRotation(v, Vec2.Right).toDouble())
-            if (v.y < 0) rot = -rot
-            canvas.save()
-            if (!java.lang.Double.isNaN(rot)) canvas.rotate(rot.toFloat(), line.start.x, line.start.y)
-            val halfWidth = streakLineWidth / 2
-            if (_enableOverrideStreakLineColor) {
-                paint.color = _overrideStreakLineColor
-            } else {
-                paint.color = line.color
-            }
-            rect[line.start.x - halfWidth, line.start.y - halfWidth, line.start.x + length + halfWidth] = line.start.y + halfWidth
-           // canvas.drawRoundRect(rect, halfWidth.toFloat(), halfWidth.toFloat(), paint)
-            canvas.restore()
-        }*/
-    }
-
-    private fun getRotation(p1: Vec2, p2: Vec2): Float {
-        val dot = normalize(p1).dot(normalize(p2))
-        return acos(dot.toDouble()).toFloat()
     }
 
     private inner class OnTouchProcessedListener : OnTouchProcessed {
@@ -211,7 +187,11 @@ class StreakView @JvmOverloads constructor(
             line.startIndex.set(rowIdx, colIdx)
 
             if (snapToGridType != SnapType.NONE) {
+                val centerCol = grid?.getCenterColFromIndex(colIdx)?.toFloat() ?: 0f
+                val centerRow = grid?.getCenterRowFromIndex(rowIdx)?.toFloat() ?: 0f
 
+                line.start.set(centerCol, centerRow)
+                line.end.set(event.x, event.y)
             } else {
                 line.start.set(event.x, event.y)
                 line.end.set(event.x, event.y)
