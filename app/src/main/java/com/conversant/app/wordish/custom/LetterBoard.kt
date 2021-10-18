@@ -33,9 +33,6 @@ import kotlin.collections.LinkedHashMap
  * yang akan dirender paling atas
  */
 
-const val LEFT: Int = 0
-const val RIGHT: Int = 100
-
 class LetterBoard @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -397,7 +394,7 @@ class LetterBoard @JvmOverloads constructor(
                     animationDir = 1
                     -100f
                 } else {
-                    width.toFloat()
+                  width.toFloat()
                 }
 
                 val cellX = streakView.grid!!.getCenterColFromIndex(j).toFloat()

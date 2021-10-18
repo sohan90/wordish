@@ -329,11 +329,6 @@ class GamePlayActivity : FullscreenActivity() {
             }
 
             override fun onSelectionEnd(streakLine: StreakLine, str: String) {
-               /* viewModel.answerWord(
-                    str,
-                    STREAK_LINE_MAPPER.revMap(streakLine),
-                    preferences.reverseMatching()
-                )*/
                 endStreakLine = streakLine
                 viewModel.answerWord(str, streakLine, preferences.reverseMatching())
                 text_selection_layout.gone()
