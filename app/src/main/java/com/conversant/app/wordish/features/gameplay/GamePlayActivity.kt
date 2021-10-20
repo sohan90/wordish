@@ -219,9 +219,6 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun resetNewCharacters(colCount: Int) {
-      /* Util.replaceNewWordForExplode(endStreakLine.endIndex.col, letterAdapter!!.backedGrid,
-           letterGrid = letter_board.letterGrid)*/
-
         val newCharList = Util.getNewCharList()
         new_word_tv.text = newCharList.joinToString(separator = ",")
         animateNewWord(newCharList, colCount)

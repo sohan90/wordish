@@ -21,18 +21,6 @@ import kotlinx.coroutines.launch
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
-/**
- * Created by abdularis on 26/06/17.
- *
- * Compound view untuk wsp game
- * yang memiliki tiga layer yaitu
- * - GridLine sebagai background
- * - StreakView sebagai middleground jadi akan dirender diatas background
- * dan dibawah foreground
- * - LetterGrid sebagai foreground yang menampilkan letters (huruf-huruf)
- * yang akan dirender paling atas
- */
-
 class LetterBoard @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null
@@ -59,13 +47,10 @@ class LetterBoard @JvmOverloads constructor(
 
     override fun update(observable: Observable, arg: Any) {
         if (observable == _dataAdapter) {
-            // ketika data grid berubah maka update row dan column count
-            // dari grid line agar memiliki dimensi yang sama
+
             gridLineBackground.setColCount(_dataAdapter.getColCount())
             gridLineBackground.setRowCount(_dataAdapter.getRowCount())
 
-            // ketika dimensi row dan column dari data grid berubah
-            // maka harus di layout/dikalkulasikan kembali ukuran dari streak view
             streakView.invalidate()
             streakView.requestLayout()
         }
@@ -356,14 +341,19 @@ class LetterBoard @JvmOverloads constructor(
         valueAnimator.addUpdateListener { animIt ->
 
             var propertyNameIndex = 0
+            var propertyCellIndex = 100
+
             for (i in 0..5) {
                 for (j in colEnd - 1..colEnd) {
 
                     propertyNameIndex++
+                    propertyCellIndex--
                     val value: Float = animIt.getAnimatedValue("$propertyNameIndex") as Float
+                    val value2: Float = animIt.getAnimatedValue("$propertyCellIndex") as Float
 
                     letterGrid.bombCell[i][j].animate = true
                     letterGrid.bombCell[i][j].xAxix = value
+                    letterGrid.bombCell[i][j].cellYaxis = value2
                     letterGrid.explodeCells()
                 }
             }
@@ -373,6 +363,7 @@ class LetterBoard @JvmOverloads constructor(
         valueAnimator.start()
     }
 
+
     private fun generateBombCells(streakLine: StreakLine): List<PropertyValuesHolder> {
         val col = streakLine.startIndex.col
 
@@ -381,6 +372,7 @@ class LetterBoard @JvmOverloads constructor(
 
         val propertyValueList = arrayListOf<PropertyValuesHolder>()
         var propertyNameIndex = 0
+        var propertyCellIndex = 100
 
         for (i in 0..5) {
 
@@ -389,6 +381,7 @@ class LetterBoard @JvmOverloads constructor(
             for (j in colEnd - 1..colEnd) {
 
                 propertyNameIndex++
+                propertyCellIndex --
 
                 val xAxis = if (animationDir == 0) {
                     animationDir = 1
@@ -399,7 +392,9 @@ class LetterBoard @JvmOverloads constructor(
 
                 val cellX = streakView.grid!!.getCenterColFromIndex(j).toFloat()
                 val propertyAnim = PropertyValuesHolder.ofFloat("$propertyNameIndex", cellX, xAxis)
+                val propertyAnim2 = PropertyValuesHolder.ofFloat("$propertyCellIndex", -100f, 0f)
                 propertyValueList.add(propertyAnim)
+                propertyValueList.add(propertyAnim2)
 
                 letterGrid.bombCell[i][j].animate = true
                 letterGrid.bombCell[i][j].xAxix = xAxis

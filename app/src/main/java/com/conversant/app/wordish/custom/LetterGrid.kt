@@ -2,27 +2,21 @@ package com.conversant.app.wordish.custom
 
 import android.content.Context
 import android.graphics.*
-import android.os.Build
 import android.util.AttributeSet
-import androidx.annotation.RequiresApi
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.commons.orZero
 import java.util.*
+import kotlin.math.abs
 
-/**
- * Created by abdularis on 22/06/17.
- *
- * Render grid of letters
- */
 class LetterGrid @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     var letterBoardListener: LetterBoard.OnLetterSelectionListener? = null
 ) : GridBehavior(context, attrs), Observer {
 
-    var bombCell = Array(6) { Array(6) { BombCell(0f, false) } }
+    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f,false) } }
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -143,7 +137,6 @@ class LetterGrid @JvmOverloads constructor(
         requestLayout()
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onDraw(canvas: Canvas) {
         val gridColCount = getColCount()
         val gridRowCount = getRowCount()
@@ -162,9 +155,12 @@ class LetterGrid @JvmOverloads constructor(
         for (i in 0 until gridRowCount) {
             cornerX = 0
             for (j in 0 until gridColCount) {
-                canvas.drawRoundRect(
-                    cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
-                    cornerY + gridHeight.toFloat(), 30f, 30f, backgroundColor)
+                if (!bombCell[i][j].animate) {
+                    canvas.drawRoundRect(
+                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
+                        cornerY + gridHeight.toFloat(), 30f, 30f, backgroundColor
+                    )
+                }
                 cornerX += gridWidth
             }
             cornerY += gridHeight
@@ -193,12 +189,25 @@ class LetterGrid @JvmOverloads constructor(
                     )
                 }
 
-                //border color
-                roundCornerPaint.setShadowLayer(20f, 0f, 0f, Color.GRAY)
-                canvas.drawRoundRect(
-                    cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
-                    cornerY + gridHeight.toFloat(), 30f, 30f, roundCornerPaint
-                )
+                //during bomb explode animation draw background and border again for size change
+                if (bombCell[i][j].animate) {
+                    val value = abs(bombCell[i][j].cellYaxis)
+                    canvas.drawRoundRect(
+                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
+                        cornerY + gridHeight.toFloat() - value, 30f, 30f, backgroundColor
+                    )
+
+                    canvas.drawRoundRect(
+                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
+                        cornerY + gridHeight.toFloat() - value, 30f, 30f, roundCornerPaint)
+                } else {
+                    //border color since background cell already drawn in the background
+                    roundCornerPaint.setShadowLayer(20f, 0f, 0f, Color.GRAY)
+                    canvas.drawRoundRect(
+                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
+                        cornerY + gridHeight.toFloat(), 30f, 30f, roundCornerPaint
+                    )
+                }
 
                 if (bombCell[i][j].animate) {
                     canvas.drawText(
