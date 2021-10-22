@@ -26,6 +26,7 @@ import java.util.*
 import javax.inject.Inject
 import kotlin.math.max
 
+const val MINIMUM_LENGTH  = 4
 class GamePlayViewModel @Inject constructor(
     private val gameDataSource: GameDataSource,
     private val wordDataSource: WordDataSource,
@@ -252,15 +253,18 @@ class GamePlayViewModel @Inject constructor(
         var correctWord:String? = null
         var correct = false
 
-        val answerStrRev = Util.getReverseString(answerStr)
-        for (word in currentGameData?.wordsList.orEmpty()) {
+        if (answerStr.length >= MINIMUM_LENGTH) {
+            val answerStrRev = Util.getReverseString(answerStr)
+            for (word in currentGameData?.wordsList.orEmpty()) {
 
-            val dictionaryWord = word.string
-            if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
-                dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching) {
-                correctWord = dictionaryWord
-                correct = true
-                break
+                val dictionaryWord = word.string
+                if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
+                    dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching
+                ) {
+                    correctWord = dictionaryWord
+                    correct = true
+                    break
+                }
             }
         }
 

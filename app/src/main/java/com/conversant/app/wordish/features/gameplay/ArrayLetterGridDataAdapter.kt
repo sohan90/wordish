@@ -8,8 +8,9 @@ import com.conversant.app.wordish.custom.LetterGridDataAdapter
 class ArrayLetterGridDataAdapter internal constructor(
     var backedGrid: Array<CharArray>,
     val fireList:Array<BooleanArray> = emptyArray(),
-    val highlight:Array<BooleanArray> = emptyArray(),
-    private val waterDrop:Array<BooleanArray> = emptyArray()
+    private val highlight:Array<BooleanArray> = emptyArray(),
+    private val waterDrop:Array<BooleanArray> = emptyArray(),
+    var completedCell:Array<BooleanArray> = emptyArray()
 
 ) : LetterGridDataAdapter() {
 
@@ -57,5 +58,13 @@ class ArrayLetterGridDataAdapter internal constructor(
 
     override fun initHighlight(row: Int, col: Int, select: Boolean) {
         highlight[row][col] = select
+    }
+
+    override fun initCompletedCell(row: Int, col: Int, select: Boolean) {
+        completedCell[row][col] = select
+    }
+
+    override fun completedCell(row: Int, col: Int): Boolean {
+        return  completedCell[row][col]
     }
 }

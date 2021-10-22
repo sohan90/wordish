@@ -36,7 +36,11 @@ internal class SampleLetterGridDataAdapter(
        return false
     }
 
-    override fun initHighlight(row: Int, col: Int, select: Boolean) {
+    override fun initHighlight(row: Int, col: Int, select: Boolean) {}
 
-    }
+    override fun initCompletedCell(row: Int, col: Int, select: Boolean) {}
+
+    override fun completedCell(row: Int, col: Int): Boolean {return false}
+
+
 }

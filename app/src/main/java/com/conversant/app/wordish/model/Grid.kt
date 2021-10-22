@@ -13,6 +13,9 @@ class Grid(rowCount: Int, colCount: Int) {
     var highlight: Array<BooleanArray>
         private set
 
+    var completedCellHighlight: Array<BooleanArray>
+        private set
+
     var waterDrop: Array<BooleanArray>
         private set
 
@@ -28,6 +31,7 @@ class Grid(rowCount: Int, colCount: Int) {
         fireArray = Array(rowCount) { BooleanArray(colCount) }
         waterDrop = Array(rowCount) { BooleanArray(colCount) }
         highlight = Array(rowCount) { BooleanArray(colCount) }
+        completedCellHighlight = Array(rowCount) { BooleanArray(colCount) }
         reset()
 
     }

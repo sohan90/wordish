@@ -335,9 +335,7 @@ class LetterBoard @JvmOverloads constructor(
         val col = streakLine.startIndex.col
         val colEnd = if (col == 0) col + 1 else col
 
-        valueAnimator.doOnEnd {
-            //todo update cells with new data
-        }
+        valueAnimator.doOnEnd {}
         valueAnimator.addUpdateListener { animIt ->
 
             var propertyNameIndex = 0
@@ -348,6 +346,7 @@ class LetterBoard @JvmOverloads constructor(
 
                     propertyNameIndex++
                     propertyCellIndex--
+
                     val value: Float = animIt.getAnimatedValue("$propertyNameIndex") as Float
                     val value2: Float = animIt.getAnimatedValue("$propertyCellIndex") as Float
 

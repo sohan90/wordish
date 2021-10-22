@@ -81,7 +81,9 @@ object Util {
 
     fun replaceNewWordForCorrectWord(
         streakView: StreakView.StreakLine,
-        adapterData: Array<CharArray>
+        adapterData: Array<CharArray>,
+        completedCell: Array<BooleanArray>,
+        fireList: Array<BooleanArray>
     ) {
         val startRow = streakView.startIndex.row
         val endRow = streakView.endIndex.row
@@ -116,6 +118,8 @@ object Util {
             row = if (rowIterator.hasNext()) rowIterator.nextInt() else row
             col = if (colIterator.hasNext()) colIterator.nextInt() else col
             adapterData[row][col] = randomChar
+            completedCell[row][col] = true
+            fireList[row][col] = false
             count++
         }
     }

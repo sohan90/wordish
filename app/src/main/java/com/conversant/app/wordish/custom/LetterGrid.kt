@@ -16,11 +16,13 @@ class LetterGrid @JvmOverloads constructor(
     var letterBoardListener: LetterBoard.OnLetterSelectionListener? = null
 ) : GridBehavior(context, attrs), Observer {
 
-    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f,false) } }
+    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false) } }
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
     private val roundCornerPaint: Paint = Paint()
+
+    private val roundCornerRedPaint: Paint = Paint()
 
     private val highlightPaint = Paint()
 
@@ -68,6 +70,11 @@ class LetterGrid @JvmOverloads constructor(
         roundCornerPaint.style = Paint.Style.STROKE
         roundCornerPaint.strokeWidth = 5f
         roundCornerPaint.isAntiAlias = true
+
+        roundCornerRedPaint.color = Color.CYAN
+        roundCornerRedPaint.style = Paint.Style.STROKE
+        roundCornerRedPaint.strokeWidth = 5f
+        roundCornerRedPaint.isAntiAlias = true
 
     }
 
@@ -180,8 +187,8 @@ class LetterGrid @JvmOverloads constructor(
                 paint.getTextBounds(letter.toString(), 0, 1, charBounds)
 
                 //highlight or selected cell color
-                val selected = gridDataAdapter?.highLight(i, j)
-                if (selected!!) {
+                val selected = gridDataAdapter?.highLight(i, j)!!
+                if (selected) {
                     highlightPaint.color = Color.RED
                     canvas.drawRoundRect(
                         cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
@@ -197,15 +204,18 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY + gridHeight.toFloat() - value, 30f, 30f, backgroundColor
                     )
 
+                    val paint = if (gridDataAdapter!!.completedCell(i, j)) roundCornerRedPaint else roundCornerPaint
                     canvas.drawRoundRect(
                         cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
-                        cornerY + gridHeight.toFloat() - value, 30f, 30f, roundCornerPaint)
+                        cornerY + gridHeight.toFloat() - value, 30f, 30f, paint
+                    )
+
                 } else {
                     //border color since background cell already drawn in the background
-                    roundCornerPaint.setShadowLayer(20f, 0f, 0f, Color.GRAY)
+                    val paint = if (gridDataAdapter!!.completedCell(i, j)) roundCornerRedPaint else roundCornerPaint
                     canvas.drawRoundRect(
                         cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat(),
-                        cornerY + gridHeight.toFloat(), 30f, 30f, roundCornerPaint
+                        cornerY + gridHeight.toFloat(), 30f, 30f, paint
                     )
                 }
 
@@ -217,7 +227,7 @@ class LetterGrid @JvmOverloads constructor(
                 } else {
                     canvas.drawText(
                         letter.toString(),
-                        (x - charBounds.exactCenterX()), (y - charBounds.exactCenterY()) , paint
+                        (x - charBounds.exactCenterX()), (y - charBounds.exactCenterY()), paint
                     )
                 }
 

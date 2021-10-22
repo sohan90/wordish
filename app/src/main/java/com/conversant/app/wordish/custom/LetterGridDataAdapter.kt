@@ -15,4 +15,6 @@ abstract class LetterGridDataAdapter : Observable() {
     abstract fun initFire(row: Int, col: Int, hasFire:Boolean)
     abstract fun highLight(row: Int, col: Int):Boolean
     abstract fun initHighlight(row: Int, col: Int, select:Boolean)
+    abstract fun initCompletedCell(row: Int, col: Int, select:Boolean)
+    abstract fun completedCell(row: Int, col: Int):Boolean
 }

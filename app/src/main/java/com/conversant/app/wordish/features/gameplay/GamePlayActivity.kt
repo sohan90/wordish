@@ -10,6 +10,7 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -17,10 +18,12 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
+import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -46,15 +49,11 @@ import javax.inject.Inject
 
 class GamePlayActivity : FullscreenActivity() {
 
+    private var fireViewList = mutableListOf<View>()
+
     private lateinit var endStreakLine: StreakLine
 
     private lateinit var beginStreakLine: StreakLine
-
-    private var row: Int = 0
-
-    private var col: Int = 0
-
-    private var fireAddedOnTilesCount: Int = 0
 
     private var clickedState: Boolean = false
 
@@ -108,14 +107,52 @@ class GamePlayActivity : FullscreenActivity() {
         initViewModel()
         initClickListener()
         loadOrGenerateNewGame()
-        createRowColListForFireMoveAnim()
-        Handler().postDelayed({
-             animateFireMove()
-        }, 2000)
+    }
+
+    private fun addFireView(fireCount: Int) {
+        val constraintLayout = parent_layout
+        val constraintSet = ConstraintSet()
+
+        fireViewList.forEach {
+            constraintLayout.removeView(it)
+        }
+
+        fireViewList.clear()
+
+        for (i in 0 until fireCount) {
+            val imageView = ImageView(this)
+            imageView.visibility = View.INVISIBLE
+            fireViewList.add(imageView)
+
+            imageView.id = View.generateViewId()
+            imageView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.frame_0_delay))
+            val size = resources.getDimension(R.dimen.bomb_width_height)
+            val layoutParams = ConstraintLayout.LayoutParams(size.toInt(), size.toInt())
+            imageView.layoutParams = layoutParams
+
+            constraintLayout.addView(imageView)
+
+            constraintSet.clone(constraintLayout)
+            constraintSet.connect(
+                imageView.id,
+                ConstraintSet.BOTTOM,
+                iv_water.id,
+                ConstraintSet.BOTTOM
+            )
+            constraintSet.connect(imageView.id, ConstraintSet.START, iv_water.id, ConstraintSet.END)
+            constraintSet.connect(
+                imageView.id,
+                ConstraintSet.END,
+                constraintLayout.id,
+                ConstraintSet.END
+            )
+
+            constraintSet.applyTo(constraintLayout)
+        }
 
     }
 
-    private fun animateNewWord(newCharList: List<Char>, colCount:Int) {
+    private fun animateNewWord(newCharList: List<Char>, colCount: Int) {
         val animation = AnimationUtils.loadAnimation(this, R.anim.new_words_text)
         new_word_tv.visible()
         animation.interpolator = DecelerateInterpolator()
@@ -131,13 +168,23 @@ class GamePlayActivity : FullscreenActivity() {
                 val colEnd = if (col == 0) col + 1 else col
 
                 if (colCount == 1) {
-                    Util.replaceNewWordForRow(newCharList, colEnd - 1,
-                        letter_board.letterGrid, letterAdapter!!.backedGrid)
+                    Util.replaceNewWordForRow(
+                        newCharList, colEnd - 1,
+                        letter_board.letterGrid, letterAdapter!!.backedGrid
+                    )
 
                     resetNewCharacters(2)
                 } else {
-                    Util.replaceNewWordForRow(newCharList, colEnd,
+                    Util.replaceNewWordForRow(
+                        newCharList, colEnd,
                         letter_board.letterGrid, letterAdapter!!.backedGrid)
+
+                    for (i in 0..5){
+                        for (j in colEnd - 1..colEnd){
+                            letterAdapter!!.initFire(i, j , true)
+                        }
+                    }
+                    updateFireCountTxt(letterAdapter!!.fireList)
                 }
 
             }
@@ -145,20 +192,42 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
-    private fun createRowColListForFireMoveAnim() {
-        val list = mutableListOf(0,1,2,3,4,5)
-        for (i in 0..2) {
-            val first = list.shuffled().take(1)[0]
-            val second = list.shuffled().take(1)[0]
-            val pair = Pair(first, second)
+    private fun createRowColListForFireMoveAnim(fireCount: Int) {
+        val rowList = mutableListOf(0, 1, 2, 3, 4, 5)
+        val colList = mutableListOf(5,4,3,2,1,0)
+        for (i in 0 until fireCount) {
+            val pair = createRowColList(rowList, colList)
             rowColListPair.add(pair)
 
-            list.remove(first)// to get unique random number
+            rowList.remove(pair.first) // to get unique random number
+            colList.remove(pair.first)
         }
-        updateFireTxt(rowColListPair.size)
     }
 
-    private fun animateFireMove(v: View, targetX: Float, targetY: Float) {
+    private fun createRowColList(rowList:List<Int>, colList:List<Int>): Pair<Int, Int> {
+        val first = rowList.shuffled().take(1)[0]
+        val second = colList.shuffled().take(1)[0]
+        val pair = Pair(first, second)
+
+        val fireCountOnBoard = tv_fire_count.text.toString() ?: ""
+        if (letterAdapter!!.fireList[first][second] &&
+            fireCountOnBoard != "36"
+        ) {
+            createRowColList(rowList, colList)
+        } else {
+            return pair
+        }
+
+        return pair
+    }
+
+    private fun animateFireMove(
+        v: View,
+        targetX: Float,
+        targetY: Float,
+        row: Int = 0,
+        col: Int = 0
+    ) {
         val animSetXY = AnimatorSet()
         val x: ObjectAnimator = ObjectAnimator.ofFloat(v, "x", v.x, targetX)
 
@@ -175,11 +244,15 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationEnd(animation: Animator?) {
                 if (iv_bomb.scaleX != 1.2f) {
                     letterAdapter!!.fireList[row][col] = true
-                    animateFireMove()
+                    updateFireCountTxt(letterAdapter!!.fireList)
+                    v.x = iv_fire_plus.x
+                    v.y = iv_fire_plus.y
+                    v.visibility = View.INVISIBLE
                 } else {
                     // bomb activated
                     explodeBomb()
                     soundPlayer.play(SoundPlayer.Sound.Bomb)
+                    disableOrEnableOtherPowerUps(1f, iv_bomb)
                 }
             }
         })
@@ -261,24 +334,21 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun animateFireMove() {
-        if (fireAddedOnTilesCount < rowColListPair.size) {
+    private fun animateFireMoveFromBank() {
+        fireViewList.forEachIndexed { index, view ->
+            val pair = rowColListPair[index]
 
-            val pair = rowColListPair[fireAddedOnTilesCount]
-
-            row =   pair.first
-            col =   pair.second
+            val row = pair.first
+            val col = pair.second
 
             val cellX = letter_board.streakView.grid?.getCenterColFromIndex(col)!!.toFloat()
-            val cellY = letter_board.streakView.grid?.getCenterRowFromIndex(row)!!.toFloat() + letter_board.y
+            val cellY = letter_board.streakView.grid?.getCenterRowFromIndex(row)!!
+                .toFloat() + letter_board.y
 
-            animateFireMove(iv_anim_fire, cellX - 30, cellY - 40)
-
-            fireAddedOnTilesCount++
-
-        } else {
-            iv_anim_fire.visibility = View.GONE
+            view.visibility = View.VISIBLE
+            animateFireMove(view, cellX - 30, cellY - 40, row, col)
         }
+        rowColListPair.clear()
     }
 
     private fun disableOrEnableOtherPowerUps(alphaVal: Float, view: View) {
@@ -312,6 +382,7 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onSelectionWord() {
                 soundPlayer.play(SoundPlayer.Sound.Highlight)
             }
+
             override fun onSelectionBegin(streakLine: StreakLine, str: String) {
                 beginStreakLine = streakLine
                 animateBombIfActivated(streakLine)
@@ -334,10 +405,10 @@ class GamePlayActivity : FullscreenActivity() {
 
             override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
                 if (hasFire) {
-                  if (iv_water.scaleX == 1.2f){// water droplets enabled
-                      soundPlayer.play(SoundPlayer.Sound.WaterDroplets)
-                  }
-                } else{
+                    if (iv_water.scaleX == 1.2f) {// water droplets enabled
+                        soundPlayer.play(SoundPlayer.Sound.WaterDroplets)
+                    }
+                } else {
                     updateFireCountTxt(letterAdapter!!.fireList)
                     disableOrEnableOtherPowerUps(1f, iv_water)
                 }
@@ -369,7 +440,8 @@ class GamePlayActivity : FullscreenActivity() {
             val col = streakLine.startIndex.col
 
             val X = letter_board.streakView.grid?.getCenterColFromIndex(col)?.toFloat()
-            val Y = letter_board.streakView.grid?.getCenterRowFromIndex(row)?.toFloat()!! + letter_board.y
+            val Y = letter_board.streakView.grid?.getCenterRowFromIndex(row)
+                ?.toFloat()!! + letter_board.y
 
             animateFireMove(bomb, X!! - 50, Y - 100)
         }
@@ -383,7 +455,7 @@ class GamePlayActivity : FullscreenActivity() {
             Observer { gameState: GameState -> onGameStateChanged(gameState) })
         viewModel.onAnswerResult.observe(
             this,
-            Observer { answerResult: AnswerResult -> onAnswerResult(answerResult) })
+            Observer { answerResult: AnswerResult ->}) //onAnswerResult(answerResult) })
 
         viewModel.onAnswerResultWord.observe(this, {
             onAnswerResult(it)
@@ -441,46 +513,24 @@ class GamePlayActivity : FullscreenActivity() {
         anim.start()
     }
 
-    private fun onAnswerResult(answerResult: AnswerResult) {
-        if (answerResult.correct) {
-            val item = findUsedWordViewItemByUsedWordId(answerResult.usedWord?.id.orZero())
-            if (item != null) {
-                val uw = answerResult.usedWord
-                if (preferences.grayscale()) {
-                    uw?.answerLine?.color = resources.getColor(R.color.gray)
-                }
-
-                val str = item.findViewById<TextView>(R.id.textStr)
-                item.background.setColorFilter(uw?.answerLine!!.color, PorterDuff.Mode.MULTIPLY)
-                str.text = uw.string
-                str.setTextColor(Color.WHITE)
-                str.paintFlags = str.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-                item.startAnimation(AnimationUtils.loadAnimation(this, R.anim.zoom_in_out))
-                text_popup_correct_word.visible()
-                text_popup_correct_word.text = uw.string.orEmpty()
-                text_popup_correct_word.startAnimation(popupTextAnimation)
-            }
-            showAnsweredWordsCount(answerResult.totalAnsweredWord)
-            soundPlayer.play(SoundPlayer.Sound.Correct)
-        } else {
-            letter_board.popStreakLine()
-            soundPlayer.play(SoundPlayer.Sound.Wrong)
-        }
-    }
-
-
-    private fun onAnswerResult(onAnswerWord: AnswerResultWord){
+    private fun onAnswerResult(onAnswerWord: AnswerResultWord) {
         if (onAnswerWord.correct) {
             text_popup_correct_word.visible()
             text_popup_correct_word.text = onAnswerWord.correctWord
             text_popup_correct_word.startAnimation(popupTextAnimation)
             soundPlayer.play(SoundPlayer.Sound.Correct)
 
-            Util.replaceNewWordForCorrectWord(onAnswerWord.streakLine, letterAdapter!!.backedGrid)
-            letter_board.popStreakLine()
+            Util.replaceNewWordForCorrectWord(
+                onAnswerWord.streakLine, letterAdapter!!.backedGrid,
+                letterAdapter!!.completedCell, letterAdapter!!.fireList)
 
-        } else{
-            letter_board.popStreakLine()
+            addFireToCellFromBank(1)
+            fireViewList.forEach {
+                it.post {
+                    animateFireMoveFromBank()
+                }
+            }
+        } else {
             soundPlayer.play(SoundPlayer.Sound.Wrong)
         }
     }
@@ -501,9 +551,19 @@ class GamePlayActivity : FullscreenActivity() {
                 showFinishGame(gameState)
             }
             is Playing -> {
-                gameState.gameData?.let { onGameRoundLoaded(it) }
+                gameState.gameData?.let { onGameRoundLoaded(it)
+                    addFireToCellFromBank(1)
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        animateFireMoveFromBank()
+                    }, 2000)
+                }
             }
         }
+    }
+
+    private fun addFireToCellFromBank(fireCount: Int) {
+        createRowColListForFireMoveAnim(fireCount)
+        addFireView(fireCount)
     }
 
     private fun onGameRoundLoaded(gameData: GameData) {
@@ -521,7 +581,8 @@ class GamePlayActivity : FullscreenActivity() {
             gameData.grid!!.array,
             gameData.grid!!.fireArray,
             gameData.grid!!.highlight,
-            gameData.grid!!.waterDrop
+            gameData.grid!!.waterDrop,
+            gameData.grid!!.completedCellHighlight
         )
         showDuration(gameData.duration)
         showUsedWords(gameData.usedWords, gameData)
@@ -591,10 +652,17 @@ class GamePlayActivity : FullscreenActivity() {
         grid: Array<CharArray>,
         fireArray: Array<BooleanArray>,
         highlight: Array<BooleanArray>,
-        waterDrop: Array<BooleanArray>
+        waterDrop: Array<BooleanArray>,
+        completedCellHighlight: Array<BooleanArray>
     ) {
         if (letterAdapter == null) {
-            letterAdapter = ArrayLetterGridDataAdapter(grid, fireArray,highlight,  waterDrop)
+            letterAdapter = ArrayLetterGridDataAdapter(
+                grid,
+                fireArray,
+                highlight,
+                waterDrop,
+                completedCellHighlight
+            )
             letterAdapter?.let {
                 letter_board.dataAdapter = it
             }
@@ -652,7 +720,7 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationStart(animation: Animation) {}
             override fun onAnimationRepeat(animation: Animation) {}
             override fun onAnimationEnd(animation: Animation) {
-                Handler().postDelayed({
+                Handler(Looper.myLooper()!!).postDelayed({
                     val intent = Intent(this@GamePlayActivity, GameOverActivity::class.java)
                     intent.putExtra(
                         GameOverActivity.EXTRA_GAME_ROUND_ID,
@@ -665,7 +733,10 @@ class GamePlayActivity : FullscreenActivity() {
         })
         if (state.win) {
             text_complete_popup.setText(R.string.lbl_complete)
-            Handler().postDelayed({ soundPlayer.play(SoundPlayer.Sound.Winning) }, 600)
+            Handler(Looper.myLooper()!!).postDelayed(
+                { soundPlayer.play(SoundPlayer.Sound.Winning) },
+                600
+            )
         } else {
             text_complete_popup.setText(R.string.lbl_game_over)
             Handler().postDelayed({ soundPlayer.play(SoundPlayer.Sound.Lose) }, 600)
@@ -706,17 +777,6 @@ class GamePlayActivity : FullscreenActivity() {
         val sb = StringBuilder(string.length)
         for (i in string.indices) sb.append(resources.getString(R.string.hidden_mask))
         return sb.toString()
-    }
-
-    private fun findUsedWordViewItemByUsedWordId(usedWordId: Int): View? {
-        for (i in 0 until flexbox_layout.childCount) {
-            val v = flexbox_layout.getChildAt(i)
-            val id = v.tag as Int
-            if (id == usedWordId) {
-                return v
-            }
-        }
-        return null
     }
 
     companion object {
