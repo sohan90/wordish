@@ -47,6 +47,7 @@
 
         <include layout="@layout/partial_game_content"/>
 
+
         <include
             layout="@layout/partial_game_complete"
             android:visibility="gone"/>
@@ -125,6 +126,7 @@
         android:textColor="@android:color/white"
         android:text="0"/>
 
+
     <ImageView
         android:id="@+id/iv_setting"
         android:layout_width="40dp"
@@ -134,6 +136,61 @@
         app:layout_constraintTop_toTopOf="@id/tv_turn_title"
         app:layout_constraintTop_toBottomOf="@id/layout1" />
 
+    <ProgressBar
+        android:id="@+id/pg_fire"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:progress="0"
+        android:progressDrawable="@drawable/bg_progress"
+        android:rotation="-90"
+        android:max="18"
+        app:layout_constraintTop_toTopOf="@id/iv_fire"
+        app:layout_constraintBottom_toBottomOf="@id/iv_fire"
+        app:layout_constraintEnd_toEndOf="@id/iv_fire"
+        app:layout_constraintStart_toStartOf="@id/iv_fire" />
+
+    <ProgressBar
+        android:id="@+id/pg_bomb"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:progress="100"
+        android:progressDrawable="@drawable/bg_progress"
+        android:rotation="-90"
+        app:layout_constraintTop_toTopOf="@id/iv_bomb"
+        app:layout_constraintBottom_toBottomOf="@id/iv_bomb"
+        app:layout_constraintEnd_toEndOf="@id/iv_bomb"
+        app:layout_constraintStart_toStartOf="@id/iv_bomb" />
+
+    <ProgressBar
+        android:id="@+id/pg_water"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:progress="0"
+        android:progressDrawable="@drawable/bg_progress"
+        android:rotation="-90"
+        app:layout_constraintTop_toTopOf="@id/iv_water"
+        app:layout_constraintBottom_toBottomOf="@id/iv_water"
+        app:layout_constraintEnd_toEndOf="@id/iv_water"
+        app:layout_constraintStart_toStartOf="@id/iv_water" />
+
+
+    <ProgressBar
+        android:id="@+id/pg_fire_plus"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:progress="0"
+        android:max="5"
+        android:progressDrawable="@drawable/bg_progress"
+        android:rotation="-90"
+        app:layout_constraintTop_toTopOf="@id/iv_fire_plus"
+        app:layout_constraintBottom_toBottomOf="@id/iv_fire_plus"
+        app:layout_constraintEnd_toEndOf="@id/iv_fire_plus"
+        app:layout_constraintStart_toStartOf="@id/iv_fire_plus" />
+
     <ImageView
         android:id="@+id/iv_fire"
         android:layout_width="50dp"
@@ -142,7 +199,7 @@
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
         android:layout_marginBottom="20dp"
-        android:src="@drawable/ic_baseline_local_fire_department_24"
+        android:src="@drawable/frame_0_delay"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/iv_bomb"
         app:layout_constraintHorizontal_bias="0.5"
@@ -178,6 +235,22 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/iv_fire" />
 
+    <TextView
+        android:id="@+id/tv_bomb_count"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/round_rect"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:text="1"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/iv_bomb"
+        app:layout_constraintEnd_toEndOf="@+id/iv_bomb"
+        app:layout_constraintStart_toStartOf="@+id/iv_bomb"
+        app:layout_constraintTop_toTopOf="@+id/iv_bomb" />
+
     <ImageView
         android:id="@+id/bomb"
         android:layout_width="50dp"
@@ -204,6 +277,22 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/iv_bomb" />
 
+    <TextView
+        android:id="@+id/tv_water_count"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/round_rect"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:text="1"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/iv_water"
+        app:layout_constraintEnd_toEndOf="@+id/iv_water"
+        app:layout_constraintStart_toStartOf="@+id/iv_water"
+        app:layout_constraintTop_toTopOf="@+id/iv_water" />
+
     <ImageView
         android:id="@+id/iv_fire_plus"
         android:layout_width="50dp"
@@ -212,11 +301,43 @@
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
         android:visibility="visible"
-        android:src="@drawable/ic_baseline_local_fire_department_24"
+        android:src="@drawable/frame_0_delay"
         app:layout_constraintBottom_toBottomOf="@id/iv_water"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/iv_water" />
+
+    <TextView
+        android:id="@+id/tv_fire_plus"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        android:text="+"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:gravity="start"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        app:layout_constraintEnd_toEndOf="@id/iv_fire_plus"
+        android:textColor="@android:color/white"
+        app:layout_constraintBottom_toBottomOf="@id/iv_fire_plus"
+        app:layout_constraintStart_toStartOf="@id/iv_fire_plus"
+        app:layout_constraintTop_toTopOf="@+id/iv_fire_plus" />
+    <TextView
+        android:id="@+id/tv_fire_plus_count"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="30dp"
+        android:background="@drawable/round_rect"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:text="1"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/iv_fire_plus"
+        app:layout_constraintEnd_toEndOf="@+id/iv_fire_plus"
+        app:layout_constraintStart_toStartOf="@+id/iv_fire_plus"
+        app:layout_constraintTop_toTopOf="@+id/iv_fire_plus" />
 
     <ImageView
         android:id="@+id/iv_anim_fire"

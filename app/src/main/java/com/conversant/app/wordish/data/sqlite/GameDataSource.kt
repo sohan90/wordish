@@ -124,11 +124,6 @@ class GameDataSource @Inject constructor(private val dbHelper: DbHelper, private
         usedWordDataSource.removeUsedWords(gid)
     }
 
-    fun deleteGameDatas() {
-        val db = dbHelper.writableDatabase
-        db.delete(DbContract.GameRound.TABLE_NAME, null, null)
-        usedWordDataSource.removeAll()
-    }
 
     suspend fun clearGameData() = withContext(Dispatchers.IO) {
         dbHelper.writableDatabase.delete(DbContract.GameRound.TABLE_NAME, null, null)

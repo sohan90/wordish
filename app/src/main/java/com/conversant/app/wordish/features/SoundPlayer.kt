@@ -1,7 +1,6 @@
 package com.conversant.app.wordish.features
 
 import android.content.Context
-import android.media.AudioManager
 import android.media.SoundPool
 import android.util.SparseIntArray
 import com.conversant.app.wordish.R
@@ -14,16 +13,24 @@ import javax.inject.Inject
 class SoundPlayer @Inject constructor(context: Context, private val mPreferences: Preferences) {
 
     enum class Sound {
-        Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight
+        Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight, Siren, PowerUp
     }
 
-    private var soundPool: SoundPool = SoundPool(2, AudioManager.STREAM_MUSIC, 0)
+    private var streadId: Int = 0
+
+    private var soundPool: SoundPool = SoundPool.Builder().setMaxStreams(2).build()
     private val soundPoolMap: SparseIntArray = SparseIntArray()
 
     fun play(sound: Sound) {
         if (mPreferences.enableSound()) {
-            soundPool.play(soundPoolMap[sound.ordinal],
+           streadId =  soundPool.play(soundPoolMap[sound.ordinal],
                 1.0f, 1.0f, 0, 0, 1.0f)
+        }
+    }
+
+    fun stop(){
+        if (streadId != 0) {
+            soundPool.stop(streadId)
         }
     }
 
@@ -63,6 +70,16 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
         soundPoolMap.put(
             Sound.Highlight.ordinal,
             soundPool.load(context, R.raw.cell_highlight, 1)
+        )
+
+        soundPoolMap.put(
+            Sound.Siren.ordinal,
+            soundPool.load(context, R.raw.siren, 1)
+        )
+
+        soundPoolMap.put(
+            Sound.PowerUp.ordinal,
+            soundPool.load(context, R.raw.enable_power_up, 1)
         )
     }
 }

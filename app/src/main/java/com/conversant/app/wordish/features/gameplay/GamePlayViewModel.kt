@@ -9,24 +9,22 @@ import com.conversant.app.wordish.commons.SingleLiveEvent
 import com.conversant.app.wordish.commons.Timer
 import com.conversant.app.wordish.commons.Timer.OnTimeoutListener
 import com.conversant.app.wordish.commons.Util
-import com.conversant.app.wordish.commons.orZero
 import com.conversant.app.wordish.custom.StreakView
 import com.conversant.app.wordish.data.room.UsedWordDataSource
 import com.conversant.app.wordish.data.room.WordDataSource
 import com.conversant.app.wordish.data.sqlite.GameDataSource
 import com.conversant.app.wordish.features.settings.Preferences
 import com.conversant.app.wordish.model.*
-import com.conversant.app.wordish.model.UsedWord.AnswerLine
 import io.reactivex.*
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.max
 
-const val MINIMUM_LENGTH  = 4
 class GamePlayViewModel @Inject constructor(
     private val gameDataSource: GameDataSource,
     private val wordDataSource: WordDataSource,
@@ -55,7 +53,8 @@ class GamePlayViewModel @Inject constructor(
     class AnswerResultWord(
         var correct: Boolean,
         var correctWord:String?,
-        val streakLine: StreakView.StreakLine
+        val streakLine: StreakView.StreakLine,
+        var coins:Int = 0,
     )
 
     private val gameDataCreator: GameDataCreator = GameDataCreator()
@@ -104,7 +103,7 @@ class GamePlayViewModel @Inject constructor(
     }
 
     fun stopGame() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             usedWordDataSource.removeAll()
             currentGameData = null
             timer.stop()
@@ -201,40 +200,6 @@ class GamePlayViewModel @Inject constructor(
             }
     }
 
-    fun answerWord(answerStr: String, answerLine: AnswerLine?, reverseMatching: Boolean) {
-        if (currentState !is Playing) return
-        val correctWord: UsedWord? = if (currentGameData?.gameMode == GameMode.Marathon) {
-            if (matchCurrentUsedWord(answerStr, reverseMatching)) {
-                currentUsedWord
-            } else {
-                null
-            }
-        } else {
-            findUsedWord(answerStr, reverseMatching)
-        }
-        var correct = false
-        if (correctWord != null) {
-            correctWord.answerLine = answerLine
-            correct = true
-        }
-        onAnswerResultLiveData.value = AnswerResult(
-            correct,
-            correctWord,
-            currentGameData?.answeredWordsCount.orZero()
-        )
-        if (correct) {
-            Completable.create { gameDataSource.markWordAsAnswered(correctWord!!) }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe()
-            if (currentGameData!!.isFinished) {
-                timer.stop()
-                finishGame(true)
-            } else if (currentGameData!!.gameMode === GameMode.Marathon) {
-                nextWord()
-            }
-        }
-    }
 
     private fun startGame() {
         setGameState(Playing(currentGameData))
@@ -259,8 +224,7 @@ class GamePlayViewModel @Inject constructor(
 
                 val dictionaryWord = word.string
                 if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
-                    dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching
-                ) {
+                    dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching) {
                     correctWord = dictionaryWord
                     correct = true
                     break
@@ -268,11 +232,22 @@ class GamePlayViewModel @Inject constructor(
             }
         }
 
-        onAnswerResultWordLiveData.value  = AnswerResultWord(correct, correctWord, streakLine)
+        val coins  = coinsForWordLength(correctWord)
+        onAnswerResultWordLiveData.value  = AnswerResultWord(correct, correctWord, streakLine, coins)
 
     }
 
-
+    private fun coinsForWordLength(str:String?):Int{
+       return when(str?.length){
+            4 -> 22
+            5 -> 30
+            6 -> 42
+            7 -> 50
+            8 -> 62
+            9 -> 70
+           else -> 0
+       }
+    }
 
     private fun setGameState(state: GameState) {
         currentState = state

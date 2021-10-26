@@ -85,6 +85,7 @@ object Util {
         completedCell: Array<BooleanArray>,
         fireList: Array<BooleanArray>
     ) {
+
         val startRow = streakView.startIndex.row
         val endRow = streakView.endIndex.row
         val startCol = streakView.startIndex.col
@@ -121,6 +122,17 @@ object Util {
             completedCell[row][col] = true
             fireList[row][col] = false
             count++
+        }
+    }
+
+    fun replaceNewWord(list:List<Pair<Int, Int>>,  adapterData: Array<CharArray>,
+                       completedCell: Array<BooleanArray>,
+                       fireList: Array<BooleanArray>){
+        for (pair in list) {
+
+            adapterData[pair.first][pair.second] = randomChar
+            completedCell[pair.first][pair.second] = true
+            fireList[pair.first][pair.second] = false
         }
     }
 

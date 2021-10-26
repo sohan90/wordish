@@ -278,13 +278,13 @@ class LetterBoard @JvmOverloads constructor(
                             letterGrid.startWaterDropAnim()
                         }
                         dataAdapter.initWaterDrop(idx.row, idx.col, false)
-                        letterGrid.invalidate()
                         it.onSelectionFireCell(streakLine, false)
                     }
                 }
 
-
-                it.onSelectionBegin(streakLine, str)
+                if(!shrinkFire) {
+                    it.onSelectionBegin(streakLine, str)
+                }
 
                 //reset the highlight tiles on release
                 val hashKey = "${idx.row},${idx.col}"
@@ -294,11 +294,12 @@ class LetterBoard @JvmOverloads constructor(
         }
 
         override fun onTouchDrag(streakLine: StreakLine) {
-            selectionListener?.onSelectionDrag(
-                streakLine,
-                getStringInRange(streakLine.startIndex, streakLine.endIndex)
-            )
-
+            if(!shrinkFire) {
+                selectionListener?.onSelectionDrag(
+                    streakLine,
+                    getStringInRange(streakLine.startIndex, streakLine.endIndex)
+                )
+            }
 
         }
 
@@ -308,8 +309,6 @@ class LetterBoard @JvmOverloads constructor(
                     val str = getStringInRange(streakLine.startIndex, streakLine.endIndex)
                     it.onSelectionEnd(streakLine, str)
                 }
-            } else {
-                popStreakLine()
             }
 
 

@@ -3,15 +3,17 @@
     xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item android:id="@android:id/background">
-        <shape android:shape="rectangle">
-            <solid android:color="#26ffffff"/>
+        <shape android:shape="oval">
+            <corners android:radius="8dp"/>
+            <solid android:color="@android:color/transparent"/>
         </shape>
     </item>
 
     <item android:id="@android:id/progress">
         <clip>
-            <shape android:shape="rectangle">
-                <solid android:color="#FDD835"/>
+            <shape android:shape="oval">
+                <corners android:radius="8dp"/>
+                <solid android:color="@android:color/holo_orange_dark"/>
             </shape>
         </clip>
     </item>

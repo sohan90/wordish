@@ -57,7 +57,7 @@ class LetterGrid @JvmOverloads constructor(
     }
 
     private fun initPaintObject() {
-        backgroundColor.color = Color.BLACK
+        backgroundColor.color = Color.GRAY//Color.parseColor("#D8BD96")
         backgroundColor.style = Paint.Style.FILL
         backgroundColor.strokeWidth = 15f
         backgroundColor.isAntiAlias = true
@@ -66,14 +66,14 @@ class LetterGrid @JvmOverloads constructor(
         highlightPaint.style = Paint.Style.FILL
         highlightPaint.isAntiAlias = true
 
-        roundCornerPaint.color = Color.GREEN
+        roundCornerPaint.color = Color.parseColor("#800000")
         roundCornerPaint.style = Paint.Style.STROKE
-        roundCornerPaint.strokeWidth = 5f
+        roundCornerPaint.strokeWidth = 7f
         roundCornerPaint.isAntiAlias = true
 
-        roundCornerRedPaint.color = Color.CYAN
+        roundCornerRedPaint.color = Color.GREEN
         roundCornerRedPaint.style = Paint.Style.STROKE
-        roundCornerRedPaint.strokeWidth = 5f
+        roundCornerRedPaint.strokeWidth = 7f
         roundCornerRedPaint.isAntiAlias = true
 
     }

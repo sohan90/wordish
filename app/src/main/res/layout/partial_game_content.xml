@@ -74,6 +74,23 @@
     </FrameLayout>
 
 
+
+    <TextView
+        android:id="@+id/text_selection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:scrollHorizontally="true"
+        android:singleLine="true"
+        android:textAlignment="center"
+        android:focusable="true"
+        android:ellipsize="marquee"
+        android:focusableInTouchMode="true"
+        android:textColor="@android:color/white"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@id/letter_board"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
     <com.conversant.app.wordish.custom.LetterBoard
         android:id="@+id/letter_board"
         android:layout_width="wrap_content"
@@ -86,16 +103,37 @@
         app:gridLineVisibility="false"
         app:gridRowCount="6"
         app:gridWidth="@dimen/_35sdp"
+        android:layout_marginTop="50dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:letterColor="@android:color/white"
-        app:letterSize="@dimen/_14ssp"
+        app:letterSize="@dimen/_20sdp"
         app:lineColor="@android:color/white"
         app:lineWidth="2dp"
         app:snapToGrid="START_END"
         app:streakWidth="@dimen/_16sdp" />
+
+    <ImageView
+        android:id="@+id/iv_penalty_placeholder"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@drawable/frame_0_delay"
+        android:textColor="@android:color/white"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/layout_current_selected_word"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageView
+        android:id="@+id/iv_penalty_fire"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/layout_current_selected_word"
+        android:src="@drawable/frame_0_delay"
+        android:visibility="invisible"
+        android:textColor="@android:color/white"/>
 
     <TextView
         android:id="@+id/text_popup_correct_word"
