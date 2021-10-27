@@ -57,7 +57,7 @@ class LetterGrid @JvmOverloads constructor(
     }
 
     private fun initPaintObject() {
-        backgroundColor.color = Color.GRAY//Color.parseColor("#D8BD96")
+        backgroundColor.color = Color.BLACK//Color.parseColor("#D8BD96")
         backgroundColor.style = Paint.Style.FILL
         backgroundColor.strokeWidth = 15f
         backgroundColor.isAntiAlias = true

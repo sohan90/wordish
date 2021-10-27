@@ -48,8 +48,8 @@ import kotlinx.android.synthetic.main.partial_game_header.*
 import javax.inject.Inject
 
 const val GAME_OVER_FIRE_COUNT: Int = 18
-const val MINIMUM_LENGTH = 2
-const val RESET_PENALTY_FIRE_VIEW:Int = -1
+const val MINIMUM_LENGTH = 4
+const val RESET_PENALTY_FIRE_VIEW: Int = -1
 
 class GamePlayActivity : FullscreenActivity() {
     private var turns: Int = 0
@@ -263,8 +263,8 @@ class GamePlayActivity : FullscreenActivity() {
                     v.visibility = View.INVISIBLE
 
 
-                    if (fireViewList.isNotEmpty()){
-                        fireViewCount --
+                    if (fireViewList.isNotEmpty()) {
+                        fireViewCount--
                     }
                     if (fireViewCount == 0) {
                         //penalty fire animation logic
@@ -606,11 +606,15 @@ class GamePlayActivity : FullscreenActivity() {
                 letterAdapter!!.completedCell, letterAdapter!!.fireList
             )
 
-            updateScoreBoard(onAnswerWord)
-
-            addFireToCellFromBank(1)
-            animateFireMoveFromBank(answerWordLength = onAnswerWord.correctWord!!.length)
-
+            val isCompleted = checkForGameCompletion()
+            if (!isCompleted) {
+                updateScoreBoard(onAnswerWord)
+                val count = tv_fire_plus_count.text.toString().toInt()
+                addFireToCellFromBank(count)
+                animateFireMoveFromBank(answerWordLength = onAnswerWord.correctWord!!.length)
+            } else {
+                showFinishGame(Finished(null, true))
+            }
 
         } else {
             if (!clickedState) {
@@ -619,13 +623,26 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
+    private fun checkForGameCompletion(): Boolean {
+        var isCompleted = true
+        for (i in 0..5) {
+            for (j in 0..5) {
+                if (!letterAdapter!!.completedCell(i, j)) {
+                    isCompleted = false
+                    break
+                }
+            }
+        }
+        return isCompleted
+    }
+
     private fun startPenaltyFireAnim() {
         iv_penalty_fire.visible()
         rowColListPair.clear()
         createRowColListForFireMoveAnim(1)
         fireViewList.clear()
         fireViewList.add(iv_penalty_fire)
-        animateFireMoveFromBank( RESET_PENALTY_FIRE_VIEW)
+        animateFireMoveFromBank(RESET_PENALTY_FIRE_VIEW)
     }
 
     private fun updateScoreBoard(onAnswerWord: AnswerResultWord) {
@@ -645,6 +662,8 @@ class GamePlayActivity : FullscreenActivity() {
         tv_turn.startAnimation(animation)
 
         updateFirePlus(turns)
+        updateWaterProgress(turns)
+        updateBombProgress(turns)
 
     }
 
@@ -843,40 +862,86 @@ class GamePlayActivity : FullscreenActivity() {
         objectAnimator.start()
     }
 
-    private fun updateWaterCountTxt(waterDrop: Int){
+    private fun updateWaterCountTxt(waterDrop: Int) {
         tv_water_count.text = waterDrop.toString()
-        val objectAnimator = ObjectAnimator.ofInt(pg_water, "progress",
-            pg_water.progress, waterDrop)
+        val objectAnimator = ObjectAnimator.ofInt(
+            pg_water, "progress",
+            pg_water.progress, waterDrop
+        )
         objectAnimator.duration = 500
         objectAnimator.start()
         iv_water.isEnabled = waterDrop != 0
     }
 
-    private fun updateBombCountTxt(bombCount:Int){
+    private fun updateWaterProgress(level: Int) {
+        if (level > 5) {
+            var value = level % 5
+            value *= 100
+            pg_water.max = 4 * 100
+
+            val objectAnimator = ObjectAnimator.ofInt(
+                pg_water, "progress",
+                pg_water.progress, value
+            )
+            objectAnimator.duration = 500
+            objectAnimator.start()
+
+            if (value == 0) {
+                val waterDrop = tv_water_count.text.toString().toInt() + 1
+                tv_water_count.text = waterDrop.toString()
+            }
+        }
+    }
+
+    private fun updateBombCountTxt(bombCount: Int) {
         tv_bomb_count.text = bombCount.toString()
-        val objectAnimator = ObjectAnimator.ofInt(pg_bomb, "progress",
-            pg_bomb.progress, bombCount)
+        val objectAnimator = ObjectAnimator.ofInt(
+            pg_bomb, "progress",
+            pg_bomb.progress, bombCount
+        )
         objectAnimator.duration = 500
         objectAnimator.start()
         iv_bomb.isEnabled = bombCount != 0
     }
 
-    private fun updateFirePlus(count: Int){
+    private fun updateBombProgress(level: Int) {
+        var bombCount = tv_bomb_count.text.toString().toInt()
+        if (level > 5 && bombCount == 0) {
+            var value = level % 5
+            value *= 100
+            pg_bomb.max = 4 * 100
+
+            val objectAnimator = ObjectAnimator.ofInt(
+                pg_bomb, "progress",
+                pg_bomb.progress, value
+            )
+            objectAnimator.duration = 500
+            objectAnimator.start()
+
+            if (value == 0) {
+                bombCount++
+                tv_bomb_count.text = bombCount.toString()
+            }
+        }
+    }
+
+    private fun updateFirePlus(count: Int) {
         val value = count % 6
         pg_fire_plus.max = 500
-        val objectAnimator = ObjectAnimator.ofInt(pg_fire_plus, "progress",
-            pg_fire_plus.progress, value * 100)
+        val objectAnimator = ObjectAnimator.ofInt(
+            pg_fire_plus, "progress",
+            pg_fire_plus.progress, value * 100
+        )
         objectAnimator.duration = 500
         objectAnimator.start()
 
-        if (value == 0){
+        if (value == 0) {
             val firePlusCount = tv_fire_plus_count.text.toString().toInt() + 1
             tv_fire_plus_count.text = firePlusCount.toString()
         }
     }
 
     private fun showFinishGame(state: Finished) {
-        letter_board.streakView.isInteractive = false
         val anim = AnimationUtils.loadAnimation(this, R.anim.game_complete)
         anim.interpolator = DecelerateInterpolator()
         anim.duration = 500
@@ -886,13 +951,6 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationRepeat(animation: Animation) {}
             override fun onAnimationEnd(animation: Animation) {
                 Handler(Looper.myLooper()!!).postDelayed({
-                    /*val intent = Intent(this@GamePlayActivity, GameOverActivity::class.java)
-                    intent.putExtra(
-                        GameOverActivity.EXTRA_GAME_ROUND_ID,
-                        state.gameData?.id.orZero()
-                    )
-                    startActivity(intent)
-                    finish()*/
                     val intent = Intent(this@GamePlayActivity, SplashScreenActivity::class.java)
                     startActivity(intent)
                     finish()
@@ -907,7 +965,10 @@ class GamePlayActivity : FullscreenActivity() {
             )
         } else {
             text_complete_popup.setText(R.string.lbl_game_over)
-            Handler().postDelayed({ soundPlayer.play(SoundPlayer.Sound.Lose) }, 600)
+            Handler(Looper.myLooper()!!).postDelayed(
+                { soundPlayer.play(SoundPlayer.Sound.Lose) },
+                600
+            )
         }
         layout_complete_popup.visible()
         layout_complete_popup.startAnimation(anim)
