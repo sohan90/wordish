@@ -5,9 +5,6 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.PorterDuff
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -20,7 +17,6 @@ import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -720,7 +716,6 @@ class GamePlayActivity : FullscreenActivity() {
             gameData.grid!!.completedCellHighlight
         )
         showDuration(gameData.duration)
-        showUsedWords(gameData.usedWords, gameData)
         showWordsCount(gameData.usedWords.size)
         showAnsweredWordsCount(gameData.answeredWordsCount)
         doneLoadingContent()
@@ -826,12 +821,6 @@ class GamePlayActivity : FullscreenActivity() {
         animateProgress(progress_overall_duration, countDown * PROGRESS_SCALE)
     }
 
-    private fun showUsedWords(usedWords: List<UsedWord>, gameData: GameData) {
-        flexbox_layout.removeAllViews()
-        for (uw in usedWords) {
-            flexbox_layout.addView(createUsedWordTextView(uw, gameData))
-        }
-    }
 
     private fun showAnsweredWordsCount(count: Int) {
         text_answered_string_count.text = count.toString()
@@ -889,6 +878,7 @@ class GamePlayActivity : FullscreenActivity() {
             if (value == 0) {
                 val waterDrop = tv_water_count.text.toString().toInt() + 1
                 tv_water_count.text = waterDrop.toString()
+                iv_water.isEnabled = true
             }
         }
     }
@@ -911,16 +901,19 @@ class GamePlayActivity : FullscreenActivity() {
             value *= 100
             pg_bomb.max = 4 * 100
 
-            val objectAnimator = ObjectAnimator.ofInt(
-                pg_bomb, "progress",
-                pg_bomb.progress, value
-            )
-            objectAnimator.duration = 500
-            objectAnimator.start()
-
             if (value == 0) {
                 bombCount++
                 tv_bomb_count.text = bombCount.toString()
+                iv_bomb.isEnabled = true
+
+            } else{
+
+                val objectAnimator = ObjectAnimator.ofInt(
+                    pg_bomb, "progress",
+                    pg_bomb.progress, value)
+
+                objectAnimator.duration = 500
+                objectAnimator.start()
             }
         }
     }
@@ -974,39 +967,6 @@ class GamePlayActivity : FullscreenActivity() {
         layout_complete_popup.startAnimation(anim)
     }
 
-    //
-    private fun createUsedWordTextView(usedWord: UsedWord, gameData: GameData): View {
-        val view = layoutInflater.inflate(R.layout.item_word, flexbox_layout, false)
-        val str = view.findViewById<TextView>(R.id.textStr)
-        if (usedWord.isAnswered) {
-            if (preferences.grayscale()) {
-                usedWord.answerLine?.color = resources.getColor(R.color.gray)
-            }
-
-            view.background.setColorFilter(
-                usedWord.answerLine!!.color,
-                PorterDuff.Mode.MULTIPLY
-            )
-            str.text = usedWord.string
-            str.setTextColor(Color.WHITE)
-            str.paintFlags = str.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
-            letter_board.addStreakLine(STREAK_LINE_MAPPER.map(usedWord.answerLine!!))
-        } else {
-            if (gameData.gameMode === GameMode.Hidden) {
-                str.text = getHiddenMask(usedWord.string)
-            } else {
-                str.text = usedWord.string
-            }
-        }
-        view.tag = usedWord.id
-        return view
-    }
-
-    private fun getHiddenMask(string: String): String {
-        val sb = StringBuilder(string.length)
-        for (i in string.indices) sb.append(resources.getString(R.string.hidden_mask))
-        return sb.toString()
-    }
 
     companion object {
         const val EXTRA_GAME_DIFFICULTY = "game_max_duration"

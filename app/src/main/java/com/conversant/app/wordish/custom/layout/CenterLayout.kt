@@ -6,12 +6,7 @@ import android.view.ViewGroup
 import kotlin.math.max
 import kotlin.math.min
 
-/**
- * Created by abdularis on 22/06/17.
- *
- * Center layout merupakan layout untuk membuat semua child view berada ditengah-tengah
- * relative terhadap posisi CenterLayout object
- */
+
 open class CenterLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
