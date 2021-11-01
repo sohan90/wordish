@@ -23,7 +23,7 @@ object Util {
     }
 
     // ASCII A = 65 - Z = 90
-    private val randomChar: Char
+    val randomChar: Char
         get() =// ASCII A = 65 - Z = 90
             getRandomIntRange(65, 90).toChar()
 
@@ -103,6 +103,7 @@ object Util {
             startCol..endCol
         }
 
+
         val rowIterator = rowProgression.iterator()
         val colIterator = colProgression.iterator()
 
@@ -125,9 +126,36 @@ object Util {
         }
     }
 
-    fun replaceNewWord(list:List<Pair<Int, Int>>,  adapterData: Array<CharArray>,
-                       completedCell: Array<BooleanArray>,
-                       fireList: Array<BooleanArray>){
+    fun getRowProgression(row: Int): IntProgression {
+        var startRow = row - 1
+        var endRow = row + 1
+
+        if (row == 0) {
+            startRow = row
+        } else if (row == 5) {
+            endRow = row
+        }
+
+        return startRow..endRow
+    }
+
+    fun getColProgression(col: Int): IntProgression {
+        var startCol = col - 1
+        var endCol = col + 1
+
+        if (col == 0) {
+            startCol = col
+        } else if (col == 5) {
+            endCol = col
+        }
+        return startCol..endCol
+    }
+
+    fun replaceNewWord(
+        list: List<Pair<Int, Int>>, adapterData: Array<CharArray>,
+        completedCell: Array<BooleanArray>,
+        fireList: Array<BooleanArray>
+    ) {
         for (pair in list) {
 
             adapterData[pair.first][pair.second] = randomChar
@@ -136,10 +164,10 @@ object Util {
         }
     }
 
-    fun replaceNewWordForExplode(col:Int, adapterData: Array<CharArray>, letterGrid: LetterGrid){
+    fun replaceNewWordForExplode(col: Int, adapterData: Array<CharArray>, letterGrid: LetterGrid) {
         val colEnd = if (col == 0) col + 1 else col
-        for (i in 0..5){
-            for (j in colEnd - 1 .. colEnd){
+        for (i in 0..5) {
+            for (j in colEnd - 1..colEnd) {
                 letterGrid.bombCell[i][j].animate = false
                 letterGrid.bombCell[i][j].xAxix = 0f
                 adapterData[i][j] = randomChar
@@ -147,15 +175,20 @@ object Util {
         }
     }
 
-    fun getNewCharList():List<Char>{
+    fun getNewCharList(): List<Char> {
         val list = mutableListOf<Char>()
-        for (i in 0..5){
+        for (i in 0..5) {
             list.add(randomChar)
         }
         return list
     }
 
-    fun replaceNewWordForRow(list:List<Char>, col: Int, letterGrid: LetterGrid, adapterData: Array<CharArray>){
+    fun replaceNewWordForRow(
+        list: List<Char>,
+        col: Int,
+        letterGrid: LetterGrid,
+        adapterData: Array<CharArray>
+    ) {
         for (i in list.indices) {
             letterGrid.bombCell[i][col].animate = false
             letterGrid.bombCell[i][col].xAxix = 0f

@@ -23,7 +23,6 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnPreDraw
-import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordSearchApp
@@ -48,6 +47,9 @@ const val MINIMUM_LENGTH = 4
 const val RESET_PENALTY_FIRE_VIEW: Int = -1
 
 class GamePlayActivity : FullscreenActivity() {
+
+    private var onAnswerRes: AnswerResultWord? = null
+
     private var turns: Int = 0
 
     private var words: Int = 0
@@ -78,8 +80,6 @@ class GamePlayActivity : FullscreenActivity() {
     private val viewModel: GamePlayViewModel by viewModels { viewModelFactory }
 
     private var letterAdapter: ArrayLetterGridDataAdapter? = null
-
-    private var popupTextAnimation: Animation? = null
 
     private val extraGameMode: GameMode by lazy {
         (intent.extras?.get(EXTRA_GAME_MODE) as? GameMode) ?: GameMode.Normal
@@ -135,7 +135,7 @@ class GamePlayActivity : FullscreenActivity() {
 
             imageView.id = View.generateViewId()
             imageView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.frame_0_delay))
-            val size = resources.getDimension(R.dimen.bomb_width_height)
+            val size = resources.getDimension(R.dimen.fire_size)
             val layoutParams = ConstraintLayout.LayoutParams(size.toInt(), size.toInt())
             imageView.layoutParams = layoutParams
 
@@ -158,47 +158,6 @@ class GamePlayActivity : FullscreenActivity() {
 
             constraintSet.applyTo(constraintLayout)
         }
-
-    }
-
-    private fun animateNewWord(newCharList: List<Char>, colCount: Int) {
-        val animation = AnimationUtils.loadAnimation(this, R.anim.new_words_text)
-        new_word_tv.visible()
-        animation.interpolator = DecelerateInterpolator()
-        animation.duration = 1000
-        new_word_tv.startAnimation(animation)
-        animation.setAnimationListener(object : AnimationListener {
-            override fun onAnimationStart(animation: Animation?) {}
-            override fun onAnimationRepeat(animation: Animation?) {}
-            override fun onAnimationEnd(animation: Animation?) {
-                new_word_tv.gone()
-
-                val col = endStreakLine.endIndex.col
-                val colEnd = if (col == 0) col + 1 else col
-
-                if (colCount == 1) {
-                    Util.replaceNewWordForRow(
-                        newCharList, colEnd - 1,
-                        letter_board.letterGrid, letterAdapter!!.backedGrid
-                    )
-
-                    resetNewCharacters(2)
-                } else {
-                    Util.replaceNewWordForRow(
-                        newCharList, colEnd,
-                        letter_board.letterGrid, letterAdapter!!.backedGrid
-                    )
-
-                    for (i in 0..5) {
-                        for (j in colEnd - 1..colEnd) {
-                            letterAdapter!!.initFire(i, j, true)
-                        }
-                    }
-                    updateFireCountTxt(letterAdapter!!.fireList)
-                }
-
-            }
-        })
 
     }
 
@@ -264,13 +223,15 @@ class GamePlayActivity : FullscreenActivity() {
                     }
                     if (fireViewCount == 0) {
                         //penalty fire animation logic
-                        if (answerWordLength >= MINIMUM_LENGTH) {
+                        if (answerWordLength == MINIMUM_LENGTH) {
                             startPenaltyFireAnim()
-                        } else if (answerWordLength == RESET_PENALTY_FIRE_VIEW) {//on penalty end animation reset x and y axis
+
+                        } else if (answerWordLength == RESET_PENALTY_FIRE_VIEW) { // on penalty end animation reset x and y axis
                             v.x = iv_penalty_placeholder.x
                             v.y = iv_penalty_placeholder.y
                         }
                     }
+
                 } else {
                     // bomb activated
                     explodeBomb()
@@ -306,7 +267,7 @@ class GamePlayActivity : FullscreenActivity() {
             bomb.alpha = 1f
             bomb.animate().withEndAction {
                 resetBombImage()
-                resetNewCharacters(1)
+                resetNewCharacters()
 
             }.alpha(0f)
                 .setDuration(300)
@@ -316,10 +277,19 @@ class GamePlayActivity : FullscreenActivity() {
         valueAnimator.start()
     }
 
-    private fun resetNewCharacters(colCount: Int) {
-        val newCharList = Util.getNewCharList()
-        new_word_tv.text = newCharList.joinToString(separator = ",")
-        animateNewWord(newCharList, colCount)
+    private fun resetNewCharacters() {
+        val rowProgression = Util.getRowProgression(beginStreakLine.startIndex.row)
+        val colProgression = Util.getColProgression(beginStreakLine.startIndex.col)
+
+        for (i in rowProgression) {
+            for (j in colProgression) {
+                letter_board.letterGrid.bombCell[i][j].animate = false
+                letter_board.letterGrid.bombCell[i][j].xAxix = 0f
+                letterAdapter!!.backedGrid[i][j] = Util.randomChar
+                letterAdapter!!.initFire(i, j, true)
+            }
+        }
+        updateFireCountTxt(letterAdapter!!.fireList)
     }
 
     private fun resetBombImage() {
@@ -473,7 +443,6 @@ class GamePlayActivity : FullscreenActivity() {
                     text_selection.text = ""
                     text_selection.alpha = 1f
                 }.alpha(0f).setDuration(1000).start()
-                selectionCellList.clear()
             }
 
             override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
@@ -495,17 +464,131 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.letterGrid.setListener(letter_board.selectionListener!!)
         letter_board.streakView.isSnapToGrid = preferences.snapToGrid
         text_game_finished.gone()
-        popupTextAnimation = AnimationUtils.loadAnimation(this, R.anim.popup_text)
-        popupTextAnimation?.duration = 1000
-        popupTextAnimation?.interpolator = DecelerateInterpolator()
-        popupTextAnimation?.setAnimationListener(object : AnimationListener {
-            override fun onAnimationRepeat(animation: Animation) {}
-            override fun onAnimationStart(animation: Animation) {}
-            override fun onAnimationEnd(animation: Animation) {
-                text_popup_correct_word.gone()
-                text_popup_correct_word.text = ""
+
+    }
+
+    private fun checkForCascadeWords(casCadeSide: CasCadeSide) {
+        selectionCellList.clear()
+        val word = StringBuilder()
+
+        var validWord: String? = null
+        mainLoop@ for (i in 0..5) {
+
+            word.clear()
+
+            for (j in 0..5) {
+
+                word.clear()
+
+                for (k in j..5) {
+
+                    val character = if (casCadeSide == CasCadeSide.HORIZONTAL) {
+                        letterAdapter!!.backedGrid[i][k]
+                    } else {
+                        letterAdapter!!.backedGrid[k][i] // cascade vertical side direction
+                    }
+
+                    val str = word.append(character.toString())
+                    validWord = viewModel.checkWordFromWordList(str.toString(), true)
+
+                    if (word.isNotEmpty() && validWord != null) {
+                        highlightCell(i, j..k, casCadeSide)
+                        break@mainLoop
+                    }
+                }
             }
-        })
+        }
+
+        when {
+            validWord != null -> {
+                val coins = viewModel.coinsForWordLength(validWord)
+                val answerResult = AnswerResultWord(true, validWord, StreakLine(), coins)
+                onAnswerResult(answerResult)
+            }
+            casCadeSide == CasCadeSide.HORIZONTAL -> {
+                checkForCascadeWords(CasCadeSide.VERTICAL)
+            }
+            else -> {
+                val count = tv_fire_plus_count.text.toString().toInt()
+                addFireToCellFromBank(count)
+                animateFireMoveFromBank(answerWordLength = onAnswerRes!!.correctWord!!.length)
+            }
+        }
+    }
+
+    private fun onAnswerResult(onAnswerWord: AnswerResultWord) {
+        onAnswerRes = onAnswerWord
+        if (onAnswerWord.correct) {
+            soundPlayer.play(SoundPlayer.Sound.Correct)
+            text_popup_correct_word.visible()
+            text_popup_correct_word.text = onAnswerWord.correctWord
+
+            val height = parent_layout.height
+            val percentage = height * (0.5)
+            text_popup_correct_word.animate()
+                .translationY(-percentage.toFloat())
+                .scaleX(2.0f).scaleY(2.0f)
+                .alpha(0f)
+                .setDuration(2000)
+                .withEndAction {
+
+                    resetAnimationValuesForCorrectWord()
+                    deselectSelectedTiles()
+
+                    Util.replaceNewWord(
+                        selectionCellList, letterAdapter!!.backedGrid,
+                        letterAdapter!!.completedCell, letterAdapter!!.fireList
+                    )
+
+                    val isCompleted = checkForGameCompletion()
+                    if (!isCompleted) {
+                        updateScoreBoard(onAnswerRes!!)
+                    } else {
+                        showFinishGame(Finished(null, true))
+                    }
+
+                    checkForCascadeWords(CasCadeSide.HORIZONTAL)
+
+                }.start()
+
+        } else {
+
+            deselectSelectedTiles()
+            selectionCellList.clear()
+            if (!clickedState) {
+                soundPlayer.play(SoundPlayer.Sound.Wrong)
+            }
+        }
+    }
+
+    private fun deselectSelectedTiles() {
+        selectionCellList.forEach {
+            val row = it.first
+            val col = it.second
+            letterAdapter!!.initHighlight(row, col, false)
+        }
+    }
+
+    private fun resetAnimationValuesForCorrectWord() {
+        text_popup_correct_word.gone()
+        text_popup_correct_word.alpha = 1f
+        text_popup_correct_word.translationY = 0f
+        text_popup_correct_word.scaleX = 1f
+        text_popup_correct_word.scaleY = 1f
+        text_popup_correct_word.text = ""
+    }
+
+
+    private fun highlightCell(row: Int, colRange: IntRange, casCadeSide: CasCadeSide) {
+        for (j in colRange) {
+            if (casCadeSide == CasCadeSide.HORIZONTAL) {
+                letterAdapter!!.initHighlight(row, j, true)
+                selectionCellList.add(Pair(row, j))
+            } else {
+                letterAdapter!!.initHighlight(j, row, true)
+                selectionCellList.add(Pair(j, row))
+            }
+        }
     }
 
     private fun animateBombIfActivated(streakLine: StreakLine) {
@@ -525,26 +608,23 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun initViewModel() {
-        viewModel.onTimer.observe(this, Observer { duration: Int -> showDuration(duration) })
-        viewModel.onCountDown.observe(this, Observer { countDown: Int -> showCountDown(countDown) })
+        viewModel.onTimer.observe(this, { duration: Int -> showDuration(duration) })
+        viewModel.onCountDown.observe(this, { countDown: Int -> showCountDown(countDown) })
         viewModel.onGameState.observe(
             this,
-            Observer { gameState: GameState -> onGameStateChanged(gameState) })
-        viewModel.onAnswerResult.observe(
-            this,
-            Observer { answerResult: AnswerResult -> }) //onAnswerResult(answerResult) })
+            { gameState: GameState -> onGameStateChanged(gameState) })
 
         viewModel.onAnswerResultWord.observe(this, {
             onAnswerResult(it)
         })
-        viewModel.onCurrentWordChanged.observe(this, Observer { usedWord: UsedWord ->
+        viewModel.onCurrentWordChanged.observe(this, { usedWord: UsedWord ->
             text_current_selected_word.setText(usedWord.string)
             progress_word_duration.max = usedWord.maxDuration * 100
             animateProgress(progress_word_duration, usedWord.remainingDuration * 100)
         })
         viewModel.onCurrentWordCountDown.observe(
             this,
-            Observer { duration: Int -> animateProgress(progress_word_duration, duration * 100) })
+            { duration: Int -> animateProgress(progress_word_duration, duration * 100) })
     }
 
     private fun loadOrGenerateNewGame() {
@@ -590,34 +670,6 @@ class GamePlayActivity : FullscreenActivity() {
         anim.start()
     }
 
-    private fun onAnswerResult(onAnswerWord: AnswerResultWord) {
-        if (onAnswerWord.correct) {
-            text_popup_correct_word.visible()
-            text_popup_correct_word.text = onAnswerWord.correctWord
-            text_popup_correct_word.startAnimation(popupTextAnimation)
-            soundPlayer.play(SoundPlayer.Sound.Correct)
-
-            Util.replaceNewWord(
-                selectionCellList, letterAdapter!!.backedGrid,
-                letterAdapter!!.completedCell, letterAdapter!!.fireList
-            )
-
-            val isCompleted = checkForGameCompletion()
-            if (!isCompleted) {
-                updateScoreBoard(onAnswerWord)
-                val count = tv_fire_plus_count.text.toString().toInt()
-                addFireToCellFromBank(count)
-                animateFireMoveFromBank(answerWordLength = onAnswerWord.correctWord!!.length)
-            } else {
-                showFinishGame(Finished(null, true))
-            }
-
-        } else {
-            if (!clickedState) {
-                soundPlayer.play(SoundPlayer.Sound.Wrong)
-            }
-        }
-    }
 
     private fun checkForGameCompletion(): Boolean {
         var isCompleted = true
@@ -643,7 +695,6 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateScoreBoard(onAnswerWord: AnswerResultWord) {
         coins += onAnswerWord.coins
-        turns += 1
         words += 1
 
         val animation = AnimationUtils.loadAnimation(this, R.anim.score_board)
@@ -651,16 +702,26 @@ class GamePlayActivity : FullscreenActivity() {
         tv_coin.text = "$coins"
         tv_coin.startAnimation(animation)
 
+        // Only for the user selected valid word match, turn count is calculated and
+        // for cascade word-match turn count is not calculated
+        if (onAnswerWord.streakLine.startIndex.row != -1) {
+            turns += 1
+            updateTurnCount(words)
+        }
+
         tv_word.text = "$words"
         tv_word.startAnimation(animation)
-
-        tv_turn.text = "$turns"
-        tv_turn.startAnimation(animation)
 
         updateFirePlus(turns)
         updateWaterProgress(turns)
         updateBombProgress(turns)
 
+    }
+
+    private fun updateTurnCount(count: Int) {
+        val animation = AnimationUtils.loadAnimation(this, R.anim.score_board)
+        tv_turn.text = "$count"
+        tv_turn.startAnimation(animation)
     }
 
     private fun onGameStateChanged(gameState: GameState) {
@@ -906,11 +967,12 @@ class GamePlayActivity : FullscreenActivity() {
                 tv_bomb_count.text = bombCount.toString()
                 iv_bomb.isEnabled = true
 
-            } else{
+            } else {
 
                 val objectAnimator = ObjectAnimator.ofInt(
                     pg_bomb, "progress",
-                    pg_bomb.progress, value)
+                    pg_bomb.progress, value
+                )
 
                 objectAnimator.duration = 500
                 objectAnimator.start()
@@ -978,4 +1040,8 @@ class GamePlayActivity : FullscreenActivity() {
         private val STREAK_LINE_MAPPER = StreakLineMapper()
         private const val PROGRESS_SCALE = 100
     }
+}
+
+enum class CasCadeSide {
+    HORIZONTAL, VERTICAL
 }

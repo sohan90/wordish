@@ -52,9 +52,9 @@ class GamePlayViewModel @Inject constructor(
 
     class AnswerResultWord(
         var correct: Boolean,
-        var correctWord:String?,
+        var correctWord: String?,
         val streakLine: StreakView.StreakLine,
-        var coins:Int = 0,
+        var coins: Int = 0,
     )
 
     private val gameDataCreator: GameDataCreator = GameDataCreator()
@@ -179,9 +179,11 @@ class GamePlayViewModel @Inject constructor(
                     .toObservable()
             }
             .flatMap { words: MutableList<Word> ->
-                val gameData = gameDataCreator.newGameData(words, rowCount, colCount, gameName, gameMode)
+                val gameData =
+                    gameDataCreator.newGameData(words, rowCount, colCount, gameName, gameMode)
                 if (gameMode === GameMode.CountDown) {
-                    gameData.maxDuration = getMaxCountDownDuration(gameData.usedWords.size, difficulty)
+                    gameData.maxDuration =
+                        getMaxCountDownDuration(gameData.usedWords.size, difficulty)
                 } else if (gameMode === GameMode.Marathon) {
                     val maxDuration = getMaxDurationPerWord(difficulty)
                     for (usedWord in gameData.usedWords) {
@@ -214,9 +216,21 @@ class GamePlayViewModel @Inject constructor(
         }
     }
 
-    fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean){
-        var correctWord:String? = null
+    fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean) {
         var correct = false
+
+        val correctWord = checkWordFromWordList(answerStr, reverseMatching)
+
+        if (correctWord != null && correctWord.isNotEmpty()) correct = true
+
+        val coins = coinsForWordLength(correctWord)
+        onAnswerResultWordLiveData.value = AnswerResultWord(correct, correctWord, streakLine, coins)
+
+    }
+
+    fun checkWordFromWordList(answerStr: String, reverseMatching: Boolean): String? {
+
+        var correctWord1: String? = null
 
         if (answerStr.length >= MINIMUM_LENGTH) {
             val answerStrRev = Util.getReverseString(answerStr)
@@ -224,29 +238,26 @@ class GamePlayViewModel @Inject constructor(
 
                 val dictionaryWord = word.string
                 if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
-                    dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching) {
-                    correctWord = dictionaryWord
-                    correct = true
+                    dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching
+                ) {
+                    correctWord1 = dictionaryWord
                     break
                 }
             }
         }
-
-        val coins  = coinsForWordLength(correctWord)
-        onAnswerResultWordLiveData.value  = AnswerResultWord(correct, correctWord, streakLine, coins)
-
+        return correctWord1
     }
 
-    private fun coinsForWordLength(str:String?):Int{
-       return when(str?.length){
+    fun coinsForWordLength(str: String?): Int {
+        return when (str?.length) {
             4 -> 22
             5 -> 30
             6 -> 42
             7 -> 50
             8 -> 62
             9 -> 70
-           else -> 0
-       }
+            else -> 0
+        }
     }
 
     private fun setGameState(state: GameState) {
@@ -309,7 +320,8 @@ class GamePlayViewModel @Inject constructor(
 
             val currUsedWord = usedWord.string
             if (currUsedWord.equals(word, ignoreCase = true) ||
-                currUsedWord.equals(answerStrRev, ignoreCase = true) && enableReverse) {
+                currUsedWord.equals(answerStrRev, ignoreCase = true) && enableReverse
+            ) {
                 return usedWord
             }
         }
@@ -322,7 +334,7 @@ class GamePlayViewModel @Inject constructor(
         val answerStrRev = Util.getReverseString(word)
         val currUsedWord = currentUsedWord!!.string
         return currUsedWord.equals(word, ignoreCase = true) ||
-            currUsedWord.equals(answerStrRev, ignoreCase = true) && enableReverse
+                currUsedWord.equals(answerStrRev, ignoreCase = true) && enableReverse
     }
 
     private fun onTimerTimeout() {
@@ -334,19 +346,21 @@ class GamePlayViewModel @Inject constructor(
                     onCountDownLiveData.value = gameData.remainingDuration
                     if (gameData.remainingDuration <= 0) {
                         val win = gameData.answeredWordsCount ==
-                            gameData.usedWords.size
+                                gameData.usedWords.size
                         timer.stop()
                         finishGame(win)
                     }
                 } else if (gameMode == GameMode.Marathon) {
                     currentUsedWord?.let { usedWord ->
                         usedWord.duration = usedWord.duration + 1
-                        onCurrentWordCountDownLiveData.value = usedWord.maxDuration - usedWord.duration
+                        onCurrentWordCountDownLiveData.value =
+                            usedWord.maxDuration - usedWord.duration
                         Completable
                             .create { e: CompletableEmitter ->
                                 usedWordDataSource.updateUsedWordDuration(
                                     usedWord.id,
-                                    usedWord.duration)
+                                    usedWord.duration
+                                )
                                 e.onComplete()
                             }
                             .subscribeOn(Schedulers.io())

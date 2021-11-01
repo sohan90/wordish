@@ -10,6 +10,7 @@ import android.view.animation.BounceInterpolator
 import androidx.core.animation.doOnEnd
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.commons.GridIndex
+import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.custom.StreakView.OnInteractionListener
 import com.conversant.app.wordish.custom.StreakView.SnapType.Companion.fromId
 import com.conversant.app.wordish.custom.StreakView.StreakLine
@@ -206,7 +207,7 @@ class LetterBoard @JvmOverloads constructor(
 
     private fun attachAllViews() {
         val layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)
-        addView(gridLineBackground, layoutParams)
+        //addView(gridLineBackground, layoutParams)
         addView(streakView, layoutParams)
         addView(letterGrid, layoutParams)
     }
@@ -312,13 +313,6 @@ class LetterBoard @JvmOverloads constructor(
             }
 
 
-            for (entry in hashMap) {
-                val rowCol = entry.key.split(",")
-                val row = rowCol[0].toInt()
-                val col = rowCol[1].toInt()
-                dataAdapter.initHighlight(row, col, false)
-            }
-
             hashMap.clear()
             endGridIndex.row = -1
             endGridIndex.col = -1
@@ -331,17 +325,19 @@ class LetterBoard @JvmOverloads constructor(
         val valueAnimator =
             ValueAnimator.ofPropertyValuesHolder(*list.toTypedArray())
 
-        val col = streakLine.startIndex.col
-        val colEnd = if (col == 0) col + 1 else col
-
         valueAnimator.doOnEnd {}
         valueAnimator.addUpdateListener { animIt ->
 
             var propertyNameIndex = 0
             var propertyCellIndex = 100
 
-            for (i in 0..5) {
-                for (j in colEnd - 1..colEnd) {
+            val rowProgression = Util.getRowProgression(streakLine.startIndex.row)
+
+            val colProgression = Util.getColProgression(streakLine.startIndex.col)
+
+            for (i in rowProgression) {
+
+                for (j in colProgression) {
 
                     propertyNameIndex++
                     propertyCellIndex--
@@ -363,20 +359,20 @@ class LetterBoard @JvmOverloads constructor(
 
 
     private fun generateBombCells(streakLine: StreakLine): List<PropertyValuesHolder> {
-        val col = streakLine.startIndex.col
-
-        val colEnd = if (col == 0) col + 1 else col
         var animationDir: Int
 
         val propertyValueList = arrayListOf<PropertyValuesHolder>()
         var propertyNameIndex = 0
         var propertyCellIndex = 100
 
-        for (i in 0..5) {
+        val rowProgression = Util.getRowProgression(streakLine.startIndex.row)
+        val colProgression = Util.getColProgression(streakLine.startIndex.col)
+
+        for (i in rowProgression) {
 
             animationDir = 0
 
-            for (j in colEnd - 1..colEnd) {
+            for (j in colProgression) {
 
                 propertyNameIndex++
                 propertyCellIndex --
