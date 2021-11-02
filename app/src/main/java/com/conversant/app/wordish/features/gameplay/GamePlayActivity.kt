@@ -448,7 +448,6 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
                 if (hasFire) {
                     if (iv_water.scaleX == 1.2f) {// water droplets enabled
-                        //disableOrEnableOtherPowerUps(1f, iv_water)
                         soundPlayer.stop()
                         soundPlayer.play(SoundPlayer.Sound.WaterDroplets)
                     }
@@ -529,7 +528,7 @@ class GamePlayActivity : FullscreenActivity() {
                 .translationY(-percentage.toFloat())
                 .scaleX(2.0f).scaleY(2.0f)
                 .alpha(0f)
-                .setDuration(2000)
+                .setDuration(1500)
                 .withEndAction {
 
                     resetAnimationValuesForCorrectWord()

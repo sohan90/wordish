@@ -287,7 +287,7 @@ class LetterBoard @JvmOverloads constructor(
                     it.onSelectionBegin(streakLine, str)
                 }
 
-                //reset the highlight tiles on release
+
                 val hashKey = "${idx.row},${idx.col}"
                 hashMap[hashKey] = 1
                 dataAdapter.initHighlight(idx.row, idx.col, true)
@@ -310,8 +310,15 @@ class LetterBoard @JvmOverloads constructor(
                     val str = getStringInRange(streakLine.startIndex, streakLine.endIndex)
                     it.onSelectionEnd(streakLine, str)
                 }
+            } else {
+                //reset the highlight tiles on release
+                for (entry in hashMap) {
+                    val rowCol = entry.key.split(",")
+                    val row = rowCol[0].toInt()
+                    val col = rowCol[1].toInt()
+                    dataAdapter.initHighlight(row, col, false)
+                }
             }
-
 
             hashMap.clear()
             endGridIndex.row = -1
