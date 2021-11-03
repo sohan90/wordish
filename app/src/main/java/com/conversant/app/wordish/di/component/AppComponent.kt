@@ -9,7 +9,6 @@ import com.conversant.app.wordish.features.SplashScreenActivity
 import com.conversant.app.wordish.features.gamehistory.GameHistoryActivity
 import com.conversant.app.wordish.features.gameover.GameOverActivity
 import com.conversant.app.wordish.features.gameplay.GamePlayActivity
-import com.conversant.app.wordish.features.mainmenu.MainMenuActivity
 import dagger.Component
 import javax.inject.Singleton
 
@@ -21,7 +20,6 @@ import javax.inject.Singleton
 interface AppComponent {
     fun inject(activity:SplashScreenActivity)
     fun inject(activity: GamePlayActivity)
-    fun inject(activity: MainMenuActivity)
     fun inject(activity: GameOverActivity)
     fun inject(activity: FullscreenActivity)
     fun inject(activity: GameHistoryActivity)

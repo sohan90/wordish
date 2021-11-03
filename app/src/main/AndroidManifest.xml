@@ -20,10 +20,7 @@
             android:name="com.conversant.app.wordish.features.gameplay.GamePlayActivity"
             android:screenOrientation="portrait">
         </activity>
-        <activity
-            android:name="com.conversant.app.wordish.features.mainmenu.MainMenuActivity"
-            android:screenOrientation="portrait">
-        </activity>
+
         <activity
             android:name="com.conversant.app.wordish.features.gameover.GameOverActivity"
             android:screenOrientation="portrait">
