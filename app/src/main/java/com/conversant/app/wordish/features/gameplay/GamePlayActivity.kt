@@ -5,6 +5,7 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -57,6 +58,8 @@ class GamePlayActivity : FullscreenActivity() {
     private var coins: Int = 0
 
     private var selectionCellList = mutableListOf<Pair<Int, Int>>()
+
+    private var cellPlacementMap = HashMap<Rect, String>()
 
     private var fireViewList = mutableListOf<View>()
 
@@ -458,6 +461,14 @@ class GamePlayActivity : FullscreenActivity() {
                     disableOrEnableOtherPowerUps(1f, iv_water)
                 }
             }
+
+            override fun onCellPlacementLaidOut(cellRect: Rect, position: String) {
+                val rect = Rect(cellRect.left, cellRect.top, cellRect.right, cellRect.bottom)
+                cellPlacementMap[rect] = position
+                if (cellPlacementMap.size == 36){
+                    letter_board.streakView.cellPlacementMap(cellPlacementMap)
+                }
+            }
         }
 
         letter_board.letterGrid.setListener(letter_board.selectionListener!!)
@@ -508,9 +519,11 @@ class GamePlayActivity : FullscreenActivity() {
                 checkForCascadeWords(CasCadeSide.VERTICAL)
             }
             else -> {
-                val count = tv_fire_plus_count.text.toString().toInt()
-                addFireToCellFromBank(count)
-                animateFireMoveFromBank(answerWordLength = onAnswerRes!!.correctWord!!.length)
+                if (onAnswerRes != null && onAnswerRes?.correctWord != null) {
+                    val count = tv_fire_plus_count.text.toString().toInt()
+                    addFireToCellFromBank(count)
+                    animateFireMoveFromBank(answerWordLength = onAnswerRes?.correctWord!!.length)
+                }
             }
         }
     }
@@ -744,6 +757,7 @@ class GamePlayActivity : FullscreenActivity() {
 
                     addFireToCellFromBank(1)
                     Handler(Looper.getMainLooper()).postDelayed({
+                        letter_board.startFireAnim()
                         animateFireMoveFromBank()
                     }, 2000)
                 }
@@ -826,8 +840,9 @@ class GamePlayActivity : FullscreenActivity() {
                 content_layout.visible()
                 content_layout.scaleY = 0.5f
                 content_layout.alpha = 0f
-                content_layout.animate()
-                    .scaleY(1f)
+                content_layout.animate().withEndAction {
+                    letter_board.letterGrid.startSizeCellCalc = true
+                }.scaleY(1f)
                     .setDuration(400)
                     .start()
                 content_layout.animate()
@@ -1036,7 +1051,6 @@ class GamePlayActivity : FullscreenActivity() {
         const val EXTRA_GAME_THEME_ID = "game_theme_id"
         const val EXTRA_ROW_COUNT = "row_count"
         const val EXTRA_COL_COUNT = "col_count"
-        private val STREAK_LINE_MAPPER = StreakLineMapper()
         private const val PROGRESS_SCALE = 100
     }
 }

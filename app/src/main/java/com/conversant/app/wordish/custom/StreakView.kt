@@ -41,6 +41,8 @@ class StreakView @JvmOverloads constructor(
         }
     }
 
+    private lateinit var cellPlacmentMap: java.util.HashMap<Rect, String>
+
     private  var valueAnimator: ValueAnimator = ValueAnimator.ofInt(255, 0)
     private var path: Path
     private val rect: RectF = RectF()
@@ -169,8 +171,12 @@ class StreakView @JvmOverloads constructor(
         setMeasuredDimension(measuredWidth, measuredHeight)
     }
 
+    fun cellPlacementMap(cellPlacementMap:HashMap<Rect, String>){
+        this.cellPlacmentMap = cellPlacementMap
+    }
+
     override fun onDraw(canvas: Canvas) {
-        canvas.drawPath(path, linePaint)
+       // canvas.drawPath(path, linePaint)
     }
 
     private inner class OnTouchProcessedListener : OnTouchProcessed {
@@ -184,7 +190,15 @@ class StreakView @JvmOverloads constructor(
             val line = lines.peek()
             val colIdx = grid?.getColIndex(event.x.toInt()).orZero()
             val rowIdx = grid?.getRowIndex(event.y.toInt()).orZero()
-            line.startIndex.set(rowIdx, colIdx)
+
+            val pair  = grid!!.getRowColumn(cellPlacmentMap, event.x.toInt(), event.y.toInt())
+
+
+            if (pair != null) {
+                line.startIndex.set(pair.first, pair.second)
+            }
+
+           // line.startIndex.set(rowIdx, colIdx)
 
             if (snapToGridType != SnapType.NONE) {
                 val centerCol = grid?.getCenterColFromIndex(colIdx)?.toFloat() ?: 0f
@@ -197,8 +211,12 @@ class StreakView @JvmOverloads constructor(
                 line.end.set(event.x, event.y)
             }
             path.moveTo(event.x, event.y)
-            interactionListener?.onTouchBegin(line)
-            invalidate()
+
+            if (pair != null) {
+                interactionListener?.onTouchBegin(line)
+            }
+
+           // invalidate()
         }
 
         override fun onUp(event: MotionEvent) {
@@ -206,7 +224,14 @@ class StreakView @JvmOverloads constructor(
             val line = lines.peek()
             val colIdx = grid?.getColIndex(event.x.toInt()).orZero()
             val rowIdx = grid?.getRowIndex(event.y.toInt()).orZero()
-            line.endIndex.set(rowIdx, colIdx)
+
+            val pair  = grid!!.getRowColumn(cellPlacmentMap, event.x.toInt(), event.y.toInt())
+
+            if (pair != null) {
+                line.endIndex.set(pair.first, pair.second)
+            }
+
+            //line.endIndex.set(rowIdx, colIdx)
 
             if (snapToGridType != SnapType.NONE) {
                 val centerCol = grid?.getCenterColFromIndex(colIdx)?.toFloat() ?: 0f
@@ -217,8 +242,10 @@ class StreakView @JvmOverloads constructor(
             }
 
             path.reset()
+
             interactionListener?.onTouchEnd(line)
-            invalidate()
+
+          //  invalidate()
         }
 
         override fun onMove(event: MotionEvent) {
@@ -227,7 +254,13 @@ class StreakView @JvmOverloads constructor(
             val line = lines.peek()
             val colIdx = grid?.getColIndex(event.x.toInt()).orZero()
             val rowIdx = grid?.getRowIndex(event.y.toInt()).orZero()
-            line.endIndex.set(rowIdx, colIdx)
+
+            val pair  = grid!!.getRowColumn(cellPlacmentMap, event.x.toInt(), event.y.toInt())
+            if (pair != null) {
+                line.endIndex.set(pair.first, pair.second)
+            }
+
+           // line.endIndex.set(rowIdx, colIdx)
 
             if (snapToGridType != SnapType.NONE) {
                 val centerCol = grid?.getCenterColFromIndex(colIdx)?.toFloat() ?: 0f
@@ -246,8 +279,10 @@ class StreakView @JvmOverloads constructor(
                 path.lineTo(event.x, event.y)
             }
             startPaintAnimation()
-            interactionListener?.onTouchDrag(line)
-            invalidate()
+            if (pair != null) {
+                interactionListener?.onTouchDrag(line)
+            }
+            //invalidate()
         }
     }
 

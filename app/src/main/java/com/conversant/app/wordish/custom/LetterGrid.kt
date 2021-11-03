@@ -10,8 +10,8 @@ import com.conversant.app.wordish.commons.orZero
 import java.util.*
 import kotlin.math.abs
 
-const val BORDER_SPACE = 10
-const val LETTER_SPACE = BORDER_SPACE/2
+const val BORDER_SPACE = 15
+const val LETTER_SPACE = BORDER_SPACE / 2
 
 class LetterGrid @JvmOverloads constructor(
     context: Context,
@@ -19,9 +19,12 @@ class LetterGrid @JvmOverloads constructor(
     var letterBoardListener: LetterBoard.OnLetterSelectionListener? = null
 ) : GridBehavior(context, attrs), Observer {
 
-    private  val fireSize = resources.getDimension(R.dimen.fire_size).toInt()
+    private var startCalculateCellSize: Boolean = false
+
+    private val fireSize = resources.getDimension(R.dimen.fire_size).toInt()
 
     var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false) } }
+
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -47,7 +50,9 @@ class LetterGrid @JvmOverloads constructor(
         R.drawable.ic_baseline_water_drop_24
     )?.toBitmap()
 
-    private var rect = Rect(0, 0, 0, 0)
+    private var rect = Rect()
+
+    private var cellRect = Rect()
 
     private val charBounds: Rect = Rect()
 
@@ -94,6 +99,13 @@ class LetterGrid @JvmOverloads constructor(
         get() = paint.color
         set(color) {
             paint.color = color
+            invalidate()
+        }
+
+    var startSizeCellCalc: Boolean
+        get() = startCalculateCellSize
+        set(start) {
+            startCalculateCellSize = start
             invalidate()
         }
 
@@ -149,6 +161,7 @@ class LetterGrid @JvmOverloads constructor(
         requestLayout()
     }
 
+
     override fun onDraw(canvas: Canvas) {
         val gridColCount = getColCount()
         val gridRowCount = getRowCount()
@@ -169,15 +182,31 @@ class LetterGrid @JvmOverloads constructor(
             for (j in 0 until gridColCount) {
                 if (!bombCell[i][j].animate) {
                     canvas.drawRoundRect(
-                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat()- BORDER_SPACE, 30f, 30f, backgroundColor
+                        cornerX.toFloat(),
+                        cornerY.toFloat(),
+                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
+                        cornerY + gridHeight.toFloat() - BORDER_SPACE,
+                        30f,
+                        30f,
+                        backgroundColor
                     )
+
+                    if (startCalculateCellSize) {
+                        cellRect.setEmpty()
+                        cellRect.left = cornerX
+                        cellRect.top = cornerY
+                        cellRect.right = cornerX + gridWidth - abs(BORDER_SPACE + 20)
+                        cellRect.bottom = cornerY + gridHeight - abs(BORDER_SPACE + 20)
+                        letterBoardListener?.onCellPlacementLaidOut(cellRect, "$i,$j")
+                    }
                 }
+
                 cornerX += gridWidth
             }
             cornerY += gridHeight
         }
 
+        startCalculateCellSize = false
         cornerY = 0
 
         // iterate and render all letters found in grid data adapter
@@ -196,8 +225,13 @@ class LetterGrid @JvmOverloads constructor(
                 if (selected) {
                     highlightPaint.color = Color.RED
                     canvas.drawRoundRect(
-                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat() - BORDER_SPACE, 30f, 30f, highlightPaint
+                        cornerX.toFloat(),
+                        cornerY.toFloat(),
+                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
+                        cornerY + gridHeight.toFloat() - BORDER_SPACE,
+                        30f,
+                        30f,
+                        highlightPaint
                     )
                 }
 
@@ -205,22 +239,45 @@ class LetterGrid @JvmOverloads constructor(
                 if (bombCell[i][j].animate) {
                     val value = abs(bombCell[i][j].cellYaxis)
                     canvas.drawRoundRect(
-                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat() - value, 30f, 30f, backgroundColor
+                        cornerX.toFloat(),
+                        cornerY.toFloat(),
+                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
+                        cornerY + gridHeight.toFloat() - value,
+                        30f,
+                        30f,
+                        backgroundColor
                     )
 
-                    val paint = if (gridDataAdapter!!.completedCell(i, j)) roundCornerRedPaint else roundCornerPaint
+                    val paint = if (gridDataAdapter!!.completedCell(
+                            i,
+                            j
+                        )
+                    ) roundCornerRedPaint else roundCornerPaint
                     canvas.drawRoundRect(
-                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat() - value, 30f, 30f, paint
+                        cornerX.toFloat(),
+                        cornerY.toFloat(),
+                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
+                        cornerY + gridHeight.toFloat() - value,
+                        30f,
+                        30f,
+                        paint
                     )
 
                 } else {
                     //border color since background cell already drawn in the background
-                    val paint = if (gridDataAdapter!!.completedCell(i, j)) roundCornerRedPaint else roundCornerPaint
+                    val paint = if (gridDataAdapter!!.completedCell(
+                            i,
+                            j
+                        )
+                    ) roundCornerRedPaint else roundCornerPaint
                     canvas.drawRoundRect(
-                        cornerX.toFloat(), cornerY.toFloat(), cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat() - BORDER_SPACE, 30f, 30f, paint
+                        cornerX.toFloat(),
+                        cornerY.toFloat(),
+                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
+                        cornerY + gridHeight.toFloat() - BORDER_SPACE,
+                        30f,
+                        30f,
+                        paint
                     )
                 }
 
@@ -242,7 +299,9 @@ class LetterGrid @JvmOverloads constructor(
                 } else {
                     canvas.drawText(
                         letter.toString(),
-                        (x - charBounds.exactCenterX() - LETTER_SPACE), (y - charBounds.exactCenterY() - LETTER_SPACE), paint
+                        (x - charBounds.exactCenterX() - LETTER_SPACE),
+                        (y - charBounds.exactCenterY() - LETTER_SPACE),
+                        paint
                     )
                 }
 

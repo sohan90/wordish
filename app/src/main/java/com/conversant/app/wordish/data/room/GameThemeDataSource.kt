@@ -9,9 +9,6 @@ import com.conversant.app.wordish.model.GameTheme
 
 @Dao
 interface GameThemeDataSource {
-    @Query("SELECT * FROM game_themes")
-    suspend fun getThemeList(): List<GameTheme>
-
     @Query("SELECT *, (SELECT COUNT(*) FROM words WHERE game_theme_id=game_themes.id) as words_count FROM game_themes")
     fun getThemeItemList(): LiveData<List<GameThemeItem>>
 

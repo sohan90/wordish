@@ -1,7 +1,9 @@
 package com.conversant.app.wordish.custom
 
 import android.content.Context
+import android.graphics.Rect
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import com.conversant.app.wordish.R
 import kotlin.math.max
@@ -89,12 +91,12 @@ abstract class GridBehavior @JvmOverloads constructor(
 
     open fun getCenterColFromIndex(cIdx: Int): Int {
         return min(max(0, cIdx), getColCount() - 1) * gridWidth +
-            gridWidth / 2 + paddingLeft
+                gridWidth / 2 + paddingLeft
     }
 
     open fun getCenterRowFromIndex(rIdx: Int): Int {
         return min(max(0, rIdx), getRowCount() - 1) * gridHeight +
-            gridHeight / 2 + paddingTop
+                gridHeight / 2 + paddingTop
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -104,12 +106,41 @@ abstract class GridBehavior @JvmOverloads constructor(
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
         var measuredWidth = requiredWidth
         var measuredHeight = requiredHeight
-        if (widthMode == MeasureSpec.EXACTLY) measuredWidth = width else if (widthMeasureSpec == MeasureSpec.AT_MOST) measuredWidth = min(measuredWidth, width)
-        if (heightMode == MeasureSpec.EXACTLY) measuredHeight = height else if (heightMode == MeasureSpec.AT_MOST) measuredHeight = min(measuredHeight, height)
+        if (widthMode == MeasureSpec.EXACTLY) measuredWidth =
+            width else if (widthMeasureSpec == MeasureSpec.AT_MOST) measuredWidth =
+            min(measuredWidth, width)
+        if (heightMode == MeasureSpec.EXACTLY) measuredHeight =
+            height else if (heightMode == MeasureSpec.AT_MOST) measuredHeight =
+            min(measuredHeight, height)
         setMeasuredDimension(measuredWidth, measuredHeight)
     }
 
 
+    fun getRowColumn(cellPlacementMap: HashMap<Rect, String>, screenPosX: Int, screenPosY:Int):Pair<Int, Int>? {
+        var filterMap:MutableMap.MutableEntry<Rect, String>?= null
+
+        for (mutableEntry in cellPlacementMap) {
+            val rect = mutableEntry.key
+            val xRange = rect.left..rect.right
+            val yRange = rect.top..rect.bottom
+
+            if (xRange.contains(screenPosX)){
+                if (yRange.contains(screenPosY)){
+                    filterMap = mutableEntry
+                    break
+                }
+            }
+
+        }
+        if (filterMap != null){
+            Log.d(GridBehavior.javaClass.canonicalName, filterMap.toString())
+
+            val row = filterMap.value.split(",")[0].toInt()
+            val col = filterMap.value.split(",")[1].toInt()
+            return Pair(row, col)
+        }
+        return null
+    }
 
     companion object {
         private const val DEFAULT_GRID_WIDTH_PIXEL = 50
