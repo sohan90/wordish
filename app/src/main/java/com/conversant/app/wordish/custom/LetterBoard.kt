@@ -228,7 +228,7 @@ class LetterBoard @JvmOverloads constructor(
                 isSameTile = false
                 endGridIndex = end.copy()
                 list.add(endGridIndex)
-                selectionListener?.onSelectionWord()
+                selectionListener?.onSelectionWord(start, list)
             }
 
             val buff = CharArray(list.size)
@@ -400,7 +400,7 @@ class LetterBoard @JvmOverloads constructor(
         fun onSelectionDrag(streakLine: StreakLine, str: String)
         fun onSelectionEnd(streakLine: StreakLine, str: String)
         fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean)
-        fun onSelectionWord()
+        fun onSelectionWord(start:GridIndex, list:List<GridIndex>)
         fun onCellPlacementLaidOut(cellRect: Rect, position: String)
     }
 

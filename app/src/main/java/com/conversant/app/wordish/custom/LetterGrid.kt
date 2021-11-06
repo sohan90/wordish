@@ -23,8 +23,9 @@ class LetterGrid @JvmOverloads constructor(
 
     private val fireSize = resources.getDimension(R.dimen.fire_size).toInt()
 
-    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false) } }
+    private val roundCornerSize = resources.getDimension(R.dimen.round_corner).toInt()
 
+    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false) } }
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -67,7 +68,7 @@ class LetterGrid @JvmOverloads constructor(
     }
 
     private fun initPaintObject() {
-        backgroundColor.color = Color.BLACK//Color.parseColor("#D8BD96")
+        backgroundColor.color = Color.BLACK //Color.parseColor("#D8BD96")
         backgroundColor.style = Paint.Style.FILL
         backgroundColor.strokeWidth = 15f
         backgroundColor.isAntiAlias = true
@@ -186,8 +187,8 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY.toFloat(),
                         cornerX + gridWidth.toFloat() - BORDER_SPACE,
                         cornerY + gridHeight.toFloat() - BORDER_SPACE,
-                        30f,
-                        30f,
+                        roundCornerSize.toFloat(),
+                        roundCornerSize.toFloat(),
                         backgroundColor
                     )
 
@@ -229,8 +230,8 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY.toFloat(),
                         cornerX + gridWidth.toFloat() - BORDER_SPACE,
                         cornerY + gridHeight.toFloat() - BORDER_SPACE,
-                        30f,
-                        30f,
+                        roundCornerSize.toFloat(),
+                        roundCornerSize.toFloat(),
                         highlightPaint
                     )
                 }
@@ -243,23 +244,20 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY.toFloat(),
                         cornerX + gridWidth.toFloat() - BORDER_SPACE,
                         cornerY + gridHeight.toFloat() - value,
-                        30f,
-                        30f,
+                        roundCornerSize.toFloat(),
+                        roundCornerSize.toFloat(),
                         backgroundColor
                     )
 
-                    val paint = if (gridDataAdapter!!.completedCell(
-                            i,
-                            j
-                        )
+                    val paint = if (gridDataAdapter!!.completedCell(i, j)
                     ) roundCornerRedPaint else roundCornerPaint
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
                         cornerX + gridWidth.toFloat() - BORDER_SPACE,
                         cornerY + gridHeight.toFloat() - value,
-                        30f,
-                        30f,
+                        roundCornerSize.toFloat(),
+                        roundCornerSize.toFloat(),
                         paint
                     )
 
@@ -275,20 +273,23 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY.toFloat(),
                         cornerX + gridWidth.toFloat() - BORDER_SPACE,
                         cornerY + gridHeight.toFloat() - BORDER_SPACE,
-                        30f,
-                        30f,
+                        roundCornerSize.toFloat(),
+                        roundCornerSize.toFloat(),
                         paint
                     )
                 }
 
                 if (gridDataAdapter?.hasFire(i, j) == true) {
-                    rect.left = x
-                    rect.top = y - 20  //- 50
+                    val fireWidth = 20
+                    val fireHeight = 50
+                    rect.left = ((cornerX + gridWidth/2) - BORDER_SPACE) - fireWidth/2
+                    rect.top = ((cornerY + gridHeight/2) - BORDER_SPACE) + fireHeight
 
-                    rect.right = rect.left + fireSize
-                    rect.bottom = rect.top + fireSize
+                    val balanceHeight = ((cornerY + gridHeight) - BORDER_SPACE) - rect.top
+                    rect.right = ((rect.left + fireWidth)) + BORDER_SPACE
+                    rect.bottom = (rect.top + balanceHeight)
 
-                    canvas.drawBitmap(fireGif[fireGifIndex % 4], null, rect, paint)
+                    canvas.drawBitmap(fireGif[fireGifIndex % 5], null, rect, null)
                 }
 
                 if (bombCell[i][j].animate) {
@@ -334,10 +335,11 @@ class LetterGrid @JvmOverloads constructor(
             a.recycle()
         }
 
-        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_0_delay))
-        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_1_delay))
-        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_2_delay))
-        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_3_delay))
+        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_massive_frame_01))
+        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_massive_frame_2))
+        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_massive_frame_3))
+        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_massive_frame_4))
+        fireGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_massive_frame_5))
 
         waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_01_delay))
         waterGif.add(BitmapFactory.decodeResource(resources, R.drawable.frame_water_02_delay))

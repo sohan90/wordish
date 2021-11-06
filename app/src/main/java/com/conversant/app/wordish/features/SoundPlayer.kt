@@ -13,7 +13,7 @@ import javax.inject.Inject
 class SoundPlayer @Inject constructor(context: Context, private val mPreferences: Preferences) {
 
     enum class Sound {
-        Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight, Siren, PowerUp
+        Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight, Siren, PowerUp, SwipeCorrect
     }
 
     private var streadId: Int = 0
@@ -80,6 +80,11 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
         soundPoolMap.put(
             Sound.PowerUp.ordinal,
             soundPool.load(context, R.raw.enable_power_up, 1)
+        )
+
+        soundPoolMap.put(
+            Sound.SwipeCorrect.ordinal,
+            soundPool.load(context, R.raw.swipe_correct, 1)
         )
     }
 }

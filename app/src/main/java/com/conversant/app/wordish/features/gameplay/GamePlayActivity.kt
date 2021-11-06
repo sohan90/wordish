@@ -410,9 +410,20 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.streakView.setOverrideStreakLineColor(resources.getColor(R.color.gray))
         letter_board.selectionListener = object : OnLetterSelectionListener {
 
-            override fun onSelectionWord() {
-                if (!clickedState) {
+            override fun onSelectionWord(start:GridIndex, list:List<GridIndex>) {
+                val buff = CharArray(list.size)
+                for ((buffCount, gridIndex) in list.withIndex()) {
+                    if (buffCount == 0) {
+                        buff[buffCount] = letterAdapter!!.getLetter(start.row, start.col)
+                    }
+                    val letter = letterAdapter!!.getLetter(gridIndex.row, gridIndex.col)
+                    buff[buffCount] = letter
+                }
+                val validWord = viewModel.checkWordFromWordList(String(buff), true)
+                if (validWord == null && !clickedState) {
                     soundPlayer.play(SoundPlayer.Sound.Highlight)
+                } else if (!clickedState){
+                    soundPlayer.play(SoundPlayer.Sound.SwipeCorrect)
                 }
             }
 
@@ -435,6 +446,7 @@ class GamePlayActivity : FullscreenActivity() {
 
                 text_selection_layout.visible()
                 text_selection.text = if (str.isEmpty()) "..." else str
+                val correctWord = viewModel.checkWordFromWordList(str, true)
             }
 
             override fun onSelectionEnd(streakLine: StreakLine, str: String) {
