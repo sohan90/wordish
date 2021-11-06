@@ -29,6 +29,7 @@ import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordSearchApp
 import com.conversant.app.wordish.commons.*
 import com.conversant.app.wordish.commons.DurationFormatter.fromInteger
+import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.LetterBoard.OnLetterSelectionListener
 import com.conversant.app.wordish.custom.StreakView.StreakLine
 import com.conversant.app.wordish.data.room.WordDataSource
@@ -182,7 +183,7 @@ class GamePlayActivity : FullscreenActivity() {
         val pair = Pair(first, second)
 
         val fireCountOnBoard = tv_fire_count.text.toString() ?: ""
-        if (letterAdapter!!.fireList[first][second] &&
+        if (letterAdapter!!.hasFire(first, second) &&
             fireCountOnBoard != "36"
         ) {
             createRowColList(rowList, colList)
@@ -216,10 +217,10 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationRepeat(animation: Animator?) {}
             override fun onAnimationEnd(animation: Animator?) {
                 if (iv_bomb.scaleX != 1.2f) {
-                    letterAdapter!!.fireList[row][col] = true
+                    letterAdapter!!.updateFire(row, col, true)
                     updateFireCountTxt(letterAdapter!!.fireList)
-                    v.visibility = View.INVISIBLE
 
+                    v.visibility = View.INVISIBLE
 
                     if (fireViewList.isNotEmpty()) {
                         fireViewCount--
@@ -289,7 +290,7 @@ class GamePlayActivity : FullscreenActivity() {
                 letter_board.letterGrid.bombCell[i][j].animate = false
                 letter_board.letterGrid.bombCell[i][j].xAxix = 0f
                 letterAdapter!!.backedGrid[i][j] = Util.randomChar
-                letterAdapter!!.initFire(i, j, true)
+                letterAdapter!!.updateFire(i, j, true)
             }
         }
         updateFireCountTxt(letterAdapter!!.fireList)
@@ -589,7 +590,7 @@ class GamePlayActivity : FullscreenActivity() {
         selectionCellList.forEach {
             val row = it.first
             val col = it.second
-            letterAdapter!!.initHighlight(row, col, false)
+            letterAdapter!!.updateHighlight(row, col, false)
         }
     }
 
@@ -606,10 +607,10 @@ class GamePlayActivity : FullscreenActivity() {
     private fun highlightCell(row: Int, colRange: IntRange, casCadeSide: CasCadeSide) {
         for (j in colRange) {
             if (casCadeSide == CasCadeSide.HORIZONTAL) {
-                letterAdapter!!.initHighlight(row, j, true)
+                letterAdapter!!.updateHighlight(row, j, true)
                 selectionCellList.add(Pair(row, j))
             } else {
-                letterAdapter!!.initHighlight(j, row, true)
+                letterAdapter!!.updateHighlight(j, row, true)
                 selectionCellList.add(Pair(j, row))
             }
         }
@@ -867,7 +868,7 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun showLetterGrid(
         grid: Array<CharArray>,
-        fireArray: Array<BooleanArray>,
+        fireArray: Array<Array<FireInfo>>,
         highlight: Array<BooleanArray>,
         waterDrop: Array<BooleanArray>,
         completedCellHighlight: Array<BooleanArray>
@@ -888,11 +889,11 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun updateFireCountTxt(fireArray: Array<BooleanArray>) {
+    private fun updateFireCountTxt(fireArray: Array<Array<FireInfo>>) {
         var count = 0
         fireArray.map {
             for (b in it) {
-                if (b) {
+                if (b.hasFire) {
                     count++
                 }
             }

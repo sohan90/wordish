@@ -21,7 +21,6 @@ class LetterGrid @JvmOverloads constructor(
 
     private var startCalculateCellSize: Boolean = false
 
-    private val fireSize = resources.getDimension(R.dimen.fire_size).toInt()
 
     private val roundCornerSize = resources.getDimension(R.dimen.round_corner).toInt()
 
@@ -279,15 +278,40 @@ class LetterGrid @JvmOverloads constructor(
                     )
                 }
 
-                if (gridDataAdapter?.hasFire(i, j) == true) {
-                    val fireWidth = 20
-                    val fireHeight = 50
-                    rect.left = ((cornerX + gridWidth/2) - BORDER_SPACE) - fireWidth/2
-                    rect.top = ((cornerY + gridHeight/2) - BORDER_SPACE) + fireHeight
+                val fireInfo = gridDataAdapter?.getFireInfo(i, j)!!
+                if (fireInfo.hasFire) {
+                    val sizeRatio = when (fireInfo.fireCount) {
+                        1 -> 5
 
-                    val balanceHeight = ((cornerY + gridHeight) - BORDER_SPACE) - rect.top
-                    rect.right = ((rect.left + fireWidth)) + BORDER_SPACE
-                    rect.bottom = (rect.top + balanceHeight)
+                        2 -> 4
+
+                        3 -> 3
+
+                        4 -> 2
+
+                        5 -> 1
+
+                        else -> 1
+                    }
+
+                    val totalWidth = gridWidth - BORDER_SPACE
+                    val smallWidth = totalWidth / sizeRatio
+                    val halfWi = abs(smallWidth / 2)
+
+                    val totalHeight = gridHeight - BORDER_SPACE
+                    val smallHeight = abs(totalHeight / sizeRatio)
+
+                    val centerX = ((cornerX + abs((gridWidth) - BORDER_SPACE) / 2))
+                    val height = cornerY + (totalHeight - abs(smallHeight))
+
+                    rect.left = (centerX - halfWi)
+                    rect.top = height - 10
+
+                    val balanceHeightFromFireSize = ((cornerY + gridHeight) - BORDER_SPACE) - height
+
+                    rect.right = ((rect.left + abs(smallWidth)))
+                    rect.bottom = (rect.top + abs(balanceHeightFromFireSize))
+
 
                     canvas.drawBitmap(fireGif[fireGifIndex % 5], null, rect, null)
                 }

@@ -1,6 +1,7 @@
 package com.conversant.app.wordish.commons
 
 import android.graphics.Color
+import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.LetterGrid
 import com.conversant.app.wordish.custom.StreakView
 import java.util.*
@@ -154,13 +155,15 @@ object Util {
     fun replaceNewWord(
         list: List<Pair<Int, Int>>, adapterData: Array<CharArray>,
         completedCell: Array<BooleanArray>,
-        fireList: Array<BooleanArray>
+        fireList: Array<Array<FireInfo>>
     ) {
         for (pair in list) {
 
             adapterData[pair.first][pair.second] = randomChar
             completedCell[pair.first][pair.second] = true
-            fireList[pair.first][pair.second] = false
+            val fireInfo = fireList[pair.first][pair.second]
+            fireInfo.fireCount = 0
+            fireInfo.hasFire = false
         }
     }
 

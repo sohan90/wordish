@@ -238,7 +238,7 @@ class LetterBoard @JvmOverloads constructor(
                     buff[buffCount] = _dataAdapter.getLetter(start.row, start.col)
                 }
                 val letter = _dataAdapter.getLetter(gridIndex.row, gridIndex.col)
-                dataAdapter.initHighlight(gridIndex.row, gridIndex.col, true)
+                dataAdapter.updateHighlight(gridIndex.row, gridIndex.col, true)
                 buff[buffCount] = letter
             }
 
@@ -253,7 +253,7 @@ class LetterBoard @JvmOverloads constructor(
                 val hasFire = _dataAdapter.hasFire(idx.row, idx.col)
                 if (hasFire && shrinkFire) { // shrink fire with water
 
-                    dataAdapter.initWaterDrop(idx.row, idx.col, true)
+                    dataAdapter.updateWaterDrop(idx.row, idx.col, true)
                     it.onSelectionFireCell(streakLine, true)
 
                     CoroutineScope(Dispatchers.Main).launch {
@@ -262,11 +262,11 @@ class LetterBoard @JvmOverloads constructor(
                             delay(100)
                             i += 100;
                             if (i >= 1500) { // shrink the fire in the halfway
-                                dataAdapter.initFire(idx.row, idx.col, false)
+                                dataAdapter.updateFire(idx.row, idx.col, false)
                             }
                             letterGrid.startWaterDropAnim()
                         }
-                        dataAdapter.initWaterDrop(idx.row, idx.col, false)
+                        dataAdapter.updateWaterDrop(idx.row, idx.col, false)
                         it.onSelectionFireCell(streakLine, false)
                     }
                 }
@@ -275,7 +275,7 @@ class LetterBoard @JvmOverloads constructor(
                     it.onSelectionBegin(streakLine, str)
                 }
 
-                dataAdapter.initHighlight(idx.row, idx.col, true)
+                dataAdapter.updateHighlight(idx.row, idx.col, true)
             }
         }
 
@@ -300,7 +300,7 @@ class LetterBoard @JvmOverloads constructor(
                     }
                 }
             } else {
-                dataAdapter.initHighlight(
+                dataAdapter.updateHighlight(
                     streakLine.startIndex.row,
                     streakLine.startIndex.col,
                     false

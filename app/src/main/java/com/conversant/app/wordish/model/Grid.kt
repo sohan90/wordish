@@ -1,5 +1,7 @@
 package com.conversant.app.wordish.model
 
+import com.conversant.app.wordish.custom.FireInfo
+
 /**
  * Created by abdularis on 08/07/17.
  */
@@ -7,7 +9,7 @@ class Grid(rowCount: Int, colCount: Int) {
     var array: Array<CharArray>
         private set
 
-    var fireArray: Array<BooleanArray>
+    var fireArray: Array<Array<FireInfo>>
         private set
 
     var highlight: Array<BooleanArray>
@@ -28,7 +30,7 @@ class Grid(rowCount: Int, colCount: Int) {
     init {
         require(!(rowCount <= 0 || colCount <= 0)) { "Row and column should be greater than 0" }
         array = Array(rowCount) { CharArray(colCount) }
-        fireArray = Array(rowCount) { BooleanArray(colCount) }
+        fireArray = Array(rowCount) { Array(colCount){ FireInfo(0, false)} }
         waterDrop = Array(rowCount) { BooleanArray(colCount) }
         highlight = Array(rowCount) { BooleanArray(colCount) }
         completedCellHighlight = Array(rowCount) { BooleanArray(colCount) }

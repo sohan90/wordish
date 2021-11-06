@@ -25,10 +25,14 @@ internal class SampleLetterGridDataAdapter(
        return false
     }
 
-    override fun initWaterDrop(row: Int, col: Int, hasWater:Boolean) {
+    override fun getFireInfo(row: Int, col: Int): FireInfo {
+        return FireInfo(0, false)
     }
 
-    override fun initFire(row: Int, col: Int, hasFire: Boolean) {
+    override fun updateWaterDrop(row: Int, col: Int, hasWater:Boolean) {
+    }
+
+    override fun updateFire(row: Int, col: Int, hasFire: Boolean) {
 
     }
 
@@ -36,7 +40,7 @@ internal class SampleLetterGridDataAdapter(
        return false
     }
 
-    override fun initHighlight(row: Int, col: Int, select: Boolean) {}
+    override fun updateHighlight(row: Int, col: Int, select: Boolean) {}
 
     override fun initCompletedCell(row: Int, col: Int, select: Boolean) {}
 
