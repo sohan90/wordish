@@ -10,19 +10,29 @@ import com.conversant.app.wordish.commons.orZero
 import java.util.*
 import kotlin.math.abs
 
-const val BORDER_SPACE = 15
-const val LETTER_SPACE = BORDER_SPACE / 2
 
+
+const val SPREAD_FIRE_RATIO = 1
+const val FIRE_RATIO_2 = 3
+const val FIRE_RATIO_3 = 2
+const val FIRE_RATIO_4 = 1
+const val START_FIRE_RATIO = 4
 class LetterGrid @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     var letterBoardListener: LetterBoard.OnLetterSelectionListener? = null
 ) : GridBehavior(context, attrs), Observer {
 
+    private var spotFireImage: Boolean = false
+
     private var startCalculateCellSize: Boolean = false
 
 
     private val roundCornerSize = resources.getDimension(R.dimen.round_corner).toInt()
+
+    private val borderSpace = resources.getDimension(R.dimen.border_space).toInt()
+
+    private val letterSpace = borderSpace / 2
 
     var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false) } }
 
@@ -67,7 +77,7 @@ class LetterGrid @JvmOverloads constructor(
     }
 
     private fun initPaintObject() {
-        backgroundColor.color = Color.BLACK //Color.parseColor("#D8BD96")
+        backgroundColor.color = Color.parseColor("#D8BD96")//Color.BLACK //
         backgroundColor.style = Paint.Style.FILL
         backgroundColor.strokeWidth = 15f
         backgroundColor.isAntiAlias = true
@@ -140,6 +150,16 @@ class LetterGrid @JvmOverloads constructor(
         invalidate()
     }
 
+    fun spotFire() {
+        spotFireImage = true
+        //invalidate()
+    }
+
+    fun releaseFire(){
+        spotFireImage = false
+        //invalidate()
+    }
+
     override fun getColCount(): Int {
         return gridDataAdapter?.getColCount().orZero()
     }
@@ -184,8 +204,8 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
-                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat() - BORDER_SPACE,
+                        cornerX + gridWidth.toFloat() - borderSpace,
+                        cornerY + gridHeight.toFloat() - borderSpace,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
                         backgroundColor
@@ -195,8 +215,8 @@ class LetterGrid @JvmOverloads constructor(
                         cellRect.setEmpty()
                         cellRect.left = cornerX
                         cellRect.top = cornerY
-                        cellRect.right = cornerX + gridWidth - abs(BORDER_SPACE + 20)
-                        cellRect.bottom = cornerY + gridHeight - abs(BORDER_SPACE + 20)
+                        cellRect.right = cornerX + gridWidth - abs(borderSpace + 20)
+                        cellRect.bottom = cornerY + gridHeight - abs(borderSpace + 20)
                         letterBoardListener?.onCellPlacementLaidOut(cellRect, "$i,$j")
                     }
                 }
@@ -227,8 +247,8 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
-                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat() - BORDER_SPACE,
+                        cornerX + gridWidth.toFloat() - borderSpace,
+                        cornerY + gridHeight.toFloat() - borderSpace,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
                         highlightPaint
@@ -241,7 +261,7 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
-                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
+                        cornerX + gridWidth.toFloat() - borderSpace,
                         cornerY + gridHeight.toFloat() - value,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
@@ -253,7 +273,7 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
-                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
+                        cornerX + gridWidth.toFloat() - borderSpace,
                         cornerY + gridHeight.toFloat() - value,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
@@ -270,8 +290,8 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
-                        cornerX + gridWidth.toFloat() - BORDER_SPACE,
-                        cornerY + gridHeight.toFloat() - BORDER_SPACE,
+                        cornerX + gridWidth.toFloat() - borderSpace,
+                        cornerY + gridHeight.toFloat() - borderSpace,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
                         paint
@@ -280,34 +300,38 @@ class LetterGrid @JvmOverloads constructor(
 
                 val fireInfo = gridDataAdapter?.getFireInfo(i, j)!!
                 if (fireInfo.hasFire) {
-                    val sizeRatio = when (fireInfo.fireCount) {
-                        1 -> 5
+                    val sizeRatio =
+                        if (spotFireImage) 1
+                        else {
+                            when (fireInfo.fireCount) {
+                                1 -> START_FIRE_RATIO
 
-                        2 -> 4
+                                2 -> FIRE_RATIO_2
 
-                        3 -> 3
+                                3 -> FIRE_RATIO_3
 
-                        4 -> 2
+                                4 -> FIRE_RATIO_4
 
-                        5 -> 1
+                                5 -> SPREAD_FIRE_RATIO
 
-                        else -> 1
-                    }
+                                else -> 1
+                            }
+                        }
 
-                    val totalWidth = gridWidth - BORDER_SPACE
+                    val totalWidth = gridWidth - borderSpace
                     val smallWidth = totalWidth / sizeRatio
                     val halfWi = abs(smallWidth / 2)
 
-                    val totalHeight = gridHeight - BORDER_SPACE
+                    val totalHeight = gridHeight - borderSpace
                     val smallHeight = abs(totalHeight / sizeRatio)
 
-                    val centerX = ((cornerX + abs((gridWidth) - BORDER_SPACE) / 2))
+                    val centerX = ((cornerX + abs((gridWidth) - borderSpace) / 2))
                     val height = cornerY + (totalHeight - abs(smallHeight))
 
                     rect.left = (centerX - halfWi)
-                    rect.top = height - 10
+                    rect.top = height
 
-                    val balanceHeightFromFireSize = ((cornerY + gridHeight) - BORDER_SPACE) - height
+                    val balanceHeightFromFireSize = ((cornerY + gridHeight) - borderSpace) - height
 
                     rect.right = ((rect.left + abs(smallWidth)))
                     rect.bottom = (rect.top + abs(balanceHeightFromFireSize))
@@ -322,10 +346,11 @@ class LetterGrid @JvmOverloads constructor(
                         bombCell[i][j].xAxix, y - charBounds.exactCenterY(), paint
                     )
                 } else {
+                    if (fireInfo.fireCount >= 5) paint.color = Color.BLACK else paint.color = Color.WHITE
                     canvas.drawText(
                         letter.toString(),
-                        (x - charBounds.exactCenterX() - LETTER_SPACE),
-                        (y - charBounds.exactCenterY() - LETTER_SPACE),
+                        (x - charBounds.exactCenterX() - letterSpace),
+                        (y - charBounds.exactCenterY() - letterSpace),
                         paint
                     )
                 }
@@ -335,7 +360,7 @@ class LetterGrid @JvmOverloads constructor(
                     rect.top = waterY
                     rect.right = rect.left + 150
                     rect.bottom = rect.top + 200
-                    canvas.drawBitmap(waterGif[waterGifIndex % 5], null, rect, paint)
+                    canvas.drawBitmap(waterGif[waterGifIndex % 5], null, rect, null)
                 }
 
 

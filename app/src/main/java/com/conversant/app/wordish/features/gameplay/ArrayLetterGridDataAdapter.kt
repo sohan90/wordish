@@ -49,7 +49,9 @@ class ArrayLetterGridDataAdapter internal constructor(
         val fireInfo = fireList[row][col]
         fireInfo.hasFire = hasFire
         if (hasFire) {
-            fireInfo.fireCount = fireInfo.fireCount + 1
+            if (fireInfo.fireCount < 5) {
+                fireInfo.fireCount = fireInfo.fireCount + 1
+            }
         } else {
             fireInfo.fireCount = 0
         }
@@ -59,8 +61,8 @@ class ArrayLetterGridDataAdapter internal constructor(
         return waterDrop[row][col]
     }
 
-    override fun updateWaterDrop(row: Int, col: Int, hasWaterDrop: Boolean) {
-        waterDrop[row][col] = hasWaterDrop
+    override fun updateWaterDrop(row: Int, col: Int, hasWater: Boolean) {
+        waterDrop[row][col] = hasWater
     }
 
     override fun highLight(row: Int, col: Int): Boolean {

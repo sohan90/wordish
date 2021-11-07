@@ -271,11 +271,12 @@ class LetterBoard @JvmOverloads constructor(
                     }
                 }
 
-                if (!shrinkFire) {
-                    it.onSelectionBegin(streakLine, str)
-                }
 
-                dataAdapter.updateHighlight(idx.row, idx.col, true)
+                    if (shrinkFire) return
+
+                    it.onSelectionBegin(streakLine, str)
+                    dataAdapter.updateHighlight(idx.row, idx.col, true)
+
             }
         }
 
@@ -292,20 +293,13 @@ class LetterBoard @JvmOverloads constructor(
         }
 
         override fun onTouchEnd(streakLine: StreakLine) {
-            if (!shrinkFire) {
-                if (streakLine.startIndex.row != -1 && streakLine.endIndex.row != -1) {
-                    selectionListener?.let {
-                        val str = getStringInRange(streakLine.startIndex, streakLine.endIndex)
-                        it.onSelectionEnd(streakLine, str)
-                    }
-                }
-            } else {
-                dataAdapter.updateHighlight(
-                    streakLine.startIndex.row,
-                    streakLine.startIndex.col,
-                    false
-                )
+            if (shrinkFire) return
 
+            if (streakLine.startIndex.row != -1 && streakLine.endIndex.row != -1) {
+                selectionListener?.let {
+                    val str = getStringInRange(streakLine.startIndex, streakLine.endIndex)
+                    it.onSelectionEnd(streakLine, str)
+                }
             }
 
             list.clear()
@@ -400,7 +394,7 @@ class LetterBoard @JvmOverloads constructor(
         fun onSelectionDrag(streakLine: StreakLine, str: String)
         fun onSelectionEnd(streakLine: StreakLine, str: String)
         fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean)
-        fun onSelectionWord(start:GridIndex, list:List<GridIndex>)
+        fun onSelectionWord(start: GridIndex, list: List<GridIndex>)
         fun onCellPlacementLaidOut(cellRect: Rect, position: String)
     }
 

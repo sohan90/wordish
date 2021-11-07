@@ -1,10 +1,6 @@
 package com.conversant.app.wordish.commons.generator
 
-/**
- * Created by abdularis on 06/07/17.
- *
- * Base class untuk grid generator
- */
+
 abstract class GridGenerator<InputType, OutputValue> {
 
     abstract fun setGrid(dataInput: InputType, grid: Array<CharArray>): OutputValue

@@ -9,6 +9,7 @@ import com.conversant.app.wordish.commons.SingleLiveEvent
 import com.conversant.app.wordish.commons.Timer
 import com.conversant.app.wordish.commons.Timer.OnTimeoutListener
 import com.conversant.app.wordish.commons.Util
+import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.StreakView
 import com.conversant.app.wordish.data.room.UsedWordDataSource
 import com.conversant.app.wordish.data.room.WordDataSource
@@ -313,30 +314,6 @@ class GamePlayViewModel @Inject constructor(
         setGameState(Finished(currentGameData, win))
     }
 
-    private fun findUsedWord(word: String, enableReverse: Boolean): UsedWord? {
-        val answerStrRev = Util.getReverseString(word)
-        for (usedWord in currentGameData?.usedWords.orEmpty()) {
-            if (usedWord.isAnswered) continue
-
-            val currUsedWord = usedWord.string
-            if (currUsedWord.equals(word, ignoreCase = true) ||
-                currUsedWord.equals(answerStrRev, ignoreCase = true) && enableReverse
-            ) {
-                return usedWord
-            }
-        }
-        return null
-    }
-
-    private fun matchCurrentUsedWord(word: String, enableReverse: Boolean): Boolean {
-        if (currentUsedWord == null) return false
-
-        val answerStrRev = Util.getReverseString(word)
-        val currUsedWord = currentUsedWord!!.string
-        return currUsedWord.equals(word, ignoreCase = true) ||
-                currUsedWord.equals(answerStrRev, ignoreCase = true) && enableReverse
-    }
-
     private fun onTimerTimeout() {
         currentGameData?.let { gameData ->
             if (timer.isStarted) {
@@ -387,6 +364,30 @@ class GamePlayViewModel @Inject constructor(
         onAnswerResultWordLiveData = SingleLiveEvent()
         onCurrentWordChangedLiveData = MutableLiveData()
         onCurrentWordCountDownLiveData = MutableLiveData()
+    }
+
+    fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>):Int {
+        var count = 0
+        fireArray.map {
+            for (b in it) {
+                if (b.hasFire) {
+                    count++
+                }
+            }
+        }
+        return count
+    }
+
+    fun growFireCell(fireArray: Array<Array<FireInfo>>){
+        fireArray.map {
+            for (b in it) {
+                if (b.hasFire) {
+                    if (b.fireCount < 5) {
+                        b.fireCount = b.fireCount + 1
+                    }
+                }
+            }
+        }
     }
 
     companion object {

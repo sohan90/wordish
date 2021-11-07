@@ -4,12 +4,14 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.DisplayMetrics
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.animation.Animation
@@ -223,7 +225,7 @@ class GamePlayActivity : FullscreenActivity() {
                     v.visibility = View.INVISIBLE
 
                     if (fireViewList.isNotEmpty()) {
-                        fireViewCount--
+                        fireViewCount --
                     }
                     if (fireViewCount == 0) {
                         //penalty fire animation logic
@@ -233,6 +235,7 @@ class GamePlayActivity : FullscreenActivity() {
                         } else if (answerWordLength == RESET_PENALTY_FIRE_VIEW) { // on penalty end animation reset x and y axis
                             v.x = iv_penalty_placeholder.x
                             v.y = iv_penalty_placeholder.y
+
                         }
                     }
 
@@ -271,6 +274,11 @@ class GamePlayActivity : FullscreenActivity() {
             bomb.alpha = 1f
             bomb.animate().withEndAction {
                 resetBombImage()
+
+                viewModel.growFireCell(letterAdapter!!.fireList)
+                addFireToCellFromBank()
+                animateFireMoveFromBank()
+
                 resetNewCharacters()
 
             }.alpha(0f)
@@ -312,7 +320,24 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun initClickListener() {
+        iv_fire.setOnTouchListener { _, event ->
+            when (event?.action) {
+                MotionEvent.ACTION_DOWN ->
+                    letter_board.letterGrid.spotFire()
+
+                MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP ->
+                    letter_board.letterGrid.releaseFire()
+
+                else -> {
+                    letter_board.letterGrid.releaseFire()
+                }
+            }
+
+            return@setOnTouchListener true
+        }
+
         iv_water.setOnClickListener {
             clickedState = if (!clickedState) {
                 disableOrEnableOtherPowerUps(0.2f, it)
@@ -411,7 +436,7 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.streakView.setOverrideStreakLineColor(resources.getColor(R.color.gray))
         letter_board.selectionListener = object : OnLetterSelectionListener {
 
-            override fun onSelectionWord(start:GridIndex, list:List<GridIndex>) {
+            override fun onSelectionWord(start: GridIndex, list: List<GridIndex>) {
                 val buff = CharArray(list.size)
                 for ((buffCount, gridIndex) in list.withIndex()) {
                     if (buffCount == 0) {
@@ -423,7 +448,7 @@ class GamePlayActivity : FullscreenActivity() {
                 val validWord = viewModel.checkWordFromWordList(String(buff), true)
                 if (validWord == null && !clickedState) {
                     soundPlayer.play(SoundPlayer.Sound.Highlight)
-                } else if (!clickedState){
+                } else if (!clickedState) {
                     soundPlayer.play(SoundPlayer.Sound.SwipeCorrect)
                 }
             }
@@ -431,8 +456,8 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onSelectionBegin(streakLine: StreakLine, str: String) {
                 val startGrid = streakLine.startIndex
                 selectionCellList.add(Pair(startGrid.row, startGrid.col))
-
                 beginStreakLine = streakLine
+
                 animateBombIfActivated(streakLine)
                 streakLine.color = Util.getRandomColorWithAlpha(170)
                 text_selection_layout.visible()
@@ -447,12 +472,12 @@ class GamePlayActivity : FullscreenActivity() {
 
                 text_selection_layout.visible()
                 text_selection.text = if (str.isEmpty()) "..." else str
-                val correctWord = viewModel.checkWordFromWordList(str, true)
             }
 
             override fun onSelectionEnd(streakLine: StreakLine, str: String) {
                 endStreakLine = streakLine
                 viewModel.answerWord(str, streakLine, preferences.reverseMatching())
+
                 text_selection_layout.gone()
                 text_selection.text = str
                 text_selection.animate().withEndAction {
@@ -463,7 +488,7 @@ class GamePlayActivity : FullscreenActivity() {
 
             override fun onSelectionFireCell(streakLine: StreakLine, hasFire: Boolean) {
                 if (hasFire) {
-                    if (iv_water.scaleX == 1.2f) {// water droplets enabled
+                    if (iv_water.scaleX == 1.2f) { // water droplets enabled
                         soundPlayer.stop()
                         soundPlayer.play(SoundPlayer.Sound.WaterDroplets)
                     }
@@ -478,7 +503,7 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onCellPlacementLaidOut(cellRect: Rect, position: String) {
                 val rect = Rect(cellRect.left, cellRect.top, cellRect.right, cellRect.bottom)
                 cellPlacementMap[rect] = position
-                if (cellPlacementMap.size == 36){
+                if (cellPlacementMap.size == 36) {
                     letter_board.streakView.cellPlacementMap(cellPlacementMap)
                 }
             }
@@ -533,8 +558,7 @@ class GamePlayActivity : FullscreenActivity() {
             }
             else -> {
                 if (onAnswerRes != null && onAnswerRes?.correctWord != null) {
-                    val count = tv_fire_plus_count.text.toString().toInt()
-                    addFireToCellFromBank(count)
+                    addFireToCellFromBank()
                     animateFireMoveFromBank(answerWordLength = onAnswerRes?.correctWord!!.length)
                 }
             }
@@ -732,6 +756,7 @@ class GamePlayActivity : FullscreenActivity() {
         if (onAnswerWord.streakLine.startIndex.row != -1) {
             turns += 1
             updateTurnCount(words)
+            viewModel.growFireCell(letterAdapter!!.fireList)
         }
 
         tv_word.text = "$words"
@@ -768,7 +793,7 @@ class GamePlayActivity : FullscreenActivity() {
                 gameState.gameData?.let {
                     onGameRoundLoaded(it)
 
-                    addFireToCellFromBank(1)
+                    addFireToCellFromBank()
                     Handler(Looper.getMainLooper()).postDelayed({
                         letter_board.startFireAnim()
                         animateFireMoveFromBank()
@@ -778,23 +803,14 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun addFireToCellFromBank(fireCount: Int) {
+    private fun addFireToCellFromBank() {
+        val fireCount = tv_fire_plus_count.text.toString().toInt()
         rowColListPair.clear()
         createRowColListForFireMoveAnim(fireCount)
         addFireView(fireCount)
     }
 
     private fun onGameRoundLoaded(gameData: GameData) {
-        if (gameData.isFinished) {
-            letter_board.streakView.isInteractive = false
-            text_game_finished.visible()
-            layout_complete_popup.visible()
-            text_complete_popup.setText(R.string.lbl_complete)
-        } else if (gameData.isGameOver) {
-            letter_board.streakView.isInteractive = false
-            layout_complete_popup.visible()
-            text_complete_popup.setText(R.string.lbl_game_over)
-        }
         showLetterGrid(
             gameData.grid!!.array,
             gameData.grid!!.fireArray,
@@ -890,14 +906,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun updateFireCountTxt(fireArray: Array<Array<FireInfo>>) {
-        var count = 0
-        fireArray.map {
-            for (b in it) {
-                if (b.hasFire) {
-                    count++
-                }
-            }
-        }
+        val count = viewModel.getTotalFireCountFromBoard(fireArray)
         updateFireTxt(count)
     }
 

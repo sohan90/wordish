@@ -2,9 +2,7 @@ package com.conversant.app.wordish.model
 
 import com.conversant.app.wordish.custom.FireInfo
 
-/**
- * Created by abdularis on 08/07/17.
- */
+
 class Grid(rowCount: Int, colCount: Int) {
     var array: Array<CharArray>
         private set
