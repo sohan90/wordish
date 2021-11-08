@@ -13,7 +13,7 @@
     <include
         android:id="@+id/layout1"
         layout="@layout/partial_game_header"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"/>
 
     <FrameLayout

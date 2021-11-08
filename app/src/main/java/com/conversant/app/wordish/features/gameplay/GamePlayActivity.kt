@@ -124,6 +124,8 @@ class GamePlayActivity : FullscreenActivity() {
         loadOrGenerateNewGame()
     }
 
+
+
     private fun addFireView(fireCount: Int) {
         val constraintLayout = parent_layout
         val constraintSet = ConstraintSet()
@@ -275,11 +277,11 @@ class GamePlayActivity : FullscreenActivity() {
             bomb.animate().withEndAction {
                 resetBombImage()
 
-                viewModel.growFireCell(letterAdapter!!.fireList)
+                resetNewCharacters()
+                
+                viewModel.growFireCell(letterAdapter!!.fireList, letterAdapter!!.backedGrid)
                 addFireToCellFromBank()
                 animateFireMoveFromBank()
-
-                resetNewCharacters()
 
             }.alpha(0f)
                 .setDuration(300)
@@ -298,7 +300,9 @@ class GamePlayActivity : FullscreenActivity() {
                 letter_board.letterGrid.bombCell[i][j].animate = false
                 letter_board.letterGrid.bombCell[i][j].xAxix = 0f
                 letterAdapter!!.backedGrid[i][j] = Util.randomChar
-                letterAdapter!!.updateFire(i, j, true)
+                letterAdapter!!.fireList[i][j].hasFire = true
+                letterAdapter!!.fireList[i][j].fireCount = 0
+                //letterAdapter!!.updateFire(i, j, true)
             }
         }
         updateFireCountTxt(letterAdapter!!.fireList)
@@ -327,7 +331,7 @@ class GamePlayActivity : FullscreenActivity() {
                 MotionEvent.ACTION_DOWN ->
                     letter_board.letterGrid.spotFire()
 
-                MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP ->
+               MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP ->
                     letter_board.letterGrid.releaseFire()
 
                 else -> {
@@ -570,7 +574,8 @@ class GamePlayActivity : FullscreenActivity() {
         if (onAnswerWord.correct) {
             soundPlayer.play(SoundPlayer.Sound.Correct)
             text_popup_correct_word.visible()
-            text_popup_correct_word.text = onAnswerWord.correctWord
+            val coins = "+${onAnswerWord.coins}"
+            text_popup_correct_word.text = coins
 
             val height = parent_layout.height
             val percentage = height * (0.5)
@@ -586,8 +591,9 @@ class GamePlayActivity : FullscreenActivity() {
 
                     Util.replaceNewWord(
                         selectionCellList, letterAdapter!!.backedGrid,
-                        letterAdapter!!.completedCell, letterAdapter!!.fireList
-                    )
+                        letterAdapter!!.completedCell, letterAdapter!!.fireList)
+
+                    Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid){}
 
                     val isCompleted = checkForGameCompletion()
                     if (!isCompleted) {
@@ -703,13 +709,25 @@ class GamePlayActivity : FullscreenActivity() {
         viewModel.resumeGame()
     }
 
+    override fun onResume() {
+        super.onResume()
+        soundPlayer.resume()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        soundPlayer.pause()
+    }
+
     override fun onStop() {
         super.onStop()
         viewModel.pauseGame()
+        soundPlayer.stop()
     }
 
     override fun onDestroy() {
         viewModel.stopGame()
+        soundPlayer.stop()
         super.onDestroy()
     }
 
@@ -756,7 +774,7 @@ class GamePlayActivity : FullscreenActivity() {
         if (onAnswerWord.streakLine.startIndex.row != -1) {
             turns += 1
             updateTurnCount(words)
-            viewModel.growFireCell(letterAdapter!!.fireList)
+            viewModel.growFireCell(letterAdapter!!.fireList, letterAdapter!!.backedGrid)
         }
 
         tv_word.text = "$words"
@@ -935,7 +953,7 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationStart(animation: Animator?) {}
 
             override fun onAnimationEnd(animation: Animator?) {
-                if (count >= GAME_OVER_FIRE_COUNT) {
+                if (count > GAME_OVER_FIRE_COUNT) {
                     showFinishGame(Finished(null, false))
                 }
             }

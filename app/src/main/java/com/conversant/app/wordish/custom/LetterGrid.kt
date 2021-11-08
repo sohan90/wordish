@@ -34,7 +34,7 @@ class LetterGrid @JvmOverloads constructor(
 
     private val letterSpace = borderSpace / 2
 
-    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false) } }
+    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false, false) } }
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -200,7 +200,7 @@ class LetterGrid @JvmOverloads constructor(
         for (i in 0 until gridRowCount) {
             cornerX = 0
             for (j in 0 until gridColCount) {
-                if (!bombCell[i][j].animate) {
+                if (!bombCell[i][j].animate && !bombCell[i][j].replaceWordAnimate) {
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
@@ -256,7 +256,7 @@ class LetterGrid @JvmOverloads constructor(
                 }
 
                 //during bomb explode animation draw background and border again for size change
-                if (bombCell[i][j].animate) {
+                if (bombCell[i][j].animate || bombCell[i][j].replaceWordAnimate) {
                     val value = abs(bombCell[i][j].cellYaxis)
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
@@ -340,26 +340,38 @@ class LetterGrid @JvmOverloads constructor(
                     canvas.drawBitmap(fireGif[fireGifIndex % 5], null, rect, null)
                 }
 
-                if (bombCell[i][j].animate) {
-                    canvas.drawText(
-                        letter.toString(),
-                        bombCell[i][j].xAxix, y - charBounds.exactCenterY(), paint
-                    )
-                } else {
-                    if (fireInfo.fireCount >= 5) paint.color = Color.BLACK else paint.color = Color.WHITE
-                    canvas.drawText(
-                        letter.toString(),
-                        (x - charBounds.exactCenterX() - letterSpace),
-                        (y - charBounds.exactCenterY() - letterSpace),
-                        paint
-                    )
+                when {
+                    bombCell[i][j].animate -> {//bomb animation
+                        canvas.drawText(
+                            letter.toString(),
+                            bombCell[i][j].xAxix, y - charBounds.exactCenterY(), paint
+                        )
+                    }
+                    bombCell[i][j].replaceWordAnimate -> { // replace new word animation
+                        var yAxis = 0f
+                        if (bombCell[i][j].cellYaxis == 0f) yAxis = y - charBounds.exactCenterY() - letterSpace
+                        canvas.drawText(
+                            letter.toString(),
+                            (x - charBounds.exactCenterX() - letterSpace), yAxis, paint)
+                    }
+                    else -> { // no animation
+                        if (fireInfo.fireCount >= 5) paint.color = Color.BLACK else paint.color = Color.WHITE
+
+                        canvas.drawText(
+                            letter.toString(),
+                            (x - charBounds.exactCenterX() - letterSpace),
+                            (y - charBounds.exactCenterY() - letterSpace),
+                            paint
+                        )
+                    }
                 }
 
                 if (gridDataAdapter?.hasWaterDrop(i, j) == true) {
-                    rect.left = waterX + (halfWidth - waterDropBitmap!!.width)
-                    rect.top = waterY
-                    rect.right = rect.left + 150
-                    rect.bottom = rect.top + 200
+                    val centerX = (waterX - borderSpace) + gridWidth/2
+                    rect.left =  centerX - waterDropBitmap!!.width//+ (halfWidth - waterDropBitmap!!.width)
+                    rect.top = waterY + borderSpace
+                    rect.right = rect.left + (gridWidth - borderSpace)
+                    rect.bottom = rect.top + (gridHeight - borderSpace)
                     canvas.drawBitmap(waterGif[waterGifIndex % 5], null, rect, null)
                 }
 

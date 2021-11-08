@@ -366,7 +366,7 @@ class GamePlayViewModel @Inject constructor(
         onCurrentWordCountDownLiveData = MutableLiveData()
     }
 
-    fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>):Int {
+    fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {
         var count = 0
         fireArray.map {
             for (b in it) {
@@ -378,7 +378,24 @@ class GamePlayViewModel @Inject constructor(
         return count
     }
 
-    fun growFireCell(fireArray: Array<Array<FireInfo>>){
+    fun growFireCell(fireArray: Array<Array<FireInfo>>, backedGrid: Array<CharArray>) {
+        for (row in fireArray.indices) {
+            for (col in fireArray.indices) {
+                val fireInfo = fireArray[row][col]
+                if (fireInfo.hasFire && fireInfo.fireCount == 5) { // spread fire to its adjacent sides each top left right bottom
+                    val rowSides = getAdjacentSides(row)
+                    val colSides = getAdjacentSides(col)
+
+                    fireArray[rowSides.first][col].hasFire = true
+                    fireArray[rowSides.second][col].hasFire = true
+
+                    fireArray[row][colSides.first].hasFire = true
+                    fireArray[row][colSides.second].hasFire = true
+                }
+            }
+        }
+
+
         fireArray.map {
             for (b in it) {
                 if (b.hasFire) {
@@ -389,6 +406,29 @@ class GamePlayViewModel @Inject constructor(
             }
         }
     }
+
+    private fun getAdjacentSides(rowOrCol: Int): Pair<Int, Int> {
+        val leftOrTop: Int
+        val rightOrBottom: Int
+
+        when (rowOrCol) {
+            0 -> {
+                leftOrTop = 0
+                rightOrBottom = rowOrCol + 1
+            }
+            5 -> {
+                leftOrTop = rowOrCol - 1
+                rightOrBottom = 5
+            }
+            else -> {
+                leftOrTop = rowOrCol - 1
+                rightOrBottom = rowOrCol + 1
+            }
+        }
+
+        return Pair(leftOrTop, rightOrBottom)
+    }
+
 
     companion object {
         private const val TIMER_TIMEOUT = 1000

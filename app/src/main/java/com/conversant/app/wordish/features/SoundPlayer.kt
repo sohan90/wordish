@@ -23,12 +23,26 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
 
     fun play(sound: Sound) {
         if (mPreferences.enableSound()) {
-           streadId =  soundPool.play(soundPoolMap[sound.ordinal],
-                1.0f, 1.0f, 0, 0, 1.0f)
+            streadId = soundPool.play(
+                soundPoolMap[sound.ordinal],
+                1.0f, 1.0f, 0, 0, 1.0f
+            )
         }
     }
 
-    fun stop(){
+    fun resume() {
+        if (streadId != 0) {
+            soundPool.resume(streadId)
+        }
+    }
+
+    fun pause(){
+        if (streadId != 0) {
+            soundPool.pause(streadId)
+        }
+    }
+
+    fun stop() {
         if (streadId != 0) {
             soundPool.stop(streadId)
         }

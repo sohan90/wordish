@@ -261,7 +261,7 @@ class LetterBoard @JvmOverloads constructor(
                         while (i < 2000) {
                             delay(100)
                             i += 100;
-                            if (i >= 1500) { // shrink the fire in the halfway
+                            if (i == 2000) { // shrink the fire in the halfway
                                 dataAdapter.updateFire(idx.row, idx.col, false)
                             }
                             letterGrid.startWaterDropAnim()
@@ -379,15 +379,15 @@ class LetterBoard @JvmOverloads constructor(
                 val propertyAnim2 = PropertyValuesHolder.ofFloat("$propertyCellIndex", -100f, 0f)
                 propertyValueList.add(propertyAnim)
                 propertyValueList.add(propertyAnim2)
-
-                letterGrid.bombCell[i][j].animate = true
-                letterGrid.bombCell[i][j].xAxix = xAxis
             }
         }
 
         return propertyValueList
 
     }
+
+
+
 
     interface OnLetterSelectionListener {
         fun onSelectionBegin(streakLine: StreakLine, str: String)

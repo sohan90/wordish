@@ -47,13 +47,19 @@ class ArrayLetterGridDataAdapter internal constructor(
 
     override fun updateFire(row: Int, col: Int, hasFire: Boolean) {
         val fireInfo = fireList[row][col]
-        fireInfo.hasFire = hasFire
         if (hasFire) {
+            fireInfo.hasFire = hasFire
             if (fireInfo.fireCount < 5) {
                 fireInfo.fireCount = fireInfo.fireCount + 1
             }
         } else {
-            fireInfo.fireCount = 0
+            if (fireInfo.fireCount >=3){
+                fireInfo.hasFire = true
+                fireInfo.fireCount = fireInfo.fireCount - 2
+            } else {
+                fireInfo.fireCount = 0
+                fireInfo.hasFire = false
+            }
         }
     }
 

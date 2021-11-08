@@ -1,6 +1,10 @@
 package com.conversant.app.wordish.commons
 
+import android.animation.PropertyValuesHolder
+import android.animation.ValueAnimator
 import android.graphics.Color
+import android.view.animation.LinearInterpolator
+import androidx.core.animation.doOnEnd
 import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.LetterGrid
 import com.conversant.app.wordish.custom.StreakView
@@ -167,43 +171,50 @@ object Util {
         }
     }
 
-    fun replaceNewWordForExplode(col: Int, adapterData: Array<CharArray>, letterGrid: LetterGrid) {
-        val colEnd = if (col == 0) col + 1 else col
-        for (i in 0..5) {
-            for (j in colEnd - 1..colEnd) {
-                letterGrid.bombCell[i][j].animate = false
-                letterGrid.bombCell[i][j].xAxix = 0f
-                adapterData[i][j] = randomChar
-            }
-        }
-    }
-
-    fun getNewCharList(): List<Char> {
-        val list = mutableListOf<Char>()
-        for (i in 0..5) {
-            list.add(randomChar)
-        }
-        return list
-    }
-
-    fun replaceNewWordForRow(
-        list: List<Char>,
-        col: Int,
-        letterGrid: LetterGrid,
-        adapterData: Array<CharArray>
-    ) {
-        for (i in list.indices) {
-            letterGrid.bombCell[i][col].animate = false
-            letterGrid.bombCell[i][col].xAxix = 0f
-            adapterData[i][col] = list[i]
-        }
-    }
-
     fun IntProgression.size(): Int {
         var size = 0
         for (i in this) {
             size++
         }
         return size
+    }
+
+    fun animateReplaceWordCell(
+        list: MutableList<Pair<Int, Int>>,
+        letterGrid: LetterGrid, onAnimationEndCallBack:() ->Unit
+    ) {
+
+        val selectionCellList = ArrayList<Pair<Int, Int>>()
+        selectionCellList.addAll(list)
+
+        val propertyValueList = arrayListOf<PropertyValuesHolder>()
+
+        val propertyAnim = PropertyValuesHolder.ofFloat("$1", -100f, 0f)
+        propertyValueList.add(propertyAnim)
+
+        val valueAnimator =
+            ValueAnimator.ofPropertyValuesHolder(propertyAnim)
+
+        valueAnimator.addUpdateListener {
+
+            onAnimationEndCallBack()
+            for (i in selectionCellList.indices) {
+
+                val pair = selectionCellList[i]
+                val value: Float = it.getAnimatedValue("$1") as Float
+                letterGrid.bombCell[pair.first][pair.second].replaceWordAnimate = true
+                letterGrid.bombCell[pair.first][pair.second].cellYaxis = value
+            }
+        }
+
+        valueAnimator.doOnEnd {
+            for (pair in selectionCellList) {
+                letterGrid.bombCell[pair.first][pair.second].replaceWordAnimate = false
+            }
+        }
+
+        valueAnimator.duration = 200
+        valueAnimator.interpolator = LinearInterpolator()
+        valueAnimator.start()
     }
 }
