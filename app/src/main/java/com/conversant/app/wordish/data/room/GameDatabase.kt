@@ -22,15 +22,7 @@ abstract class GameDatabase : RoomDatabase() {
         private var INSTANCE: GameDatabase? = null
         fun getInstance(context: Context): GameDatabase {
             if (INSTANCE == null) {
-                INSTANCE = Room.databaseBuilder(context, GameDatabase::class.java, DB_NAME)
-                    /*addCallback(object : Callback() {
-                        override fun onCreate(db: SupportSQLiteDatabase) {
-                            Executors.newSingleThreadScheduledExecutor()
-                                .execute { //prepopulateDatabase(context)
-                                }
-                        }
-                    })*/
-                    .build()
+                INSTANCE = Room.databaseBuilder(context, GameDatabase::class.java, DB_NAME).build()
             }
             return INSTANCE!!
         }
@@ -40,8 +32,14 @@ abstract class GameDatabase : RoomDatabase() {
                 val dataXmlLoader = WordThemeDataXmlLoader(context)
                 val gameDb = getInstance(context)
                 gameDb.wordDataSource.insertAll(dataXmlLoader.words)
-                gameDb.gameThemeDataSource.insertAll(dataXmlLoader.gameThemes)
                 dataXmlLoader.release()
+            }
+        }
+
+        suspend fun loadDefinition(context: Context){
+            withContext(Dispatchers.IO) {
+                val dataXmlLoader = WordThemeDataXmlLoader(context)
+                dataXmlLoader.loadDefinition()
             }
         }
     }

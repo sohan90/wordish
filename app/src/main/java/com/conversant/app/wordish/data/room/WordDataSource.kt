@@ -14,8 +14,11 @@ interface WordDataSource {
     @Query("SELECT * FROM words WHERE LENGTH(string) < :maxChar")
     fun getWords(maxChar: Int): Flowable<List<Word>>
 
-    @Query("SELECT * FROM words WHERE LENGTH(string) < :maxChar")
+    @Query("SELECT * FROM words WHERE LENGTH(string) <= :maxChar")
     fun getWordsMayBe(maxChar: Int): Maybe<List<Word>>
+
+    @Query("SELECT meaning FROM words WHERE lower(string) == :word")
+    fun getMeaningForWord(word: String): Single<String>
 
     @Query("SELECT * FROM words WHERE game_theme_id=:themeId AND LENGTH(string) < :maxChar")
     fun getWords(themeId: Int, maxChar: Int): Flowable<List<Word>>

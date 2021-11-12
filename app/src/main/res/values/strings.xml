@@ -77,4 +77,7 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="summ_reverse_match">Allow reverse word selection</string>
     <string name="summ_del_finish">Delete game data when it finished</string>
+    <string name="no_meaning" translatable="false">No definition available for %s</string>
+    <string name="check_dictionary" translatable="false">check dictionary</string>
+    <string name="dictionary" translatable="false">Dictionary</string>
 </resources>

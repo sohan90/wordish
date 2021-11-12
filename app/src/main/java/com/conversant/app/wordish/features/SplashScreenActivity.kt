@@ -2,6 +2,7 @@ package com.conversant.app.wordish.features
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
@@ -21,6 +22,8 @@ class SplashScreenActivity : AppCompatActivity() {
 
     private lateinit var disposable: Disposable
 
+    private var currenTime: Long = 0
+
     @Inject
     lateinit var wordDataSource: WordDataSource
 
@@ -32,7 +35,8 @@ class SplashScreenActivity : AppCompatActivity() {
     }
 
     private fun start() {
-        disposable = wordDataSource.getWordsMayBe(6)
+        currenTime = System.currentTimeMillis()
+        disposable = wordDataSource.getWordsMayBe(20)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {
@@ -52,6 +56,7 @@ class SplashScreenActivity : AppCompatActivity() {
     }
 
     private fun nextScreen() {
+        loadDefinition()
         val dim = 6
         val intent = Intent(this, GamePlayActivity::class.java)
         intent.putExtra(GamePlayActivity.EXTRA_GAME_DIFFICULTY, Difficulty.Easy)
@@ -62,6 +67,14 @@ class SplashScreenActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
 
+    }
+
+    private fun loadDefinition() {
+        lifecycleScope.launch {
+              GameDatabase.loadDefinition(this@SplashScreenActivity)
+        }
+        val difference = (System.currentTimeMillis() - currenTime) / 1000
+        Log.d("Difference..", "$difference")
     }
 
     override fun onDestroy() {

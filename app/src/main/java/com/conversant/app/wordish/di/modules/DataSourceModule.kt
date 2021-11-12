@@ -11,9 +11,6 @@ import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
 
-/**
- * Created by abdularis on 18/07/17.
- */
 @Module
 class DataSourceModule {
     @Provides

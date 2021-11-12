@@ -4,6 +4,7 @@ import com.conversant.app.wordish.custom.LetterBoard
 import com.conversant.app.wordish.di.modules.AppModule
 import com.conversant.app.wordish.di.modules.DataSourceModule
 import com.conversant.app.wordish.di.modules.ViewModelModule
+import com.conversant.app.wordish.features.DefinitionInfoDialog
 import com.conversant.app.wordish.features.FullscreenActivity
 import com.conversant.app.wordish.features.SplashScreenActivity
 import com.conversant.app.wordish.features.gamehistory.GameHistoryActivity
@@ -24,4 +25,5 @@ interface AppComponent {
     fun inject(activity: FullscreenActivity)
     fun inject(activity: GameHistoryActivity)
     fun inject(letterboard: LetterBoard)
+    fun inject(dialog: DefinitionInfoDialog)
 }

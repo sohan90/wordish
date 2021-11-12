@@ -126,6 +126,19 @@
         android:text="0"/>
 
 
+    <ListView
+        android:id="@+id/lv_used_word"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="5dp"
+        app:layout_constraintTop_toTopOf="@id/tv_turn_title"
+        app:layout_constraintBottom_toBottomOf="@id/tv_coin"
+        android:background="@drawable/round_corner_dialog"
+        tools:listitem="@android:layout/simple_list_item_1"
+        app:layout_constraintStart_toEndOf="@id/tv_coin"
+        app:layout_constraintEnd_toStartOf="@id/iv_setting"/>
+
     <ImageView
         android:id="@+id/iv_setting"
         android:layout_width="40dp"

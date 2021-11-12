@@ -72,6 +72,7 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var onAnswerResultLiveData: SingleLiveEvent<AnswerResult>
     private lateinit var onAnswerResultWordLiveData: SingleLiveEvent<AnswerResultWord>
     private lateinit var onCurrentWordChangedLiveData: MutableLiveData<UsedWord>
+    private lateinit var foundedWord: MutableLiveData<String>
 
     val onTimer: LiveData<Int>
         get() = onTimerLiveData
@@ -93,6 +94,9 @@ class GamePlayViewModel @Inject constructor(
 
     val onCurrentWordCountDown: LiveData<Int>
         get() = onCurrentWordCountDownLiveData
+
+    val selectedWord: LiveData<String>
+        get() = foundedWord
 
     init {
         timer.addOnTimeoutListener(object : OnTimeoutListener {
@@ -364,6 +368,7 @@ class GamePlayViewModel @Inject constructor(
         onAnswerResultWordLiveData = SingleLiveEvent()
         onCurrentWordChangedLiveData = MutableLiveData()
         onCurrentWordCountDownLiveData = MutableLiveData()
+        foundedWord = MutableLiveData()
     }
 
     fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {
@@ -427,6 +432,10 @@ class GamePlayViewModel @Inject constructor(
         }
 
         return Pair(leftOrTop, rightOrBottom)
+    }
+
+    fun setSelectedWord(s: String) {
+        foundedWord.value = s
     }
 
 

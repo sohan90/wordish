@@ -5,4 +5,6 @@
     <dimen name="fire_size">15dp</dimen>
     <dimen name="round_corner">15dp</dimen>
     <dimen name="border_space">5dp</dimen>
+    <dimen name="dialog_width_padding">50dp</dimen>
+    <dimen name="dialog_heigh_padding">50dp</dimen>
 </resources>

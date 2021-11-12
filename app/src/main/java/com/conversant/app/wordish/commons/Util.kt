@@ -20,6 +20,12 @@ object Util {
     const val NULL_CHAR = '\u0000'
     private val sRand = Random()
 
+    var distributionCount = 1643315
+    var letterBuckets = arrayListOf(
+        125341, 156814, 223129, 280000, 468904, 489615, 534942, 573298, 718854, 721638, 736957, 824529, 871067, 981510,
+        1089191, 1137539, 1140235, 1256584, 1413051, 1520736, 1574753, 1590639, 1603594, 1608537, 1635344, 1643315)
+
+
     fun getRandomColorWithAlpha(alpha: Int): Int {
         val r = randomInt % 256
         val g = randomInt % 256
@@ -30,7 +36,7 @@ object Util {
     // ASCII A = 65 - Z = 90
     val randomChar: Char
         get() =// ASCII A = 65 - Z = 90
-            getRandomIntRange(65, 90).toChar()
+        getRandomChars()
 
     /**
      * generate random integer between min and max (inclusive)
@@ -42,6 +48,16 @@ object Util {
      */
     private fun getRandomIntRange(min: Int, max: Int): Int {
         return min + randomInt % (max - min + 1)
+    }
+
+    private fun getRandomChars():Char{
+        val pickNumber = sRand.nextInt(distributionCount)
+        var idx = 0
+        while(pickNumber > letterBuckets[idx]) {
+            idx += 1
+        }
+        val character = 'A'.code + idx
+        return character.toChar()
     }
 
     @JvmStatic

@@ -17,5 +17,8 @@ open class Word @JvmOverloads constructor (
     var gameThemeId: Int = 0,
 
     @ColumnInfo(name = "string")
-    var string: String = ""
+    var string: String = "",
+
+    @ColumnInfo(name = "meaning")
+    var meaning: String = ""
 )

@@ -23,12 +23,12 @@ public class StringListGridGenerator extends GridGenerator<List<Word>, List<Word
     public List<Word> setGrid(List<Word> dataInput, @NotNull char[][] grid) {
         List<Word> usedWords = new ArrayList<>();
         int usedCount;
-        for (int i = 0; i < MIN_GRID_ITERATION_ATTEMPT; i++) {
+        /*for (int i = 0; i < MIN_GRID_ITERATION_ATTEMPT; i++) {
 
             usedCount = 0;
             usedWords.clear();
             resetGrid(grid);
-            /*for (Word word : dataInput) {
+            for (Word word : dataInput) {
                 if (tryPlaceWord(word.getString(), grid)) {
                     usedCount++;
                     usedWords.add(word);
@@ -36,8 +36,8 @@ public class StringListGridGenerator extends GridGenerator<List<Word>, List<Word
             }
 
             if (usedCount >= dataInput.size())
-                break;*/
-        }
+                break;
+        }*/
 
         Util.fillNullCharWidthRandom(grid);
         return usedWords;

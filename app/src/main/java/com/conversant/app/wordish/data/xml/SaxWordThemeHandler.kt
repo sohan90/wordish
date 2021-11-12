@@ -29,12 +29,17 @@ class SaxWordThemeHandler : DefaultHandler() {
             if (currentGameTheme != null) {
                 gameThemeId = currentGameTheme!!.id
             }
-            val word = Word(
-                _words!!.size + 1,
-                gameThemeId,
-                attributes.getValue(XML_STR_ATTRIBUTE)
-            )
-            _words!!.add(word)
+
+            val string = attributes.getValue(XML_STR_ATTRIBUTE)
+
+            if (string.length >= 4) {
+                val word = Word(
+                    _words!!.size + 1,
+                    gameThemeId,
+                    string
+                )
+                _words!!.add(word)
+            }
         } else if (qName.equals(XML_WORD_BANK_TAG_NAME, ignoreCase = true)) {
             currentGameTheme = GameTheme(
                 _gameThemes!!.size + 1,

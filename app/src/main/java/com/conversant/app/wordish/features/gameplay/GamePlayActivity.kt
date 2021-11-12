@@ -4,7 +4,6 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
@@ -18,6 +17,7 @@ import android.view.animation.Animation
 import android.view.animation.Animation.AnimationListener
 import android.view.animation.AnimationUtils
 import android.view.animation.DecelerateInterpolator
+import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.activity.viewModels
@@ -35,9 +35,7 @@ import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.LetterBoard.OnLetterSelectionListener
 import com.conversant.app.wordish.custom.StreakView.StreakLine
 import com.conversant.app.wordish.data.room.WordDataSource
-import com.conversant.app.wordish.features.FullscreenActivity
-import com.conversant.app.wordish.features.SoundPlayer
-import com.conversant.app.wordish.features.SplashScreenActivity
+import com.conversant.app.wordish.features.*
 import com.conversant.app.wordish.features.gameplay.GamePlayViewModel.*
 import com.conversant.app.wordish.model.*
 import kotlinx.android.synthetic.main.activity_game_play.*
@@ -46,11 +44,16 @@ import kotlinx.android.synthetic.main.partial_game_content.*
 import kotlinx.android.synthetic.main.partial_game_header.*
 import javax.inject.Inject
 
+
 const val GAME_OVER_FIRE_COUNT: Int = 18
 const val MINIMUM_LENGTH = 4
 const val RESET_PENALTY_FIRE_VIEW: Int = -1
 
 class GamePlayActivity : FullscreenActivity() {
+
+    private val adapterList: MutableList<String> = mutableListOf()
+
+    private lateinit var adapter: ArrayAdapter<String>
 
     private var onAnswerRes: AnswerResultWord? = null
 
@@ -123,7 +126,6 @@ class GamePlayActivity : FullscreenActivity() {
         initClickListener()
         loadOrGenerateNewGame()
     }
-
 
 
     private fun addFireView(fireCount: Int) {
@@ -227,7 +229,7 @@ class GamePlayActivity : FullscreenActivity() {
                     v.visibility = View.INVISIBLE
 
                     if (fireViewList.isNotEmpty()) {
-                        fireViewCount --
+                        fireViewCount--
                     }
                     if (fireViewCount == 0) {
                         //penalty fire animation logic
@@ -278,7 +280,7 @@ class GamePlayActivity : FullscreenActivity() {
                 resetBombImage()
 
                 resetNewCharacters()
-                
+
                 viewModel.growFireCell(letterAdapter!!.fireList, letterAdapter!!.backedGrid)
                 addFireToCellFromBank()
                 animateFireMoveFromBank()
@@ -324,22 +326,25 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private fun initClickListener() {
-        iv_fire.setOnTouchListener { _, event ->
+        iv_setting.setOnClickListener {
+        }
+
+        iv_fire.setOnTouchListener { view, event ->
+            view.performClick()
             when (event?.action) {
-                MotionEvent.ACTION_DOWN ->
+                MotionEvent.ACTION_DOWN -> {
                     letter_board.letterGrid.spotFire()
+                    return@setOnTouchListener true
+                }
 
-               MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP ->
+                MotionEvent.ACTION_UP -> {
                     letter_board.letterGrid.releaseFire()
-
-                else -> {
-                    letter_board.letterGrid.releaseFire()
+                    return@setOnTouchListener true
                 }
             }
 
-            return@setOnTouchListener true
+            return@setOnTouchListener false
         }
 
         iv_water.setOnClickListener {
@@ -364,6 +369,13 @@ class GamePlayActivity : FullscreenActivity() {
                 false
             }
         }
+    }
+
+    private fun showMeaningInfoDialog(selectedWord: String) {
+        soundPlayer.play(SoundPlayer.Sound.SwipeCorrect)
+        soundPlayer.play(SoundPlayer.Sound.Open)
+        DefinitionInfoDialog().show(supportFragmentManager, DEFINITION_DIALOG_TAG)
+        viewModel.setSelectedWord(selectedWord)
     }
 
     private fun animateFireMoveFromBank(answerWordLength: Int = 0) {
@@ -433,6 +445,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun initViews() {
+        initUsedWordListView()
         text_current_selected_word.setInAnimation(this, android.R.anim.slide_in_left)
         text_current_selected_word.setOutAnimation(this, android.R.anim.slide_out_right)
         text_selection.isSelected = true
@@ -519,6 +532,20 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
+    private fun initUsedWordListView() {
+        lv_used_word.visibility = View.INVISIBLE
+        adapter = ArrayAdapter<String>(
+            this,
+            android.R.layout.simple_list_item_1, android.R.id.text1, adapterList
+        )
+        lv_used_word.adapter = adapter
+
+        lv_used_word.setOnItemClickListener { _, _, position, _ ->
+            val value = adapter.getItem(position)
+            showMeaningInfoDialog(value!!)
+        }
+    }
+
     private fun checkForCascadeWords(casCadeSide: CasCadeSide) {
         selectionCellList.clear()
         val word = StringBuilder()
@@ -591,9 +618,10 @@ class GamePlayActivity : FullscreenActivity() {
 
                     Util.replaceNewWord(
                         selectionCellList, letterAdapter!!.backedGrid,
-                        letterAdapter!!.completedCell, letterAdapter!!.fireList)
+                        letterAdapter!!.completedCell, letterAdapter!!.fireList
+                    )
 
-                    Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid){}
+                    Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid) {}
 
                     val isCompleted = checkForGameCompletion()
                     if (!isCompleted) {
@@ -784,6 +812,15 @@ class GamePlayActivity : FullscreenActivity() {
         updateWaterProgress(turns)
         updateBombProgress(turns)
 
+        updateUserWordAdapter(onAnswerWord.correctWord)
+
+    }
+
+    private fun updateUserWordAdapter(correctWord: String?) {
+        lv_used_word.visibility = View.VISIBLE
+        adapterList.add(correctWord!!)
+        adapter.notifyDataSetChanged()
+        lv_used_word.smoothScrollToPosition(adapterList.size)
     }
 
     private fun updateTurnCount(count: Int) {
