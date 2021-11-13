@@ -55,8 +55,10 @@ class GamePlayViewModel @Inject constructor(
         var correct: Boolean,
         var correctWord: String?,
         val streakLine: StreakView.StreakLine,
-        var coins: Int = 0,
+        var coins: Int = 0
     )
+
+    private var correctWordLength: Int = 0
 
     private val gameDataCreator: GameDataCreator = GameDataCreator()
     private var currentGameData: GameData? = null
@@ -221,12 +223,17 @@ class GamePlayViewModel @Inject constructor(
         }
     }
 
+    fun getCorrectWordLength():Int = correctWordLength
+
     fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean) {
         var correct = false
 
         val correctWord = checkWordFromWordList(answerStr, reverseMatching)
 
-        if (correctWord != null && correctWord.isNotEmpty()) correct = true
+        if (correctWord != null && correctWord.isNotEmpty()) {
+            correct = true
+            correctWordLength = correctWord.length
+        }
 
         val coins = coinsForWordLength(correctWord)
         onAnswerResultWordLiveData.value = AnswerResultWord(correct, correctWord, streakLine, coins)

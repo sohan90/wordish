@@ -171,11 +171,16 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
-    private fun createRowColListForFireMoveAnim(fireCount: Int) {
+    private fun createRowColListForFireMoveAnim(fireCount: Int, gameLaunch: Boolean = false) {
         val rowList = mutableListOf(0, 1, 2, 3, 4, 5)
         val colList = mutableListOf(0, 1, 2, 3, 4, 5)
         for (i in 0 until fireCount) {
-            val pair = createRowColList(rowList, colList)
+            var pair = createRowColList(rowList, colList)
+
+            if (gameLaunch){
+              pair = Pair(0, pair.second)
+            }
+
             rowColListPair.add(pair)
 
             rowList.remove(pair.first) // to get unique random number
@@ -239,7 +244,6 @@ class GamePlayActivity : FullscreenActivity() {
                         } else if (answerWordLength == RESET_PENALTY_FIRE_VIEW) { // on penalty end animation reset x and y axis
                             v.x = iv_penalty_placeholder.x
                             v.y = iv_penalty_placeholder.y
-
                         }
                     }
 
@@ -551,12 +555,11 @@ class GamePlayActivity : FullscreenActivity() {
         val word = StringBuilder()
 
         var validWord: String? = null
-        mainLoop@ for (i in 0..5) {
 
+        mainLoop@ for (i in 0..5) {
             word.clear()
 
             for (j in 0..5) {
-
                 word.clear()
 
                 for (k in j..5) {
@@ -590,7 +593,7 @@ class GamePlayActivity : FullscreenActivity() {
             else -> {
                 if (onAnswerRes != null && onAnswerRes?.correctWord != null) {
                     addFireToCellFromBank()
-                    animateFireMoveFromBank(answerWordLength = onAnswerRes?.correctWord!!.length)
+                    animateFireMoveFromBank(answerWordLength = viewModel.getCorrectWordLength())
                 }
             }
         }
@@ -598,6 +601,7 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun onAnswerResult(onAnswerWord: AnswerResultWord) {
         onAnswerRes = onAnswerWord
+
         if (onAnswerWord.correct) {
             soundPlayer.play(SoundPlayer.Sound.Correct)
             text_popup_correct_word.visible()
@@ -610,7 +614,7 @@ class GamePlayActivity : FullscreenActivity() {
                 .translationY(-percentage.toFloat())
                 .scaleX(2.0f).scaleY(2.0f)
                 .alpha(0f)
-                .setDuration(1500)
+                .setDuration(1000)
                 .withEndAction {
 
                     resetAnimationValuesForCorrectWord()
@@ -817,10 +821,12 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun updateUserWordAdapter(correctWord: String?) {
-        lv_used_word.visibility = View.VISIBLE
-        adapterList.add(correctWord!!)
-        adapter.notifyDataSetChanged()
-        lv_used_word.smoothScrollToPosition(adapterList.size)
+        if (correctWord != null) {
+            lv_used_word.visibility = View.VISIBLE
+            adapterList.add(correctWord)
+            adapter.notifyDataSetChanged()
+            lv_used_word.smoothScrollToPosition(adapterList.size)
+        }
     }
 
     private fun updateTurnCount(count: Int) {
@@ -848,7 +854,7 @@ class GamePlayActivity : FullscreenActivity() {
                 gameState.gameData?.let {
                     onGameRoundLoaded(it)
 
-                    addFireToCellFromBank()
+                    addFireToCellFromBank(true)
                     Handler(Looper.getMainLooper()).postDelayed({
                         letter_board.startFireAnim()
                         animateFireMoveFromBank()
@@ -858,10 +864,10 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun addFireToCellFromBank() {
+    private fun addFireToCellFromBank(gameLaunch:Boolean = false) {
         val fireCount = tv_fire_plus_count.text.toString().toInt()
         rowColListPair.clear()
-        createRowColListForFireMoveAnim(fireCount)
+        createRowColListForFireMoveAnim(fireCount, gameLaunch)
         addFireView(fireCount)
     }
 
