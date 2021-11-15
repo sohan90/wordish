@@ -3,6 +3,7 @@ package com.conversant.app.wordish.commons
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.graphics.Color
+import android.text.TextUtils
 import android.view.animation.LinearInterpolator
 import androidx.core.animation.doOnEnd
 import com.conversant.app.wordish.custom.FireInfo
@@ -96,6 +97,36 @@ object Util {
         for (i in gridArr.indices) {
             for (j in gridArr[i].indices) {
                 if (gridArr[i][j] == NULL_CHAR) gridArr[i][j] = randomChar
+            }
+        }
+    }
+
+    @JvmStatic
+    fun fillSavedValue(emptyArr: Array<CharArray>, gridArr: Array<CharArray>) {
+        for (i in gridArr.indices) {
+            for (j in gridArr[i].indices) {
+               emptyArr[i][j] = gridArr[i][j]
+            }
+        }
+    }
+
+    /**
+     * Saved db value string format will be like "[0,3],,[0,2],,[0,5]" with respect to fire count as "1,4,5"
+     */
+    fun fillFireInfoSavedValue(dbSavedFireInfo:String , fireCountString:String, fireInfoArray:Array<Array<FireInfo>>){
+        if (!TextUtils.isEmpty(dbSavedFireInfo)) {
+            val fireCount = fireCountString.split(",")
+            val rowColArr = dbSavedFireInfo.split(",,")
+
+            rowColArr.forEachIndexed { index, rowCol ->
+                val frC = rowCol.replace("[", "")
+                val srC = frC.replace("]", "")
+
+                val row = srC.split(",")[0].toInt()
+                val col = srC.split(",")[1].toInt()
+
+                fireInfoArray[row][col].hasFire = true
+                fireInfoArray[row][col].fireCount = fireCount[index].toInt()
             }
         }
     }

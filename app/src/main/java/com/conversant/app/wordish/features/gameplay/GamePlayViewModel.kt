@@ -11,6 +11,7 @@ import com.conversant.app.wordish.commons.Timer.OnTimeoutListener
 import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.StreakView
+import com.conversant.app.wordish.data.room.GameStatusSource
 import com.conversant.app.wordish.data.room.UsedWordDataSource
 import com.conversant.app.wordish.data.room.WordDataSource
 import com.conversant.app.wordish.data.sqlite.GameDataSource
@@ -20,7 +21,6 @@ import io.reactivex.*
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
@@ -30,6 +30,7 @@ class GamePlayViewModel @Inject constructor(
     private val gameDataSource: GameDataSource,
     private val wordDataSource: WordDataSource,
     private val usedWordDataSource: UsedWordDataSource,
+    private val gameStatusDataSource: GameStatusSource,
     private val preferences: Preferences
 ) : ViewModel() {
 
@@ -75,6 +76,7 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var onAnswerResultWordLiveData: SingleLiveEvent<AnswerResultWord>
     private lateinit var onCurrentWordChangedLiveData: MutableLiveData<UsedWord>
     private lateinit var foundedWord: MutableLiveData<String>
+    private lateinit var _gameStatusData: MutableLiveData<List<GameStatus>>
 
     val onTimer: LiveData<Int>
         get() = onTimerLiveData
@@ -100,6 +102,9 @@ class GamePlayViewModel @Inject constructor(
     val selectedWord: LiveData<String>
         get() = foundedWord
 
+    val gameStatus: LiveData<List<GameStatus>>
+        get() = _gameStatusData
+
     init {
         timer.addOnTimeoutListener(object : OnTimeoutListener {
             override fun onTimeout(elapsedTime: Long) {
@@ -109,12 +114,56 @@ class GamePlayViewModel @Inject constructor(
         resetLiveData()
     }
 
-    fun stopGame() {
-        viewModelScope.launch(Dispatchers.IO) {
-            usedWordDataSource.removeAll()
-            currentGameData = null
-            timer.stop()
-            resetLiveData()
+    fun stopGame(gridData: Array<CharArray>, fireList: Array<Array<FireInfo>>) {
+        viewModelScope.launch {
+            val dbList = gameStatusDataSource.getGameStatus()
+
+            val fireBuilder = StringBuilder()
+            val firCounterBuilder = StringBuilder()
+
+            val list = mutableListOf<GameStatus>()
+
+            gridData.forEachIndexed { row, chars ->
+
+                val str = chars.concatToString()
+                val gameStatus = GameStatus()
+
+                for (col in 0..5) {
+
+                    val fireInfo = fireList[row][col]
+
+                    if (fireInfo.hasFire || fireInfo.fireCount > 0) {
+                        val fire = "[$row,$col]"
+                        fireBuilder.append(fire)
+                        firCounterBuilder.append(fireInfo.fireCount)
+
+                        fireBuilder.append(",,")
+                        firCounterBuilder.append(",")
+
+                    }
+                }
+
+                gameStatus.letterColumn = str
+                gameStatus.fireColumn = fireBuilder.toString().removeSuffix(",,")
+                gameStatus.fireCount = firCounterBuilder.toString().removeSuffix(",")
+                list.add(gameStatus)
+
+                fireBuilder.clear()
+                firCounterBuilder.clear()
+
+            }
+
+            if (dbList.isEmpty()) {
+                gameStatusDataSource.insertAll(list)
+            } else {
+                gameStatusDataSource.deleteAll()
+                gameStatusDataSource.insertAll(list)
+            }
+
+//            usedWordDataSource.removeAll()
+            //   currentGameData = null
+            //timer.stop()
+            //resetLiveData()
         }
     }
 
@@ -155,20 +204,32 @@ class GamePlayViewModel @Inject constructor(
         }
     }
 
+    fun getGameStatusDataFromDb() {
+        viewModelScope.launch {
+            val list = gameStatusDataSource.getGameStatus()
+            if (list.isNotEmpty()) {
+                _gameStatusData.value = list
+            } else {
+                _gameStatusData.value = emptyList()
+            }
+        }
+
+    }
+
     @SuppressLint("CheckResult")
     fun generateNewGameRound(
-        rowCount: Int,
-        colCount: Int,
         gameThemeId: Int,
         gameMode: GameMode,
-        difficulty: Difficulty
+        difficulty: Difficulty,
+        newGame: Boolean,
+        gameStatusList: List<GameStatus>
     ) {
 
         if (currentState is Generating) return
 
         val gameName = gameDataName
-        setGameState(Generating(rowCount, colCount, gameName))
-        val maxChar = max(rowCount, colCount)
+        setGameState(Generating(6, 6, gameName))
+        val maxChar = max(6, 6)
         val flowableWords: Flowable<List<Word>> = if (gameThemeId == GameTheme.NONE.id) {
             wordDataSource.getWords(maxChar)
         } else {
@@ -186,8 +247,11 @@ class GamePlayViewModel @Inject constructor(
                     .toObservable()
             }
             .flatMap { words: MutableList<Word> ->
-                val gameData =
-                    gameDataCreator.newGameData(words, rowCount, colCount, gameName, gameMode)
+                val gameData: GameData = if (newGame) {
+                    gameDataCreator.newGameData(words, 6, 6, gameName, gameMode)
+                } else {
+                    getGameDataForSavedGame(words, gameStatusList)
+                }
                 if (gameMode === GameMode.CountDown) {
                     gameData.maxDuration =
                         getMaxCountDownDuration(gameData.usedWords.size, difficulty)
@@ -210,6 +274,28 @@ class GamePlayViewModel @Inject constructor(
     }
 
 
+    private fun getGameDataForSavedGame(
+        words: List<Word>,
+        dbGameStatusList: List<GameStatus>
+    ): GameData {
+
+        val grid = Grid(6, 6)
+        for (row in 0..5) {
+
+            val gameStatus = dbGameStatusList[row]
+            Util.fillFireInfoSavedValue(gameStatus.fireColumn, gameStatus.fireCount, grid.fireArray) // udpate fireinfo
+
+            val charArray = gameStatus.letterColumn.toCharArray()
+            for (col in 0..5) {
+                val ch = charArray[col]
+                grid.array[row][col] = ch // update grid array
+            }
+        }
+        val gameData = GameData(grid = grid, newGame = false)
+        gameData.addAllWords(words)
+        return gameData
+    }
+
     private fun startGame() {
         setGameState(Playing(currentGameData))
         currentGameData?.let {
@@ -223,7 +309,7 @@ class GamePlayViewModel @Inject constructor(
         }
     }
 
-    fun getCorrectWordLength():Int = correctWordLength
+    fun getCorrectWordLength(): Int = correctWordLength
 
     fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean) {
         var correct = false
@@ -376,6 +462,7 @@ class GamePlayViewModel @Inject constructor(
         onCurrentWordChangedLiveData = MutableLiveData()
         onCurrentWordCountDownLiveData = MutableLiveData()
         foundedWord = MutableLiveData()
+        _gameStatusData = MutableLiveData()
     }
 
     fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {

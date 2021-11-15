@@ -13,7 +13,8 @@ class GameData @JvmOverloads constructor(
     var gameMode: GameMode = GameMode.Normal,
     var grid: Grid? = null,
     private val _usedWords: MutableList<UsedWord> = ArrayList(),
-    private val _wordsList: MutableList<Word> = ArrayList()
+    private val _wordsList: MutableList<Word> = ArrayList(),
+    var newGame:Boolean = true
 ) {
 
     var maxDuration = 0

@@ -7,9 +7,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.min
 
-/**
- * Created by abdularis on 20/07/17.
- */
+
 class GameDataCreator {
 
     fun newGameData(words: MutableList<Word>,

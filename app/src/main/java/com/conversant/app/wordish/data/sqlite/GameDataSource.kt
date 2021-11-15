@@ -15,9 +15,6 @@ import kotlinx.coroutines.withContext
 import java.util.*
 import javax.inject.Inject
 
-/**
- * Created by abdularis on 18/07/17.
- */
 class GameDataSource @Inject constructor(private val dbHelper: DbHelper, private val usedWordDataSource: UsedWordDataSource) {
     suspend fun getGameData(gid: Int): GameData? = withContext(Dispatchers.IO) {
         val db = dbHelper.readableDatabase

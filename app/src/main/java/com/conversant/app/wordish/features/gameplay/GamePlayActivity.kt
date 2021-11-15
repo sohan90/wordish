@@ -172,33 +172,33 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun createRowColListForFireMoveAnim(fireCount: Int, gameLaunch: Boolean = false) {
-        val rowList = mutableListOf(0, 1, 2, 3, 4, 5)
-        val colList = mutableListOf(0, 1, 2, 3, 4, 5)
         for (i in 0 until fireCount) {
-            var pair = createRowColList(rowList, colList)
+            var pair = createRowColList()
 
-            if (gameLaunch){
-              pair = Pair(0, pair.second)
+            if (gameLaunch) {
+                pair = Pair(0, pair.second)
             }
-
             rowColListPair.add(pair)
-
-            rowList.remove(pair.first) // to get unique random number
-            colList.remove(pair.first)
         }
     }
 
-    private fun createRowColList(rowList: List<Int>, colList: List<Int>): Pair<Int, Int> {
-        val first = rowList.shuffled().take(1)[0]
-        val second = colList.shuffled().take(1)[0]
+    private fun createRowColList(): Pair<Int, Int> {
+        val list = listOf(0, 1, 2, 3, 4, 5)
+        val shuffledItem = list.shuffled().take(2)
+
+        val first = shuffledItem[0]
+        val second = shuffledItem[1]
+
         val pair = Pair(first, second)
 
         val fireCountOnBoard = tv_fire_count.text.toString() ?: ""
         if (letterAdapter!!.hasFire(first, second) &&
             fireCountOnBoard != "36"
         ) {
-            createRowColList(rowList, colList)
+
+            createRowColList()
         } else {
+
             return pair
         }
 
@@ -332,6 +332,7 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun initClickListener() {
         iv_setting.setOnClickListener {
+            viewModel.stopGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList)
         }
 
         iv_fire.setOnTouchListener { view, event ->
@@ -715,25 +716,25 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun loadOrGenerateNewGame() {
-        if (shouldOpenExistingGameData()) {
-            viewModel.loadGameRound(extraGameId)
-        } else {
-            generateNewGame()
-        }
+        viewModel.gameStatus.observe(this, {
+            if (it.isNotEmpty()) {
+                generateNewGame(false, it) // load game
+            } else {
+                generateNewGame(true, emptyList()) // new game
+            }
+        })
+
+        viewModel.getGameStatusDataFromDb()
+
     }
 
-    private fun generateNewGame() {
+    private fun generateNewGame(newGame: Boolean, gameStatusList: List<GameStatus>) {
         viewModel.generateNewGameRound(
-            rowCount = extraRowCount,
-            colCount = extraColumnCount,
             gameThemeId = extraGameThemeId,
             gameMode = extraGameMode,
-            difficulty = extraDifficulty
+            difficulty = extraDifficulty,
+            newGame, gameStatusList
         )
-    }
-
-    private fun shouldOpenExistingGameData(): Boolean {
-        return intent.extras?.containsKey(EXTRA_GAME_DATA_ID) ?: false
     }
 
     override fun onStart() {
@@ -758,7 +759,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     override fun onDestroy() {
-        viewModel.stopGame()
+        viewModel.stopGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList)
         soundPlayer.stop()
         super.onDestroy()
     }
@@ -854,17 +855,21 @@ class GamePlayActivity : FullscreenActivity() {
                 gameState.gameData?.let {
                     onGameRoundLoaded(it)
 
-                    addFireToCellFromBank(true)
-                    Handler(Looper.getMainLooper()).postDelayed({
+                    if (it.newGame) {
+                        addFireToCellFromBank(true)
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            letter_board.startFireAnim()
+                            animateFireMoveFromBank()
+                        }, 2000)
+                    } else{
                         letter_board.startFireAnim()
-                        animateFireMoveFromBank()
-                    }, 2000)
+                    }
                 }
             }
         }
     }
 
-    private fun addFireToCellFromBank(gameLaunch:Boolean = false) {
+    private fun addFireToCellFromBank(gameLaunch: Boolean = false) {
         val fireCount = tv_fire_plus_count.text.toString().toInt()
         rowColListPair.clear()
         createRowColListForFireMoveAnim(fireCount, gameLaunch)
