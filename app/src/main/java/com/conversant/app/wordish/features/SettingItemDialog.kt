@@ -8,27 +8,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
-import androidx.core.widget.addTextChangedListener
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordSearchApp
+import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.commons.gone
 import com.conversant.app.wordish.data.room.WordDataSource
-import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader
 import com.conversant.app.wordish.features.gameplay.GamePlayViewModel
 import kotlinx.android.synthetic.main.fragment_meanin_dialog.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-const val DEFINITION_DIALOG_TAG = "definition_tag"
-class DefinitionInfoDialog : DialogFragment() {
+const val SETTING_ITEM_DIALOG_TAG = "definition_tag"
+
+class SettingItemDialog : DialogFragment() {
 
     @Inject
     lateinit var wordDataSource: WordDataSource
 
     @Inject
-    lateinit var  soundPlayer:SoundPlayer
+    lateinit var soundPlayer: SoundPlayer
 
     private val gameViewModel: GamePlayViewModel by activityViewModels()
 
@@ -82,48 +85,38 @@ class DefinitionInfoDialog : DialogFragment() {
     }
 
     private fun initViews() {
+        fl_webview_lyt.background = AppCompatResources.getDrawable(
+            requireContext(),
+            R.drawable.round_corner_webview_white
+        )
         wv_meaning.setBackgroundColor(Color.TRANSPARENT)
+        tv_title.text = getString(R.string.rules_amp_tips)
+        tv_check.gone()
+        et_search_view.gone()
+
     }
 
     private fun observeSelectedWord() {
-        gameViewModel.selectedWord.observe(viewLifecycleOwner, {
-            searchWordForWebview(it)
+        gameViewModel.htmlFileName.observe(viewLifecycleOwner, {
+            if (it != null) {
+                if (it.contains("credits"))  tv_title.text = getString(R.string.credits)
+                lifecycleScope.launch {
+                    val htmlString = Util.readStringFromAssets(requireContext(), it)
+                    showWebView(htmlString)
+                }
+            }
         })
     }
 
-    private fun searchWordForWebview(it: String?) {
-        if (it != null) {
-            var parentDefinition = WordThemeDataXmlLoader.definitionsMap[it.uppercase()]
-
-            val appendWordsList =
-                WordThemeDataXmlLoader.appendWordsMap[it.uppercase()]
-
-            if (appendWordsList != null && appendWordsList.isNotEmpty()) {
-                appendWordsList.forEach { appendWord ->
-                    val define = WordThemeDataXmlLoader.definitionsMap[appendWord]
-                    parentDefinition += define
-                }
-            }
-            showWebView(it, parentDefinition)
-        }
-    }
-
     private fun initClickListener() {
-        et_search_view.addTextChangedListener { editable ->
-            if (editable.toString().length >= 3){
-                searchWordForWebview(editable.toString())
-            }
-        }
         iv_cancel.setOnClickListener {
-            soundPlayer.stop()
             soundPlayer.play(SoundPlayer.Sound.Dismiss)
             dismiss()
-
         }
     }
 
 
-    private fun showWebView(selectedWord: String, html: String?) {
+    private fun showWebView(html: String?) {
         pg_view.gone()
         if (html != null && html.isNotEmpty()) {
             soundPlayer.play(SoundPlayer.Sound.SwipeCorrect)
@@ -133,17 +126,6 @@ class DefinitionInfoDialog : DialogFragment() {
                 null, html,
                 "text/html", "utf-8", null
             )
-        } else {
-            no_word.visibility = View.VISIBLE
-            wv_meaning.gone()
-            val format =
-                String.format(requireContext().getString(R.string.no_meaning), selectedWord)
-            no_word.text = format
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
     }
 }

@@ -27,6 +27,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordSearchApp
 import com.conversant.app.wordish.commons.*
@@ -42,6 +43,8 @@ import kotlinx.android.synthetic.main.activity_game_play.*
 import kotlinx.android.synthetic.main.partial_game_complete.*
 import kotlinx.android.synthetic.main.partial_game_content.*
 import kotlinx.android.synthetic.main.partial_game_header.*
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
@@ -125,6 +128,15 @@ class GamePlayActivity : FullscreenActivity() {
         initViewModel()
         initClickListener()
         loadOrGenerateNewGame()
+        registerLiveDataForQuitGame()
+    }
+
+    private fun registerLiveDataForQuitGame() {
+        viewModel.quitGame.observe(this, {
+            if (it) {
+                restartGame()
+            }
+        })
     }
 
 
@@ -238,12 +250,21 @@ class GamePlayActivity : FullscreenActivity() {
                     }
                     if (fireViewCount == 0) {
                         //penalty fire animation logic
-                        if (answerWordLength == MINIMUM_LENGTH) {
-                            startPenaltyFireAnim()
+                        when (answerWordLength) {
 
-                        } else if (answerWordLength == RESET_PENALTY_FIRE_VIEW) { // on penalty end animation reset x and y axis
-                            v.x = iv_penalty_placeholder.x
-                            v.y = iv_penalty_placeholder.y
+                            MINIMUM_LENGTH -> {
+                                startPenaltyFireAnim() }
+
+                            RESET_PENALTY_FIRE_VIEW -> { // on penalty end animation reset x and y axis
+                                v.x = iv_penalty_placeholder.x
+                                v.y = iv_penalty_placeholder.y
+
+                                allAnimationsEndListener()
+                            }
+
+                            else -> {
+                                allAnimationsEndListener()
+                            }
                         }
                     }
 
@@ -257,6 +278,14 @@ class GamePlayActivity : FullscreenActivity() {
                 }
             }
         })
+    }
+
+    private fun allAnimationsEndListener() {
+        val value = viewModel.getWaterForLongWordLength(viewModel.getCorrectWordLength())
+        if (value > 0) {
+            updateWaterCountTxt(value)
+        }
+        saveGame()
     }
 
     private fun explodeBomb() {
@@ -332,7 +361,9 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun initClickListener() {
         iv_setting.setOnClickListener {
-            viewModel.stopGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList)
+            openSettingDialog()
+
+            //saveGame()
         }
 
         iv_fire.setOnTouchListener { view, event ->
@@ -374,6 +405,39 @@ class GamePlayActivity : FullscreenActivity() {
                 false
             }
         }
+    }
+
+    private fun saveGame() {
+        lifecycleScope.launch {
+            val scoreBoard = getScoreBoardDetails()
+            viewModel.stopGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList, scoreBoard)
+        }
+    }
+
+    private fun openSettingDialog() {
+        soundPlayer.stop()
+        soundPlayer.play(SoundPlayer.Sound.Open)
+        SettingsDialog().show(supportFragmentManager, SETTINGS_DIALOG_TAG)
+    }
+
+    private fun getScoreBoardDetails(): ScoreBoard {
+        val turns = tv_turn.text.toString().toInt()
+        val words = tv_word.text.toString().toInt()
+        val coins = tv_coin.text.toString().toInt()
+        val fireCount = tv_fire_count.text.toString().toInt()
+        val waterCount = tv_water_count.text.toString().toInt()
+        val bombCount = tv_bomb_count.text.toString().toInt()
+        val firePlusCount = tv_fire_plus_count.text.toString().toInt()
+        val bombProgress = pg_bomb.progress
+        val waterProgress = pg_water.progress
+        val firePlusProgress = pg_fire_plus.progress
+
+        return ScoreBoard(
+            turns = turns, words = words, coins = coins, boardFireCount = fireCount,
+            waterCount = waterCount, waterCountProgress = waterProgress,
+            bombCount = bombCount, bombCountProgress = bombProgress,
+            boardFirePlusCount = firePlusCount, boardFirePlusCountProgress = firePlusProgress
+        )
     }
 
     private fun showMeaningInfoDialog(selectedWord: String) {
@@ -451,6 +515,7 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun initViews() {
         initUsedWordListView()
+        initScoreBoardView()
         text_current_selected_word.setInAnimation(this, android.R.anim.slide_in_left)
         text_current_selected_word.setOutAnimation(this, android.R.anim.slide_out_right)
         text_selection.isSelected = true
@@ -537,7 +602,34 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
+    private fun initScoreBoardView() {
+        viewModel.scoreBoardLiveData.observe(this, {
+            turns = it.turns
+            words = it.words
+            coins = it.coins
+
+            tv_turn.text = it.turns.toString()
+            tv_word.text = it.words.toString()
+            tv_coin.text = it.coins.toString()
+
+            tv_fire_count.text = it.boardFireCount.toString()
+            tv_bomb_count.text = it.bombCount.toString()
+            tv_water_count.text = it.waterCount.toString()
+            tv_fire_plus_count.text = it.boardFirePlusCount.toString()
+
+            pg_fire.progress = it.boardFireCount * 100
+            pg_bomb.progress = it.bombCountProgress
+            pg_water.progress = it.waterCountProgress
+            pg_fire_plus.progress = it.boardFirePlusCountProgress
+        })
+        viewModel.getScoreBoardFromDb()
+    }
+
     private fun initUsedWordListView() {
+        viewModel.usedWordListForAdapter.observe(this, {
+            updateUserWordAdapter(it)
+        })
+
         lv_used_word.visibility = View.INVISIBLE
         adapter = ArrayAdapter<String>(
             this,
@@ -549,6 +641,9 @@ class GamePlayActivity : FullscreenActivity() {
             val value = adapter.getItem(position)
             showMeaningInfoDialog(value!!)
         }
+
+        viewModel.getUsedWordListForAdapter()
+
     }
 
     private fun checkForCascadeWords(casCadeSide: CasCadeSide) {
@@ -759,7 +854,6 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     override fun onDestroy() {
-        viewModel.stopGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList)
         soundPlayer.stop()
         super.onDestroy()
     }
@@ -806,25 +900,27 @@ class GamePlayActivity : FullscreenActivity() {
         // for cascade word-match turn count is not calculated
         if (onAnswerWord.streakLine.startIndex.row != -1) {
             turns += 1
-            updateTurnCount(words)
+            updateTurnCount(turns)
             viewModel.growFireCell(letterAdapter!!.fireList, letterAdapter!!.backedGrid)
+
+            updateFirePlus(turns)
+            updateWaterProgress(turns)
+            updateBombProgress(turns)
         }
 
         tv_word.text = "$words"
         tv_word.startAnimation(animation)
 
-        updateFirePlus(turns)
-        updateWaterProgress(turns)
-        updateBombProgress(turns)
-
-        updateUserWordAdapter(onAnswerWord.correctWord)
-
+        val correctWord = onAnswerWord.correctWord
+        if (correctWord != null) {
+            updateUserWordAdapter(arrayListOf(correctWord))
+        }
     }
 
-    private fun updateUserWordAdapter(correctWord: String?) {
-        if (correctWord != null) {
+    private fun updateUserWordAdapter(list: List<String>) {
+        if (list.isNotEmpty()) {
             lv_used_word.visibility = View.VISIBLE
-            adapterList.add(correctWord)
+            adapterList.addAll(list)
             adapter.notifyDataSetChanged()
             lv_used_word.smoothScrollToPosition(adapterList.size)
         }
@@ -861,7 +957,7 @@ class GamePlayActivity : FullscreenActivity() {
                             letter_board.startFireAnim()
                             animateFireMoveFromBank()
                         }, 2000)
-                    } else{
+                    } else {
                         letter_board.startFireAnim()
                     }
                 }
@@ -995,7 +1091,9 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateFireTxt(count: Int) {
         tv_fire_count.text = count.toString()
-        val objectAnimator = ObjectAnimator.ofInt(pg_fire, "progress", pg_fire.progress, count)
+        pg_fire.max = 1800
+        val objectAnimator =
+            ObjectAnimator.ofInt(pg_fire, "progress", pg_fire.progress, count * 100)
         objectAnimator.duration = 500
         objectAnimator.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator?) {}
@@ -1016,12 +1114,6 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateWaterCountTxt(waterDrop: Int) {
         tv_water_count.text = waterDrop.toString()
-        val objectAnimator = ObjectAnimator.ofInt(
-            pg_water, "progress",
-            pg_water.progress, waterDrop
-        )
-        objectAnimator.duration = 500
-        objectAnimator.start()
         iv_water.isEnabled = waterDrop != 0
     }
 
@@ -1040,8 +1132,7 @@ class GamePlayActivity : FullscreenActivity() {
 
             if (value == 0) {
                 val waterDrop = tv_water_count.text.toString().toInt() + 1
-                tv_water_count.text = waterDrop.toString()
-                iv_water.isEnabled = true
+                updateWaterCountTxt(waterDrop)
             }
         }
     }
@@ -1050,7 +1141,7 @@ class GamePlayActivity : FullscreenActivity() {
         tv_bomb_count.text = bombCount.toString()
         val objectAnimator = ObjectAnimator.ofInt(
             pg_bomb, "progress",
-            pg_bomb.progress, bombCount
+            pg_bomb.progress, bombCount * 100
         )
         objectAnimator.duration = 500
         objectAnimator.start()
@@ -1107,11 +1198,10 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationStart(animation: Animation) {}
             override fun onAnimationRepeat(animation: Animation) {}
             override fun onAnimationEnd(animation: Animation) {
-                Handler(Looper.myLooper()!!).postDelayed({
-                    val intent = Intent(this@GamePlayActivity, SplashScreenActivity::class.java)
-                    startActivity(intent)
-                    finish()
-                }, 800)
+                lifecycleScope.launch {
+                    delay(8000)
+                    viewModel.quitGame()
+                }
             }
         })
         if (state.win) {
@@ -1129,6 +1219,12 @@ class GamePlayActivity : FullscreenActivity() {
         }
         layout_complete_popup.visible()
         layout_complete_popup.startAnimation(anim)
+    }
+
+    private fun restartGame() {
+        val intent = Intent(this@GamePlayActivity, SplashScreenActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
 

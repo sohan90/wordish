@@ -47,6 +47,12 @@ class Preferences @Inject constructor(
         return preferences.getBoolean(KEY_GRAYSCALE, false)
     }
 
+    fun enableOrDisableSound(isEnable:Boolean){
+        preferences.edit()
+            .putBoolean(KEY_ENABLE_SOUND, isEnable)
+            .apply()
+    }
+
     fun resetSaveGameDataCount() {
         preferences.edit()
             .putInt(KEY_PREV_SAVE_GAME_DATA_COUNT, 1)

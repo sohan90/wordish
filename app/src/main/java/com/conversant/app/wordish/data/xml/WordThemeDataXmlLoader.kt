@@ -137,6 +137,7 @@ class WordThemeDataXmlLoader(val context: Context) {
 
     companion object {
          private const val ASSET_BASE_FOLDER = "dictionary"
+          const val ASSET_BASE_FOLDER2 = "help"
          var definitionsMap = mutableMapOf<String, String>()
          val appendWordsMap = mutableMapOf<String, List<String>>()
     }

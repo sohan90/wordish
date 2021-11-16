@@ -7,4 +7,5 @@
     <dimen name="border_space">5dp</dimen>
     <dimen name="dialog_width_padding">50dp</dimen>
     <dimen name="dialog_heigh_padding">50dp</dimen>
+    <dimen name="setting_height_padding">100dp</dimen>
 </resources>

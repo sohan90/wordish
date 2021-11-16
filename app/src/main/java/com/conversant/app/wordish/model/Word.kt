@@ -19,6 +19,8 @@ open class Word @JvmOverloads constructor (
     @ColumnInfo(name = "string")
     var string: String = "",
 
-    @ColumnInfo(name = "meaning")
-    var meaning: String = ""
+
+    @ColumnInfo(name = "used_word")
+    var usedWord: Boolean = false
+
 )

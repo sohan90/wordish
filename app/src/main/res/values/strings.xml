@@ -80,4 +80,6 @@
     <string name="no_meaning" translatable="false">No definition available for %s</string>
     <string name="check_dictionary" translatable="false">check dictionary</string>
     <string name="dictionary" translatable="false">Dictionary</string>
+    <string name="rules_amp_tips" translatable="false"><![CDATA[Rules & Tips]]></string>
+    <string name="credits" translatable="false">Credits</string>
 </resources>

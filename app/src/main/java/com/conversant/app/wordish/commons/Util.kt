@@ -2,13 +2,16 @@ package com.conversant.app.wordish.commons
 
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
+import android.content.Context
 import android.graphics.Color
 import android.text.TextUtils
 import android.view.animation.LinearInterpolator
 import androidx.core.animation.doOnEnd
 import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.LetterGrid
-import com.conversant.app.wordish.custom.StreakView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.max
@@ -23,8 +26,33 @@ object Util {
 
     var distributionCount = 1643315
     var letterBuckets = arrayListOf(
-        125341, 156814, 223129, 280000, 468904, 489615, 534942, 573298, 718854, 721638, 736957, 824529, 871067, 981510,
-        1089191, 1137539, 1140235, 1256584, 1413051, 1520736, 1574753, 1590639, 1603594, 1608537, 1635344, 1643315)
+        125341,
+        156814,
+        223129,
+        280000,
+        468904,
+        489615,
+        534942,
+        573298,
+        718854,
+        721638,
+        736957,
+        824529,
+        871067,
+        981510,
+        1089191,
+        1137539,
+        1140235,
+        1256584,
+        1413051,
+        1520736,
+        1574753,
+        1590639,
+        1603594,
+        1608537,
+        1635344,
+        1643315
+    )
 
 
     fun getRandomColorWithAlpha(alpha: Int): Int {
@@ -37,7 +65,7 @@ object Util {
     // ASCII A = 65 - Z = 90
     val randomChar: Char
         get() =// ASCII A = 65 - Z = 90
-        getRandomChars()
+            getRandomChars()
 
     /**
      * generate random integer between min and max (inclusive)
@@ -51,10 +79,10 @@ object Util {
         return min + randomInt % (max - min + 1)
     }
 
-    private fun getRandomChars():Char{
+    private fun getRandomChars(): Char {
         val pickNumber = sRand.nextInt(distributionCount)
         var idx = 0
-        while(pickNumber > letterBuckets[idx]) {
+        while (pickNumber > letterBuckets[idx]) {
             idx += 1
         }
         val character = 'A'.code + idx
@@ -101,19 +129,14 @@ object Util {
         }
     }
 
-    @JvmStatic
-    fun fillSavedValue(emptyArr: Array<CharArray>, gridArr: Array<CharArray>) {
-        for (i in gridArr.indices) {
-            for (j in gridArr[i].indices) {
-               emptyArr[i][j] = gridArr[i][j]
-            }
-        }
-    }
-
     /**
      * Saved db value string format will be like "[0,3],,[0,2],,[0,5]" with respect to fire count as "1,4,5"
      */
-    fun fillFireInfoSavedValue(dbSavedFireInfo:String , fireCountString:String, fireInfoArray:Array<Array<FireInfo>>){
+    fun fillFireInfoSavedValue(
+        dbSavedFireInfo: String,
+        fireCountString: String,
+        fireInfoArray: Array<Array<FireInfo>>
+    ) {
         if (!TextUtils.isEmpty(dbSavedFireInfo)) {
             val fireCount = fireCountString.split(",")
             val rowColArr = dbSavedFireInfo.split(",,")
@@ -131,52 +154,6 @@ object Util {
         }
     }
 
-    fun replaceNewWordForCorrectWord(
-        streakView: StreakView.StreakLine,
-        adapterData: Array<CharArray>,
-        completedCell: Array<BooleanArray>,
-        fireList: Array<BooleanArray>
-    ) {
-
-        val startRow = streakView.startIndex.row
-        val endRow = streakView.endIndex.row
-        val startCol = streakView.startIndex.col
-        val endCol = streakView.endIndex.col
-
-        val rowProgression: IntProgression = if (startRow > endRow) {
-            startRow.downTo(endRow)
-        } else {
-            startRow..endRow
-        }
-
-        val colProgression: IntProgression = if (startCol > endCol) {
-            startCol.downTo(endCol)
-        } else {
-            startCol..endCol
-        }
-
-
-        val rowIterator = rowProgression.iterator()
-        val colIterator = colProgression.iterator()
-
-        val rowSize = rowProgression.size()
-        val colSize = colProgression.size()
-
-        val maxSize = rowSize.coerceAtLeast(colSize)
-
-        var count = 0
-        var row = 0
-        var col = 0
-
-        while (count < maxSize) {
-            row = if (rowIterator.hasNext()) rowIterator.nextInt() else row
-            col = if (colIterator.hasNext()) colIterator.nextInt() else col
-            adapterData[row][col] = randomChar
-            completedCell[row][col] = true
-            fireList[row][col] = false
-            count++
-        }
-    }
 
     fun getRowProgression(row: Int): IntProgression {
         var startRow = row - 1
@@ -228,7 +205,7 @@ object Util {
 
     fun animateReplaceWordCell(
         list: MutableList<Pair<Int, Int>>,
-        letterGrid: LetterGrid, onAnimationEndCallBack:() ->Unit
+        letterGrid: LetterGrid, onAnimationEndCallBack: () -> Unit
     ) {
 
         val selectionCellList = ArrayList<Pair<Int, Int>>()
@@ -264,4 +241,20 @@ object Util {
         valueAnimator.interpolator = LinearInterpolator()
         valueAnimator.start()
     }
+
+    suspend fun readStringFromAssets(context: Context, folderName: String) =
+        withContext(Dispatchers.IO) {
+            val assetsManager = context.assets
+            val inputStream = assetsManager.open(folderName)
+            try {
+                val length: Int = inputStream.available()
+                val data = ByteArray(length)
+                inputStream.read(data)
+                String(data)
+            } catch (e: IOException) {
+                e.printStackTrace()
+                ""
+            }
+        }
+
 }

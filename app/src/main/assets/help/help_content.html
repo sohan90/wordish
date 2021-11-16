@@ -1,0 +1,265 @@
+
+    <h3>How to Play</h3>
+    Make words by dragging through letter tiles.  Words must be at
+    least four letters long.  Longer words score more and earn
+    bonuses.  You can use the same tile more than once in a word.
+    <br/><br/>
+    Clear a level by getting rid of all green-borderd tiles.
+    Win short games by clearing one level; win long games by clearing
+    five.  Lose by letting more than half the tiles catch fire.
+    <br/><br/>
+    Power-Ups, once gotten, are used to make better words or to
+    fight fire.
+    <br/><br/>
+    Four letter words cause more fire.  Seven letter or longer words
+    throw water on fires.  Nine letter or longer words earn free
+    Power-Ups.
+  
+  <h3>Details</h3>
+
+    <h4>What's on the Screen</h4>
+    In the upper left are the game progress fields; the number
+    of Turns, the number of Words formed, the score as a number
+    of Coins, and, in Long Games, the current Level.
+    <br/><br/>
+    In the upper right are the Settings ("⚙️") and Help ("?")
+    buttons.  Tap the Help button for tutorials and long tap
+    to enter "Help Mode" for descriptions of on screen elements.
+    <br/><br/>
+    In the middle is the Game Grid, a six by six grid of letter
+    tiles which are used to form words.
+    <br/><br/>
+    There is a section of "wells" that provide information
+    and tools for playing the game.  Two of these wells
+    are informational only; the Burning Well ("🔥") and
+    the Fire Well ("+🔥").  The other seven wells are
+    resources; they are the Bomb Well ("💣"), the Water
+    Well ("💧") and the five Power-Up Wells.
+    <br/><br/>
+    Finally, there are two boxes; the
+    Game Log and the Definition Box.  Their positions
+    vary with screen size and orientation.  On the smallest
+    screens, the Definition Box may be left out entirely.
+
+    <h4>Basics</h4>
+    To form words, either drag through letters or tap on
+    letter tiles.  A letter can only be added if its tile
+    is adjacent to the previous tile.  When tapping, end the
+    word by tapping the last tile a final time.
+    <br/><br/>
+    Tiles can be reused in a word but only if at least one
+    tile is between the separate uses.  So a palindrome like
+    "kayak" can be formed if the letters "kay" appear
+    together on the grid.  Drag from the 'k' to the 'a'
+    to the 'y', then back to the same 'a' and back to
+    the original 'k'.
+    <br/><br/>
+    Fire is added to the grid every turn.  The number of
+    burns that will be added is displayed in the
+    Fire Well ("+🔥").
+    The starting value is determined by the game difficulty
+    and it increases every five turns.  Short words (four
+    letters long) incur a penalty by adding an additional
+    burn.  Long words receive a bonus of water which lessens
+    the fire in a tile and also adds to the amount of water
+    in the Water Well ("💧").  One water bonus is received
+    for each letter in the word over six.
+    <br/><br/>
+    Fires grow a little bit each turn.  When a tile is fully
+    engulfed (i.e. the fire is at its maximum size) the color
+    of the letter changes from white to black, and instead
+    of growing more it spreads to the orthogonally adjacent
+    tiles.
+    <br/><br/>
+    Using burning tiles in a word not only removes some
+    fire from the grid but also adds water to the Water
+    Well ("💧").
+    <br/><br/>
+    The number of tiles on fire is tracked in the Burning
+    Well ("🔥").
+    <br/><br/>
+    After a word is formed, the tiles are removed, the tiles
+    above slide down and new tiles drop in to refill the
+    grid.  Then the game automatically plays any words
+    that have formed in a column going from top to bottom, or
+    in a row going from left to right.  The value of these
+    "cascade words" is based on the length of the player word
+    and goes up as more cascade words are formed (in
+    the same turn).
+
+    <h4>The Bomb and Water Wells</h4>
+    <ul>
+    <li>Bomb ("💣"):<br/>
+    There is at most one Bomb at a time.  After using
+    the Bomb it takes four turns to get a new one.  The
+    game always starts with a Bomb.
+    <br/><br/>
+    A Bomb destroys a grid of up to nine tiles, the tile
+    on which it is placed and the up-to-eight adjacent tiles.
+    The tiles that replace the bombed tiles are set on fire.
+    <br/><br/>
+    Using a bomb acts like a turn, so all fires will grow
+    a little and fully engulfed tiles will spread fire to
+    the tiles above, below, and to their sides.  This makes
+    it very easy to end up with more than half the grid on
+    fire, causing the game to end in a loss.
+
+    <br/><br/><li>Water ("💧"):<br/>
+    Water can be used to shrink fires.  If a fire is not
+    put out completely it will start to grow again.  Gain
+    water by forming words with tiles that are on fire and
+    by forming words that are more than six letters long.
+    Cascade words that include burning tiles will add to
+    the water supply just as much as words formed by the
+    player.
+    <br/><br/>
+    The game always starts with a Water quantity of 1, any
+    water left at the end of a game is lost.
+    </ul>
+
+    <h4>Power-Up Wells</h4>
+    Each well has a badge that shows the quantity of
+    that Power-Up that is available.  Power-Ups
+    are gained by making long words (get one random
+    Power-Up for each two letters beyond seven) and by
+    buying them with banked coins.  (The score of a game
+    is added to the bank when the game is won.)
+    <br/><br/>
+    A single use of a Power-Up can be applied by dragging
+    from its Well to a letter tile.
+    <br/><br/>
+    To quickly apply a
+    Power-Up to multiple tiles, tap the Well to enter
+    active mode.  In active mode the Power-Up is applied to
+    each tile tapped, lowering the well's supply each time.
+    Active mode is automatically exited when the supply is
+    emptied.
+    <br/><br/>
+    To exit active mode before the supply runs
+    out tap the Well again.  Forgetting to exit before trying
+    to form a word will waste Power-Ups.
+    <ul>
+    <li>Letter Changer ("✽"):<br/>
+    A Letter Changer changes a tile to whatever
+    letter is desired.  The tile will be marked with an
+    asterisk (*), making it easy to see what tiles have
+    been changed.
+    <br/><br/><li>Snow ("❄️"):<br/>
+    Snow lessens fire in a grid of up to nine tiles, the
+    tile on which it is placed and the up-to-eight
+    adjacent tiles.  It has a certain amount of strength
+    to  spread amongst the burning tiles, if the total
+    fire is more than the strength of the snow then the
+    biggest flames will only be reduced, not put out
+    completely.
+    <br/><br/><li>Trash ("🗑"):<br/>
+    The Trash Power-Up destroys a letter tile.  Any tiles
+    above will drop down, and a new tile
+    will fill in the top.  If the last target is removed
+    by a Trash Power-Up, the level still won't end until a new
+    word is formed.
+    <br/><br/><li>Tile Swapper ("⇄"):<br/>
+    The Tile Swapper causes two tiles to trade
+    places.  Apply it to a letter tile and then tap
+    the second tile.  In active mode two tiles will be
+    tapped for each use of this Power-Up.  To cancel,
+    choose the first tile as the second tile also.
+    <br/><br/><li>Letter Doubler ("♊︎"):<br/>
+    The Letter Doubler marks a tile as being able to be
+    used in a word as either a single or double letter.
+    This is shown by, for example, a 'p' being displayed
+    as 'p/pp'.  The tile will be used for whichever use will
+    give the longest valid word, for each place it is used
+    in the word.  So if a word is formed with the tiles
+    "p/pp, i, p/pp, e, d" the word scored would be "pipped"
+    because it is longer than "piped" and because "ppipped"
+    is not a valid word.  As a special case, the Letter Doubler
+    applied to a 'q' allows it to be used as either 'q' or 'qu'.
+    </ul>
+    Note: The Letter Changer and the Letter
+    Doubler can both be undone by applying them a second
+    time to the same tile.  Undoing these Power-Ups will
+    restore the Power-Up to the appropriate well.  Both of
+    these can also be in use on a single tile at the same
+    time, which will "double" the changed letter.
+    </ul>
+    <h3>Tips and Tidbits</h3>
+    
+   <li>  "Fire bad." -- Frankenstein's Monster</br></br></li>
+   
+  <li>  To fight fire:  Make words long enough to get water bonuses (7+ letters).  Make words with burning tiles.  Drop water from the Water Well ("💧") onto burning tiles.  Use the Snow ("❄️") Power-Ups.</br></br></li>
+  
+ <li> There's no rush.  The first word found is probably not the best word to be found.  Wordish rewards erudition over speed.</br></br></li>
+ 
+ <li> There is no penalty for playing slowly, nor for trying a word that isn't valid.  Relax and take your time.</br></br></li>
+ 
+  <li> Before playing a word, look to see if it can be extended at either end.  Adding "un" at the beginning or "ed" at the end (when valid) will score more points and possibly earn a Power-Up.</br></br></li>
+  
+   <li> Look for common endings like "ing" or "ness" and try to build words that use them.  This is often the best way to find longer words.</br></br></li>
+   
+  <li>  Don't spend too much effort trying to set up future moves; most of the time cascade words will mess up careful planning.  Wordish tends to be more tactical than strategic.</br></br></li>
+  
+  <li> Double-tap the Game Log to cycle through the three levels of detail or go to the Settings Screen to choose the level desired.</br></br></li>
+  
+  <li>  Tapping the Definition Box will bring up a Dictionary Screen where words can be checked for validity and/or to see their definitions.</br></br></li>
+  
+ <li>  Tapping a word in the Game Log will display how the board looked at the time the word was formed.</br></br></li>
+ 
+   <li> Touching the Burning Well causes fires to flare up, making smaller fires easier to find.  Stop touching and the fires go back to their current size.</br></br></li>
+   
+   
+ <li>   You can use the Dictionary Screen to check the validity of a word before using a Letter Changer Power-Up, but it is often faster to change the letter, try the word, then undo the change if the word is not valid.</br></br></li>
+ 
+<li>   Since Tile Swap Power-Ups do not have an undo option, it can be important to use the Dictionary Screen to check the validity of a planned word before spending the Power-Up.</br></br></li>
+
+<li> Keep an eye out for letters that you find difficult to use or that are tough to use where they are in the grid and look to get rid of them sooner rather than later.</br></br></li>
+
+ 
+ <li>  Sometimes a section of the grid fills with either consonants or vowels, instead of a good mix.  That's when a Bomb can really shine, but if too much is already burning it may be too late.</br></br></li>
+
+
+ <li> Watch for chances to reuse tiles.  For instance, the three tiles "ver" in any arrangement where the "e" touches both of the other tiles can be used to form the seven letter word "reverer."</br></br></li>
+  
+ <li>  Forming words with burning tiles earns water.  Four letter words burn an extra tile.  Using four letter words early in a game can sometimes help build a reserve of water.</br></br></li>
+   
+ <li> Tiles on the outside have fewer opportunities to be used, so clearing the target tiles there early can be a good strategy.</br></br></li>
+       
+ <li>    Burning tiles trapped in a block of all consonants or vowels can be tough to reach, work towards them while the fire is small, or douse the flames with water.</br></br></li>
+        
+ <li>   Newer words and slang are often not in the word list.  A word has to last awhile to be considered fair game.</br></br></li>
+
+<li>   If you quickly clear most of the targets on the last level, you may then have relatively safe time in which to work on increasing your score.</br></br></li>
+
+ <li>    Word length matters a lot.  Longer words earn more points.  4 letter words get a penalty burn.  Every letter above 6 earns water.  Every two letters above 7 earns a Power-Up.</br></br></li>
+ 
+ <li> Q but no U: faqir(s) mbaqanga(s) qabala(s) qabalah(s) qadi(s) qaid(s) qanat(s) qats qindar(s) qindarka qintar(s) qoph(s) qwerty(s) sheqalim sheqel(s) tranq(s)</br></br></li>
+ 
+ <li>  Like most word games, proper nouns and acronyms are not considered valid.  Some words (like "laser") started as acronyms but have since been recognized as words in their own right and these, of course, are valid.</br></br></li>
+ 
+ <li> When adding fire at the start of a turn, the first burn will always go to a tile in the top row.</br></br></li>
+ 
+  
+ <li> The letter frequency is based on a histogram of the letters appearing in the list of valid words.</br></br></li>
+ 
+  <li> Words shorter than four letters are not allowed (they appear on the grid far too often).  They are still in the Wordish dictionary, though, so their meanings can be looked up.</br></br></li>
+  
+  <li>  The size of the fire doesn't change the amount of water it adds to the Water Well ("💧") when used in a word.</br></br></li>
+  
+   <li>   More difficult games (Challenging and Crushing) start with more fire.  In those games, and in short games, the fire is more aggressive, the water is more powerful, and the coins are more plentiful.</br></br></li>
+   
+ <li>  Because heat rises, when fire spreads from a fully engulfed tile, it spreads a little more to the tile above it.</br></br></li>
+   
+ <li>   Every game starts with a bomb, and there is never more than one.  Unused water does not carry over to a new game, games always start with one water.
+ </br></br></li>
+ 
+  <li>   The damage from bombs can be reduced by bombing along an edge or in a corner, so that some of its damage is off the grid. </br></br></li>
+  
+<li>   Coins earned in a game are only added to your bank if you win the game.  Banked coins are used to buy Power-Ups.</br></br></li>
+    
+<li> Words longer than six letters get a double bonus, they add water to the well and also drop water on current fires.</br></br></li>
+  
+ <li> Cascade words (words scored automatically after a played word clears) earn points based on the length of the played word and the number of cascade words.</br></br></li>
+ 
+ <li> Q and X are the only letters that never appear consecutively in a valid word.</br></br></li>
+ 
+Have fun and good luck!

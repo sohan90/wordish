@@ -55,4 +55,10 @@ class DataSourceModule {
     fun provideGameStatusSource(gameDatabase: GameDatabase): GameStatusSource {
         return gameDatabase.gameStatusSource
     }
+
+    @Provides
+    @Singleton
+    fun provideScoreBoardSource(gameDatabase: GameDatabase): ScoreBoardDataSource {
+        return gameDatabase.scoreBoard
+    }
 }

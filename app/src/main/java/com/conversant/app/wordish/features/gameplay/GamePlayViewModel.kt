@@ -1,6 +1,5 @@
 package com.conversant.app.wordish.features.gameplay
 
-import android.annotation.SuppressLint
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,14 +11,18 @@ import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.StreakView
 import com.conversant.app.wordish.data.room.GameStatusSource
+import com.conversant.app.wordish.data.room.ScoreBoardDataSource
 import com.conversant.app.wordish.data.room.UsedWordDataSource
 import com.conversant.app.wordish.data.room.WordDataSource
 import com.conversant.app.wordish.data.sqlite.GameDataSource
 import com.conversant.app.wordish.features.settings.Preferences
 import com.conversant.app.wordish.model.*
-import io.reactivex.*
+import io.reactivex.Completable
+import io.reactivex.CompletableEmitter
+import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import java.util.*
@@ -31,6 +34,7 @@ class GamePlayViewModel @Inject constructor(
     private val wordDataSource: WordDataSource,
     private val usedWordDataSource: UsedWordDataSource,
     private val gameStatusDataSource: GameStatusSource,
+    private val scoreBoardDataSource: ScoreBoardDataSource,
     private val preferences: Preferences
 ) : ViewModel() {
 
@@ -59,6 +63,8 @@ class GamePlayViewModel @Inject constructor(
         var coins: Int = 0
     )
 
+    private lateinit var disposable: Disposable
+
     private var correctWordLength: Int = 0
 
     private val gameDataCreator: GameDataCreator = GameDataCreator()
@@ -76,7 +82,12 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var onAnswerResultWordLiveData: SingleLiveEvent<AnswerResultWord>
     private lateinit var onCurrentWordChangedLiveData: MutableLiveData<UsedWord>
     private lateinit var foundedWord: MutableLiveData<String>
+    private lateinit var _htmlFileName: MutableLiveData<String>
     private lateinit var _gameStatusData: MutableLiveData<List<GameStatus>>
+    private lateinit var _usedWordListForAdapter: MutableLiveData<List<String>>
+    private lateinit var _scoreBoardLiveData: MutableLiveData<ScoreBoard>
+    private lateinit var _quitGame: MutableLiveData<Boolean>
+
 
     val onTimer: LiveData<Int>
         get() = onTimerLiveData
@@ -102,8 +113,20 @@ class GamePlayViewModel @Inject constructor(
     val selectedWord: LiveData<String>
         get() = foundedWord
 
+    val htmlFileName: LiveData<String>
+        get() = _htmlFileName
+
     val gameStatus: LiveData<List<GameStatus>>
         get() = _gameStatusData
+
+    val usedWordListForAdapter: LiveData<List<String>>
+        get() = _usedWordListForAdapter
+
+    val scoreBoardLiveData: LiveData<ScoreBoard>
+        get() = _scoreBoardLiveData
+
+    val quitGame: LiveData<Boolean>
+        get() = _quitGame
 
     init {
         timer.addOnTimeoutListener(object : OnTimeoutListener {
@@ -114,56 +137,90 @@ class GamePlayViewModel @Inject constructor(
         resetLiveData()
     }
 
-    fun stopGame(gridData: Array<CharArray>, fireList: Array<Array<FireInfo>>) {
-        viewModelScope.launch {
-            val dbList = gameStatusDataSource.getGameStatus()
+    suspend fun stopGame(
+        gridData: Array<CharArray>,
+        fireList: Array<Array<FireInfo>>,
+        scoreBoard: ScoreBoard) {
 
-            val fireBuilder = StringBuilder()
-            val firCounterBuilder = StringBuilder()
-
-            val list = mutableListOf<GameStatus>()
-
-            gridData.forEachIndexed { row, chars ->
-
-                val str = chars.concatToString()
-                val gameStatus = GameStatus()
-
-                for (col in 0..5) {
-
-                    val fireInfo = fireList[row][col]
-
-                    if (fireInfo.hasFire || fireInfo.fireCount > 0) {
-                        val fire = "[$row,$col]"
-                        fireBuilder.append(fire)
-                        firCounterBuilder.append(fireInfo.fireCount)
-
-                        fireBuilder.append(",,")
-                        firCounterBuilder.append(",")
-
-                    }
-                }
-
-                gameStatus.letterColumn = str
-                gameStatus.fireColumn = fireBuilder.toString().removeSuffix(",,")
-                gameStatus.fireCount = firCounterBuilder.toString().removeSuffix(",")
-                list.add(gameStatus)
-
-                fireBuilder.clear()
-                firCounterBuilder.clear()
-
-            }
-
-            if (dbList.isEmpty()) {
-                gameStatusDataSource.insertAll(list)
-            } else {
-                gameStatusDataSource.deleteAll()
-                gameStatusDataSource.insertAll(list)
-            }
+        disposable.dispose()
+        saveScoreBoardToDb(scoreBoard)
+        saveBoardDataToDb(gridData, fireList)
 
 //            usedWordDataSource.removeAll()
-            //   currentGameData = null
-            //timer.stop()
-            //resetLiveData()
+        //   currentGameData = null
+        //timer.stop()
+        //resetLiveData()
+
+    }
+
+    private suspend fun saveScoreBoardToDb(scoreBoard: ScoreBoard) {
+        val scoreBoardDb = scoreBoardDataSource.getScoreBoard()
+        if (scoreBoardDb != null) {
+            scoreBoardDb.turns = scoreBoard.turns
+            scoreBoardDb.coins = scoreBoard.coins
+            scoreBoardDb.words = scoreBoard.words
+            scoreBoardDb.boardFireCount = scoreBoard.boardFireCount
+            scoreBoardDb.bombCount = scoreBoard.bombCount
+            scoreBoardDb.waterCount = scoreBoard.waterCount
+            scoreBoardDb.boardFirePlusCount = scoreBoard.boardFirePlusCount
+
+            scoreBoardDb.bombCountProgress = scoreBoard.bombCountProgress
+            scoreBoardDb.waterCountProgress = scoreBoard.waterCountProgress
+            scoreBoardDb.boardFirePlusCountProgress = scoreBoard.boardFirePlusCountProgress
+
+            scoreBoardDataSource.update(scoreBoardDb)
+        } else {
+            scoreBoardDataSource.insert(scoreBoard)
+        }
+    }
+
+    private suspend fun saveBoardDataToDb(
+        gridData: Array<CharArray>,
+        fireList: Array<Array<FireInfo>>
+    ) {
+        val dbList = gameStatusDataSource.getGameStatus()
+        wordDataSource.updateWordForUsedWord(currentGameData!!.wordsList)
+
+        val fireBuilder = StringBuilder()
+        val firCounterBuilder = StringBuilder()
+
+        val list = mutableListOf<GameStatus>()
+
+        gridData.forEachIndexed { row, chars ->
+
+            val str = chars.concatToString()
+            val gameStatus = GameStatus()
+
+            for (col in 0..5) {
+
+                val fireInfo = fireList[row][col]
+
+                if (fireInfo.hasFire || fireInfo.fireCount > 0) {
+                    val fire = "[$row,$col]"
+                    fireBuilder.append(fire)
+                    firCounterBuilder.append(fireInfo.fireCount)
+
+                    fireBuilder.append(",,")
+                    firCounterBuilder.append(",")
+
+                }
+            }
+
+            gameStatus.letterColumn = str
+            gameStatus.fireColumn = fireBuilder.toString().removeSuffix(",,")
+            gameStatus.fireCount = firCounterBuilder.toString().removeSuffix(",")
+            list.add(gameStatus)
+
+            fireBuilder.clear()
+            firCounterBuilder.clear()
+
+        }
+
+        if (dbList.isEmpty()) {
+            gameStatusDataSource.insertAll(list)
+        } else {
+            gameStatusDataSource.deleteAll()
+            gameStatusDataSource.insertAll(list)
         }
     }
 
@@ -185,25 +242,6 @@ class GamePlayViewModel @Inject constructor(
         }
     }
 
-    @SuppressLint("CheckResult")
-    fun loadGameRound(gid: Int) {
-        if (currentState !is Generating) {
-            setGameState(Loading())
-            Observable
-                .create { e: ObservableEmitter<GameData?> ->
-                    e.onNext(gameDataSource.getGameDataSync(gid)!!)
-                    e.onComplete()
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe { gameData: GameData? ->
-                    currentGameData = gameData
-                    currentDuration = currentGameData!!.duration
-                    startGame()
-                }
-        }
-    }
-
     fun getGameStatusDataFromDb() {
         viewModelScope.launch {
             val list = gameStatusDataSource.getGameStatus()
@@ -216,7 +254,6 @@ class GamePlayViewModel @Inject constructor(
 
     }
 
-    @SuppressLint("CheckResult")
     fun generateNewGameRound(
         gameThemeId: Int,
         gameMode: GameMode,
@@ -235,7 +272,7 @@ class GamePlayViewModel @Inject constructor(
         } else {
             wordDataSource.getWords(gameThemeId, maxChar)
         }
-        flowableWords.toObservable()
+        disposable = flowableWords.toObservable()
             .flatMap { words: List<Word> ->
                 Flowable.fromIterable(words)
                     .distinct(Word::string)
@@ -271,6 +308,7 @@ class GamePlayViewModel @Inject constructor(
                 currentGameData = gameData
                 startGame()
             }
+
     }
 
 
@@ -283,7 +321,11 @@ class GamePlayViewModel @Inject constructor(
         for (row in 0..5) {
 
             val gameStatus = dbGameStatusList[row]
-            Util.fillFireInfoSavedValue(gameStatus.fireColumn, gameStatus.fireCount, grid.fireArray) // udpate fireinfo
+            Util.fillFireInfoSavedValue(
+                gameStatus.fireColumn,
+                gameStatus.fireCount,
+                grid.fireArray
+            ) // udpate fireinfo
 
             val charArray = gameStatus.letterColumn.toCharArray()
             for (col in 0..5) {
@@ -310,6 +352,14 @@ class GamePlayViewModel @Inject constructor(
     }
 
     fun getCorrectWordLength(): Int = correctWordLength
+
+    fun getWaterForLongWordLength(wordLength:Int):Int{
+        val value = wordLength % 7
+        if (wordLength >= 7){
+           return value + 1
+        }
+        return 0
+    }
 
     fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean) {
         var correct = false
@@ -338,6 +388,7 @@ class GamePlayViewModel @Inject constructor(
                 if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
                     dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching
                 ) {
+                    word.usedWord = true
                     correctWord1 = dictionaryWord
                     break
                 }
@@ -463,6 +514,10 @@ class GamePlayViewModel @Inject constructor(
         onCurrentWordCountDownLiveData = MutableLiveData()
         foundedWord = MutableLiveData()
         _gameStatusData = MutableLiveData()
+        _usedWordListForAdapter = MutableLiveData()
+        _scoreBoardLiveData = MutableLiveData()
+        _htmlFileName = MutableLiveData()
+        _quitGame = MutableLiveData()
     }
 
     fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {
@@ -532,6 +587,43 @@ class GamePlayViewModel @Inject constructor(
         foundedWord.value = s
     }
 
+    fun getUsedWordListForAdapter() {
+        viewModelScope.launch {
+            val list = wordDataSource.getUsedWordsList()
+            if (list.isNotEmpty()) {
+                _usedWordListForAdapter.value = list
+            } else {
+                _usedWordListForAdapter.value = mutableListOf()
+            }
+        }
+    }
+
+    fun getScoreBoardFromDb() {
+        viewModelScope.launch {
+            val scoreBoard = scoreBoardDataSource.getScoreBoard()
+            if (scoreBoard != null) {
+                _scoreBoardLiveData.value = scoreBoard
+            } else {
+                _scoreBoardLiveData.value = ScoreBoard(
+                    turns = 0, bombCount = 1, bombCountProgress = 400,
+                    waterCount = 1, waterCountProgress = 0, boardFirePlusCount = 1,
+                    boardFirePlusCountProgress = 0
+                )
+            }
+        }
+    }
+
+    fun setHtmlFileName(fileName: String) {
+        _htmlFileName.value = fileName
+    }
+
+    suspend fun quitGame() {
+        disposable.dispose()
+        wordDataSource.deleteAll()
+        gameStatusDataSource.deleteAll()
+        scoreBoardDataSource.deleteAll()
+        _quitGame.value = true
+    }
 
     companion object {
         private const val TIMER_TIMEOUT = 1000

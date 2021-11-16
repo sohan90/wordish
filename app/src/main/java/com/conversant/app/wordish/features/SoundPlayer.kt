@@ -60,7 +60,7 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
         )
         soundPoolMap.put(
             Sound.Winning.ordinal,
-            soundPool.load(context, R.raw.winning, 1)
+            soundPool.load(context, R.raw.applause, 1)
         )
         soundPoolMap.put(
             Sound.Lose.ordinal,

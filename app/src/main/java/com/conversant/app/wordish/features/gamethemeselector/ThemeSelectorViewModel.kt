@@ -55,7 +55,7 @@ class ThemeSelectorViewModel @Inject constructor(
                     }
                 }
                 gameThemeRepository.deleteAll()
-                wordDataSource.deleteAll()
+                //wordDataSource.deleteAll()
                 gameThemeRepository.insertAll(themes)
                 wordDataSource.insertAll(words)
                 lastDataRevision = wordsUpdateResponse.revision
