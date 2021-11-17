@@ -634,8 +634,8 @@ class GamePlayActivity : FullscreenActivity() {
             pg_water.progress = it.waterCountProgress
             pg_fire_plus.progress = it.boardFirePlusCountProgress
 
-             updateWaterCountTxt(it.waterCount)
-             updateBombCountTxt(it.bombCount)
+            updateWaterCountTxt(it.waterCount)
+            updateBombCountTxt(it.bombCount)
         })
         viewModel.getScoreBoardFromDb()
     }
@@ -736,7 +736,7 @@ class GamePlayActivity : FullscreenActivity() {
                         letterAdapter!!.completedCell, letterAdapter!!.fireList
                     )
 
-                   // Util.winGame(letterAdapter!!.completedCell)
+                    //Util.winGame(letterAdapter!!.completedCell)
 
                     Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid) {}
 
@@ -1085,7 +1085,9 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateFireCountTxt(fireArray: Array<Array<FireInfo>>) {
         val count = viewModel.getTotalFireCountFromBoard(fireArray)
-        updateFireTxt(count)
+        if (letter_board.streakView.isInteractive) {// if not then its game is already  lost
+            updateFireTxt(count)
+        }
     }
 
     private fun showDuration(duration: Int) {
@@ -1116,7 +1118,6 @@ class GamePlayActivity : FullscreenActivity() {
 
             override fun onAnimationEnd(animation: Animator?) {
                 if (count > GAME_OVER_FIRE_COUNT) {
-                    objectAnimator.removeAllListeners()
                     showFinishGame(Finished(null, false))
                 }
             }
@@ -1244,7 +1245,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
 
-    private fun showFireWorks(){
+    private fun showFireWorks() {
         iv_fire_works.visibility = View.VISIBLE
         val valueAnimator = ValueAnimator.ofInt(1, 26)
         valueAnimator.addUpdateListener {

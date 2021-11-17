@@ -461,7 +461,7 @@ class GamePlayViewModel @Inject constructor(
     }
 
     fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {
-        var count = 0//16
+        var count = 0//18
         fireArray.map {
             for (b in it) {
                 if (b.hasFire) {
