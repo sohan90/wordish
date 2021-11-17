@@ -5,10 +5,7 @@ import com.conversant.app.wordish.di.component.AppComponent
 import com.conversant.app.wordish.di.component.DaggerAppComponent
 import com.conversant.app.wordish.di.modules.AppModule
 
-/**
- * Created by abdularis on 18/07/17.
- */
-class WordSearchApp : Application() {
+class WordishApp : Application() {
     lateinit var appComponent: AppComponent
     override fun onCreate() {
         super.onCreate()

@@ -30,7 +30,7 @@ import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
-import com.conversant.app.wordish.WordSearchApp
+import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.commons.*
 import com.conversant.app.wordish.commons.DurationFormatter.fromInteger
 import com.conversant.app.wordish.custom.FireInfo
@@ -123,7 +123,7 @@ class GamePlayActivity : FullscreenActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_play)
-        (application as WordSearchApp).appComponent.inject(this)
+        (application as WordishApp).appComponent.inject(this)
 
         initViews()
         initViewModel()

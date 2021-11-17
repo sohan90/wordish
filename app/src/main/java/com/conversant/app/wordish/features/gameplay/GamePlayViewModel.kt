@@ -6,19 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.conversant.app.wordish.commons.SingleLiveEvent
 import com.conversant.app.wordish.commons.Timer
-import com.conversant.app.wordish.commons.Timer.OnTimeoutListener
 import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.StreakView
 import com.conversant.app.wordish.data.room.GameStatusSource
 import com.conversant.app.wordish.data.room.ScoreBoardDataSource
-import com.conversant.app.wordish.data.room.UsedWordDataSource
 import com.conversant.app.wordish.data.room.WordDataSource
-import com.conversant.app.wordish.data.sqlite.GameDataSource
 import com.conversant.app.wordish.features.settings.Preferences
 import com.conversant.app.wordish.model.*
-import io.reactivex.Completable
-import io.reactivex.CompletableEmitter
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -30,9 +25,7 @@ import javax.inject.Inject
 import kotlin.math.max
 
 class GamePlayViewModel @Inject constructor(
-    private val gameDataSource: GameDataSource,
     private val wordDataSource: WordDataSource,
-    private val usedWordDataSource: UsedWordDataSource,
     private val gameStatusDataSource: GameStatusSource,
     private val scoreBoardDataSource: ScoreBoardDataSource,
     private val preferences: Preferences
@@ -129,11 +122,6 @@ class GamePlayViewModel @Inject constructor(
         get() = _quitGame
 
     init {
-        timer.addOnTimeoutListener(object : OnTimeoutListener {
-            override fun onTimeout(elapsedTime: Long) {
-                onTimerTimeout()
-            }
-        })
         resetLiveData()
     }
 
@@ -145,12 +133,6 @@ class GamePlayViewModel @Inject constructor(
         disposable.dispose()
         saveScoreBoardToDb(scoreBoard)
         saveBoardDataToDb(gridData, fireList)
-
-//            usedWordDataSource.removeAll()
-        //   currentGameData = null
-        //timer.stop()
-        //resetLiveData()
-
     }
 
     private suspend fun saveScoreBoardToDb(scoreBoard: ScoreBoard) {
@@ -300,7 +282,7 @@ class GamePlayViewModel @Inject constructor(
                 }
                 Observable.just(gameData)
             }
-            .doOnNext { gameRound: GameData? -> gameDataSource.saveGameData(gameRound!!) }
+            .doOnNext { }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { gameData: GameData? ->
@@ -460,48 +442,6 @@ class GamePlayViewModel @Inject constructor(
 
     private fun finishGame(win: Boolean) {
         setGameState(Finished(currentGameData, win))
-    }
-
-    private fun onTimerTimeout() {
-        currentGameData?.let { gameData ->
-            if (timer.isStarted) {
-                gameData.duration = ++currentDuration
-                val gameMode = gameData.gameMode
-                if (gameMode === GameMode.CountDown) {
-                    onCountDownLiveData.value = gameData.remainingDuration
-                    if (gameData.remainingDuration <= 0) {
-                        val win = gameData.answeredWordsCount ==
-                                gameData.usedWords.size
-                        timer.stop()
-                        finishGame(win)
-                    }
-                } else if (gameMode == GameMode.Marathon) {
-                    currentUsedWord?.let { usedWord ->
-                        usedWord.duration = usedWord.duration + 1
-                        onCurrentWordCountDownLiveData.value =
-                            usedWord.maxDuration - usedWord.duration
-                        Completable
-                            .create { e: CompletableEmitter ->
-                                usedWordDataSource.updateUsedWordDuration(
-                                    usedWord.id,
-                                    usedWord.duration
-                                )
-                                e.onComplete()
-                            }
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe()
-
-                        if (usedWord.isTimeout) {
-                            timer.stop()
-                            finishGame(false)
-                        }
-                    }
-                }
-                onTimerLiveData.value = currentDuration
-                gameDataSource.saveGameDataDuration(gameData.id, currentDuration)
-            }
-        }
     }
 
     private fun resetLiveData() {

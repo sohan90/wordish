@@ -13,7 +13,7 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
-import com.conversant.app.wordish.WordSearchApp
+import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.commons.gone
 import com.conversant.app.wordish.data.room.WordDataSource
@@ -49,7 +49,7 @@ class SettingItemDialog : DialogFragment() {
     }
 
     private fun injectDependency() {
-        (requireActivity().application as WordSearchApp).appComponent.inject(this)
+        (requireActivity().application as WordishApp).appComponent.inject(this)
     }
 
     override fun onStart() {

@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import android.view.Window
 import androidx.fragment.app.DialogFragment
 import com.conversant.app.wordish.R
-import com.conversant.app.wordish.WordSearchApp
+import com.conversant.app.wordish.WordishApp
 import javax.inject.Inject
 
 
@@ -34,7 +34,7 @@ class GameOverDialogFragment : DialogFragment() {
     }
 
     private fun injectDependency() {
-        (requireActivity().application as WordSearchApp).appComponent.inject(this)
+        (requireActivity().application as WordishApp).appComponent.inject(this)
     }
 
     override fun onStart() {

@@ -1,19 +1,14 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <string name="app_name">Word Quest</string>
-    <string name="summary_about">
-        Word search puzzle game with dynamically generated levels.
-        \n\nSound effects:
-        \ncorrect (https://freesound.org/s/131660/) &amp; wrong (https://freesound.org/s/131657/) by Bertrof, winning (https://freesound.org/s/258142/) by Tuudurt, lose (https://freesound.org/s/270329/) by LittleRobotSoundFactory\n
-    </string>
+    <string name="app_name">Wordish</string>
     <string name="finished">Finished!</string>
 
     <!-- prefs -->
-    <string tools:ignore="MissingTranslation" name="pref_showGridLine">showGridLine</string>
-    <string tools:ignore="MissingTranslation" name="pref_snapToGrid">snapToGrid</string>
-    <string tools:ignore="MissingTranslation" name="pref_enableSound">enableSound</string>
-    <string tools:ignore="MissingTranslation" name="pref_deleteAfterFinish">deleteAfterFinish</string>
-    <string tools:ignore="MissingTranslation" name="pref_enableFullscreen">enableFullscreen</string>
-    <string tools:ignore="MissingTranslation" name="pref_autoScaleGrid">autoScaleGrid</string>
+    <string tools:ignore="MissingTranslation" name="pref_showGridLine" >showGridLine</string>
+    <string tools:ignore="MissingTranslation" name="pref_snapToGrid" >snapToGrid</string>
+    <string tools:ignore="MissingTranslation" name="pref_enableSound" >enableSound</string>
+    <string tools:ignore="MissingTranslation" name="pref_deleteAfterFinish" >deleteAfterFinish</string>
+    <string tools:ignore="MissingTranslation" name="pref_enableFullscreen" >enableFullscreen</string>
+    <string tools:ignore="MissingTranslation" name="pref_autoScaleGrid" >autoScaleGrid</string>
     <string name="snap_to_grid_def_val">ALWAYS_SNAP</string>
     <string name="show_grid_line">Show Grid Line</string>
     <string name="snap_to_grid">Snap To Grid</string>
@@ -77,10 +72,10 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="summ_reverse_match">Allow reverse word selection</string>
     <string name="summ_del_finish">Delete game data when it finished</string>
-    <string name="no_meaning" translatable="false">No definition available for %s</string>
-    <string name="check_dictionary" translatable="false">check dictionary</string>
-    <string name="dictionary" translatable="false">Dictionary</string>
-    <string name="rules_amp_tips" translatable="false"><![CDATA[Rules & Tips]]></string>
-    <string name="credits" translatable="false">Credits</string>
-    <string name="better_luck_next_time" translatable="false">Game Over. Better \n luck next time!</string>
+    <string name="no_meaning">No definition available for %s</string>
+    <string name="check_dictionary" >check dictionary</string>
+    <string name="dictionary" >Dictionary</string>
+    <string name="rules_amp_tips" ><![CDATA[Rules & Tips]]></string>
+    <string name="credits" >Credits</string>
+    <string name="better_luck_next_time" >Game Over. Better \n luck next time!</string>
 </resources>

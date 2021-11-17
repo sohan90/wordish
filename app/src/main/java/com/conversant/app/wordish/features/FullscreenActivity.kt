@@ -7,7 +7,7 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import com.conversant.app.wordish.R
-import com.conversant.app.wordish.WordSearchApp
+import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.features.settings.Preferences
 import javax.inject.Inject
 
@@ -24,7 +24,7 @@ open class FullscreenActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        (application as WordSearchApp).appComponent.inject(this)
+        (application as WordishApp).appComponent.inject(this)
 
         if (preferences.enableFullscreen()) {
             requestWindowFeature(Window.FEATURE_NO_TITLE)

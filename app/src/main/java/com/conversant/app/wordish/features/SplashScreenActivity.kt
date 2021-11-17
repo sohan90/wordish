@@ -6,7 +6,7 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
-import com.conversant.app.wordish.WordSearchApp
+import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.data.room.GameDatabase
 import com.conversant.app.wordish.data.room.WordDataSource
 import com.conversant.app.wordish.features.gameplay.GamePlayActivity
@@ -30,7 +30,7 @@ class SplashScreenActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
-        (application as WordSearchApp).appComponent.inject(this)
+        (application as WordishApp).appComponent.inject(this)
         start()
     }
 

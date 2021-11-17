@@ -1,54 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.conversant.app.wordish">
+    package="com.conversant.app.wordish">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name="com.conversant.app.wordish.WordSearchApp"
+        android:name="com.conversant.app.wordish.WordishApp"
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:supportsRtl="true"
         android:largeHeap="true"
+        android:supportsRtl="true"
         android:theme="@style/AppTheme.NoActionBar">
-        <activity
-            android:name="com.conversant.app.wordish.features.settings.SettingsActivity"
-            android:screenOrientation="portrait"
-            android:theme="@style/AppTheme">
-        </activity>
-        <activity
-            android:name="com.conversant.app.wordish.features.gameplay.GamePlayActivity"
-            android:screenOrientation="portrait">
-        </activity>
 
         <activity
-            android:name="com.conversant.app.wordish.features.gameover.GameOverActivity"
-            android:screenOrientation="portrait">
-        </activity>
+            android:name="com.conversant.app.wordish.features.gameplay.GamePlayActivity"
+            android:screenOrientation="portrait"/>
+
         <activity
             android:name="com.conversant.app.wordish.features.SplashScreenActivity"
             android:screenOrientation="portrait">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW"/>
-                <category android:name="android.intent.category.DEFAULT"/>
-                <category android:name="android.intent.category.BROWSABLE"/>
+        </activity>
 
-                <data android:scheme="https"
-                      android:host="abdularis.com"
-                      android:pathPrefix="/app/wsp"/>
-            </intent-filter>
-        </activity>
-        <activity
-            android:name="com.conversant.app.wordish.features.gamehistory.GameHistoryActivity"
-            android:screenOrientation="portrait">
-        </activity>
-        <activity android:name="com.conversant.app.wordish.features.gamethemeselector.ThemeSelectorActivity">
-        </activity>
     </application>
 
 </manifest>
