@@ -263,7 +263,8 @@ class GamePlayActivity : FullscreenActivity() {
                         when (answerWordLength) {
 
                             MINIMUM_LENGTH -> {
-                                startPenaltyFireAnim() }
+                                startPenaltyFireAnim()
+                            }
 
                             RESET_PENALTY_FIRE_VIEW -> { // on penalty end animation reset x and y axis
                                 v.x = iv_penalty_placeholder.x
@@ -295,7 +296,13 @@ class GamePlayActivity : FullscreenActivity() {
         if (value > 0) {
             updateWaterCountTxt(value)
         }
-        saveGame()
+
+        val count = tv_fire_count.text.toString().toInt()
+        if (count > GAME_OVER_FIRE_COUNT) {
+            showFinishGame(Finished(null, false))
+        } else {
+            saveGame()
+        }
     }
 
     private fun explodeBomb() {
@@ -1117,9 +1124,9 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationStart(animation: Animator?) {}
 
             override fun onAnimationEnd(animation: Animator?) {
-                if (count > GAME_OVER_FIRE_COUNT) {
+                /*if (count > GAME_OVER_FIRE_COUNT) {
                     showFinishGame(Finished(null, false))
-                }
+                }*/
             }
 
             override fun onAnimationCancel(animation: Animator?) {}
@@ -1227,13 +1234,13 @@ class GamePlayActivity : FullscreenActivity() {
                 delay(600)
                 soundPlayer.play(SoundPlayer.Sound.Winning)
             }
-
             layout_complete_popup.visible()
             layout_complete_popup.startAnimation(anim)
+
         } else {
             lifecycleScope.launch {
-                soundPlayer.play(SoundPlayer.Sound.Lose)
                 viewModel.quitGame()
+                soundPlayer.play(SoundPlayer.Sound.Lose)
             }
         }
     }

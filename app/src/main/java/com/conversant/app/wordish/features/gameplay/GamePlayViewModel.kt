@@ -128,7 +128,8 @@ class GamePlayViewModel @Inject constructor(
     suspend fun stopGame(
         gridData: Array<CharArray>,
         fireList: Array<Array<FireInfo>>,
-        scoreBoard: ScoreBoard) {
+        scoreBoard: ScoreBoard
+    ) {
 
         disposable.dispose()
         saveScoreBoardToDb(scoreBoard)
@@ -335,10 +336,10 @@ class GamePlayViewModel @Inject constructor(
 
     fun getCorrectWordLength(): Int = correctWordLength
 
-    fun getWaterForLongWordLength(wordLength:Int):Int{
+    fun getWaterForLongWordLength(wordLength: Int): Int {
         val value = wordLength % 7
-        if (wordLength >= 7){
-           return value + 1
+        if (wordLength >= 7) {
+            return value + 1
         }
         return 0
     }
@@ -461,7 +462,7 @@ class GamePlayViewModel @Inject constructor(
     }
 
     fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {
-        var count = 0//18
+        var count = 0
         fireArray.map {
             for (b in it) {
                 if (b.hasFire) {
@@ -557,11 +558,12 @@ class GamePlayViewModel @Inject constructor(
         _htmlFileName.value = fileName
     }
 
-    suspend fun quitGame(updateQuitGame:Boolean = true) {
+    suspend fun quitGame(updateQuitGame: Boolean = true) {
         disposable.dispose()
         wordDataSource.deleteAll()
         gameStatusDataSource.deleteAll()
         scoreBoardDataSource.deleteAll()
+
         if (updateQuitGame) {
             _quitGame.value = true
         }
