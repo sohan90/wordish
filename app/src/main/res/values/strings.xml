@@ -82,4 +82,5 @@
     <string name="dictionary" translatable="false">Dictionary</string>
     <string name="rules_amp_tips" translatable="false"><![CDATA[Rules & Tips]]></string>
     <string name="credits" translatable="false">Credits</string>
+    <string name="better_luck_next_time" translatable="false">Game Over. Better \n luck next time!</string>
 </resources>

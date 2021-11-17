@@ -195,6 +195,22 @@ object Util {
         }
     }
 
+    fun winGame(completedCell: Array<BooleanArray>){
+        for (row in 0..5){
+           for (col in 0..5){
+               completedCell[row][col] = true
+           }
+        }
+    }
+
+    fun looseGame(fireList: Array<Array<FireInfo>>){
+        for (row in 0..5){
+            for (col in 0..5){
+                fireList[row][col].hasFire = true
+            }
+        }
+    }
+
     fun IntProgression.size(): Int {
         var size = 0
         for (i in this) {

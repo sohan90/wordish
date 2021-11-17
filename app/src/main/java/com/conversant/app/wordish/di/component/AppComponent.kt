@@ -26,4 +26,5 @@ interface AppComponent {
     fun inject(dialog: DefinitionInfoDialog)
     fun inject(dialog: SettingsDialog)
     fun inject(dialog: SettingItemDialog)
+    fun inject(dialog: GameOverDialogFragment)
 }

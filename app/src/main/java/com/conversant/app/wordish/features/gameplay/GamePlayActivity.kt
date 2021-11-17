@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.animation.ValueAnimator.RESTART
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
@@ -134,9 +135,18 @@ class GamePlayActivity : FullscreenActivity() {
     private fun registerLiveDataForQuitGame() {
         viewModel.quitGame.observe(this, {
             if (it) {
-                restartGame()
+                letter_board.streakView.isInteractive = false
+                lifecycleScope.launch {
+                    showGameOverDialog()
+                    delay(5000)
+                    restartGame()
+                }
             }
         })
+    }
+
+    private fun showGameOverDialog() {
+        GameOverDialogFragment().show(supportFragmentManager, GAME_OVER_ITEM_DIALOG_TAG)
     }
 
 
@@ -584,6 +594,8 @@ class GamePlayActivity : FullscreenActivity() {
                     val waterDrop = tv_water_count.text.toString().toInt()
                     updateWaterCountTxt(waterDrop - 1)
                     disableOrEnableOtherPowerUps(1f, iv_water)
+
+                    saveGame()
                 }
             }
 
@@ -621,6 +633,9 @@ class GamePlayActivity : FullscreenActivity() {
             pg_bomb.progress = it.bombCountProgress
             pg_water.progress = it.waterCountProgress
             pg_fire_plus.progress = it.boardFirePlusCountProgress
+
+             updateWaterCountTxt(it.waterCount)
+             updateBombCountTxt(it.bombCount)
         })
         viewModel.getScoreBoardFromDb()
     }
@@ -721,16 +736,17 @@ class GamePlayActivity : FullscreenActivity() {
                         letterAdapter!!.completedCell, letterAdapter!!.fireList
                     )
 
+                   // Util.winGame(letterAdapter!!.completedCell)
+
                     Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid) {}
 
                     val isCompleted = checkForGameCompletion()
                     if (!isCompleted) {
                         updateScoreBoard(onAnswerRes!!)
+                        checkForCascadeWords(CasCadeSide.HORIZONTAL)
                     } else {
                         showFinishGame(Finished(null, true))
                     }
-
-                    checkForCascadeWords(CasCadeSide.HORIZONTAL)
 
                 }.start()
 
@@ -1100,6 +1116,7 @@ class GamePlayActivity : FullscreenActivity() {
 
             override fun onAnimationEnd(animation: Animator?) {
                 if (count > GAME_OVER_FIRE_COUNT) {
+                    objectAnimator.removeAllListeners()
                     showFinishGame(Finished(null, false))
                 }
             }
@@ -1116,6 +1133,7 @@ class GamePlayActivity : FullscreenActivity() {
         tv_water_count.text = waterDrop.toString()
         iv_water.isEnabled = waterDrop != 0
     }
+
 
     private fun updateWaterProgress(level: Int) {
         if (level > 5) {
@@ -1139,12 +1157,6 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateBombCountTxt(bombCount: Int) {
         tv_bomb_count.text = bombCount.toString()
-        val objectAnimator = ObjectAnimator.ofInt(
-            pg_bomb, "progress",
-            pg_bomb.progress, bombCount * 100
-        )
-        objectAnimator.duration = 500
-        objectAnimator.start()
         iv_bomb.isEnabled = bombCount != 0
     }
 
@@ -1190,6 +1202,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun showFinishGame(state: Finished) {
+        letter_board.streakView.isInteractive = false
         val anim = AnimationUtils.loadAnimation(this, R.anim.game_complete)
         anim.interpolator = DecelerateInterpolator()
         anim.duration = 500
@@ -1199,26 +1212,29 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationRepeat(animation: Animation) {}
             override fun onAnimationEnd(animation: Animation) {
                 lifecycleScope.launch {
+                    showFireWorks()
                     delay(8000)
-                    viewModel.quitGame()
+                    viewModel.quitGame(false)
+                    restartGame()
                 }
             }
         })
         if (state.win) {
             text_complete_popup.setText(R.string.lbl_complete)
-            Handler(Looper.myLooper()!!).postDelayed(
-                { soundPlayer.play(SoundPlayer.Sound.Winning) },
-                600
-            )
+
+            lifecycleScope.launch {
+                delay(600)
+                soundPlayer.play(SoundPlayer.Sound.Winning)
+            }
+
+            layout_complete_popup.visible()
+            layout_complete_popup.startAnimation(anim)
         } else {
-            text_complete_popup.setText(R.string.lbl_game_over)
-            Handler(Looper.myLooper()!!).postDelayed(
-                { soundPlayer.play(SoundPlayer.Sound.Lose) },
-                600
-            )
+            lifecycleScope.launch {
+                soundPlayer.play(SoundPlayer.Sound.Lose)
+                viewModel.quitGame()
+            }
         }
-        layout_complete_popup.visible()
-        layout_complete_popup.startAnimation(anim)
     }
 
     private fun restartGame() {
@@ -1227,6 +1243,22 @@ class GamePlayActivity : FullscreenActivity() {
         finish()
     }
 
+
+    private fun showFireWorks(){
+        iv_fire_works.visibility = View.VISIBLE
+        val valueAnimator = ValueAnimator.ofInt(1, 26)
+        valueAnimator.addUpdateListener {
+            val i = it.animatedValue as Int
+            val imageName = "paper_frame_${i}"
+            val res = resources.getIdentifier(imageName, "drawable", packageName);
+            val drawableImg = ContextCompat.getDrawable(this, res)
+            iv_fire_works.setImageDrawable(drawableImg)
+        }
+        valueAnimator.duration = 1000
+        valueAnimator.repeatCount = 8
+        valueAnimator.repeatMode = RESTART
+        valueAnimator.start()
+    }
 
     companion object {
         const val EXTRA_GAME_DIFFICULTY = "game_max_duration"

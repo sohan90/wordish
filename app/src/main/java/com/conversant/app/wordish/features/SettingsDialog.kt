@@ -103,6 +103,7 @@ class SettingsDialog : DialogFragment() {
         }
 
         tv_quit.setOnClickListener {
+            soundPlayer.play(SoundPlayer.Sound.GameOver)
             lifecycleScope.launch {
                 gameViewModel.quitGame()
                 dismiss()

@@ -521,7 +521,7 @@ class GamePlayViewModel @Inject constructor(
     }
 
     fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {
-        var count = 0
+        var count = 0//16
         fireArray.map {
             for (b in it) {
                 if (b.hasFire) {
@@ -617,12 +617,14 @@ class GamePlayViewModel @Inject constructor(
         _htmlFileName.value = fileName
     }
 
-    suspend fun quitGame() {
+    suspend fun quitGame(updateQuitGame:Boolean = true) {
         disposable.dispose()
         wordDataSource.deleteAll()
         gameStatusDataSource.deleteAll()
         scoreBoardDataSource.deleteAll()
-        _quitGame.value = true
+        if (updateQuitGame) {
+            _quitGame.value = true
+        }
     }
 
     companion object {

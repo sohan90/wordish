@@ -14,7 +14,7 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
 
     enum class Sound {
         Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight, Siren, PowerUp,
-        SwipeCorrect, Dismiss, Open
+        SwipeCorrect, Dismiss, Open, GameOver
     }
 
     private var streadId: Int = 0
@@ -110,6 +110,11 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
         soundPoolMap.put(
             Sound.Dismiss.ordinal,
             soundPool.load(context, R.raw.dialog_dismiss, 1)
+        )
+
+        soundPoolMap.put(
+            Sound.GameOver.ordinal,
+            soundPool.load(context, R.raw.game_over, 1)
         )
     }
 }
