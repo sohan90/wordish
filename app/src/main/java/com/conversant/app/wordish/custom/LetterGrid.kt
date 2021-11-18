@@ -38,13 +38,13 @@ class LetterGrid @JvmOverloads constructor(
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    private val roundCornerPaint: Paint = Paint()
+    private val greyBorderColor: Paint = Paint()
 
-    private val roundCornerRedPaint: Paint = Paint()
+    private val greenBorderColor: Paint = Paint()
 
-    private val highlightPaint = Paint()
+    private val redBckColor = Paint()
 
-    private val backgroundColor = Paint()
+    private val greyWhiteBckColor = Paint()
 
     private val fireGif = mutableListOf<Bitmap>()
 
@@ -77,24 +77,25 @@ class LetterGrid @JvmOverloads constructor(
     }
 
     private fun initPaintObject() {
-        backgroundColor.color = Color.parseColor("#D8BD96")//Color.BLACK //
-        backgroundColor.style = Paint.Style.FILL
-        backgroundColor.strokeWidth = 15f
-        backgroundColor.isAntiAlias = true
+        greyWhiteBckColor.color = Color.parseColor("#D8BD96")//Color.BLACK //
+        greyWhiteBckColor.style = Paint.Style.FILL
+        greyWhiteBckColor.strokeWidth = 15f
+        greyWhiteBckColor.isAntiAlias = true
 
-        highlightPaint.color = Color.RED
-        highlightPaint.style = Paint.Style.FILL
-        highlightPaint.isAntiAlias = true
+        redBckColor.color = Color.RED // red background
+        redBckColor.style = Paint.Style.FILL
+        redBckColor.isAntiAlias = true
 
-        roundCornerPaint.color = Color.parseColor("#800000")
-        roundCornerPaint.style = Paint.Style.STROKE
-        roundCornerPaint.strokeWidth = 7f
-        roundCornerPaint.isAntiAlias = true
+        greyBorderColor.color = Color.parseColor("#800000")//grey border
+        greyBorderColor.style = Paint.Style.STROKE
+        greyBorderColor.strokeWidth = 7f
+        greyBorderColor.isAntiAlias = true
 
-        roundCornerRedPaint.color = Color.GREEN
-        roundCornerRedPaint.style = Paint.Style.STROKE
-        roundCornerRedPaint.strokeWidth = 7f
-        roundCornerRedPaint.isAntiAlias = true
+        greenBorderColor.color = Color.GREEN //green border
+        greenBorderColor.style = Paint.Style.STROKE
+        greenBorderColor.strokeWidth = 7f
+        greenBorderColor.isAntiAlias = true
+
 
     }
 
@@ -208,7 +209,7 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY + gridHeight.toFloat() - borderSpace,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
-                        backgroundColor
+                        greyWhiteBckColor
                     )
 
                     if (startCalculateCellSize) {
@@ -243,7 +244,7 @@ class LetterGrid @JvmOverloads constructor(
                 //highlight or selected cell color
                 val selected = gridDataAdapter?.highLight(i, j)!!
                 if (selected) {
-                    highlightPaint.color = Color.RED
+                    redBckColor.color = Color.RED
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
@@ -251,7 +252,7 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY + gridHeight.toFloat() - borderSpace,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
-                        highlightPaint
+                        redBckColor
                     )
                 }
 
@@ -265,11 +266,12 @@ class LetterGrid @JvmOverloads constructor(
                         cornerY + gridHeight.toFloat() - value,
                         roundCornerSize.toFloat(),
                         roundCornerSize.toFloat(),
-                        backgroundColor
+                        greyWhiteBckColor
                     )
 
-                    val paint = if (gridDataAdapter!!.completedCell(i, j)
-                    ) roundCornerRedPaint else roundCornerPaint
+                    val paint = if (gridDataAdapter!!.completedCell(i, j))
+                        greenBorderColor else greyBorderColor
+
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
@@ -282,11 +284,8 @@ class LetterGrid @JvmOverloads constructor(
 
                 } else {
                     //border color since background cell already drawn in the background
-                    val paint = if (gridDataAdapter!!.completedCell(
-                            i,
-                            j
-                        )
-                    ) roundCornerRedPaint else roundCornerPaint
+                    val paint = if (gridDataAdapter!!.completedCell(i, j)) greenBorderColor else greyBorderColor
+
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
                         cornerY.toFloat(),
@@ -337,7 +336,8 @@ class LetterGrid @JvmOverloads constructor(
                     rect.bottom = (rect.top + abs(balanceHeightFromFireSize))
 
 
-                    canvas.drawBitmap(fireGif[fireGifIndex % 5], null, rect, null)
+                        canvas.drawBitmap(fireGif[fireGifIndex % 5], null, rect, null)
+
                 }
 
                 when {
@@ -357,12 +357,13 @@ class LetterGrid @JvmOverloads constructor(
                     else -> { // no animation
                         if (fireInfo.fireCount >= 5) paint.color = Color.BLACK else paint.color = Color.WHITE
 
-                        canvas.drawText(
-                            letter.toString(),
-                            (x - charBounds.exactCenterX() - letterSpace),
-                            (y - charBounds.exactCenterY() - letterSpace),
-                            paint
-                        )
+                            canvas.drawText(
+                                letter.toString(),
+                                (x - charBounds.exactCenterX() - letterSpace),
+                                (y - charBounds.exactCenterY() - letterSpace),
+                                paint
+                            )
+
                     }
                 }
 

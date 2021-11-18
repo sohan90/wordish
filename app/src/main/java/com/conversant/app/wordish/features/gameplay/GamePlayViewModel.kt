@@ -558,13 +558,13 @@ class GamePlayViewModel @Inject constructor(
         _htmlFileName.value = fileName
     }
 
-    suspend fun quitGame(updateQuitGame: Boolean = true) {
+    suspend fun quitGame(showQuitDialog: Boolean = true) {
         disposable.dispose()
         wordDataSource.deleteAll()
         gameStatusDataSource.deleteAll()
         scoreBoardDataSource.deleteAll()
 
-        if (updateQuitGame) {
+        if (showQuitDialog) {
             _quitGame.value = true
         }
     }
