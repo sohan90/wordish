@@ -22,11 +22,11 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
     private var soundPool: SoundPool = SoundPool.Builder().setMaxStreams(2).build()
     private val soundPoolMap: SparseIntArray = SparseIntArray()
 
-    fun play(sound: Sound) {
+    fun play(sound: Sound, loop:Int = 0) {
         if (mPreferences.enableSound()) {
             streadId = soundPool.play(
                 soundPoolMap[sound.ordinal],
-                1.0f, 1.0f, 0, 0, 1.0f
+                1.0f, 1.0f, 0, loop, 1.0f
             )
         }
     }

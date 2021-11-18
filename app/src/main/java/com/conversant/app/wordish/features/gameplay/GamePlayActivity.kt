@@ -520,7 +520,7 @@ class GamePlayActivity : FullscreenActivity() {
             clickedState = false
         } else {
             soundPlayer.play(SoundPlayer.Sound.PowerUp)
-            soundPlayer.play(SoundPlayer.Sound.Siren)
+            soundPlayer.play(SoundPlayer.Sound.Siren, -1)
             view.animate().scaleX(1.2f).scaleY(1.2f).start()
             if (view.id == iv_water.id) {
                 letter_board.shrinkFireWithWater(true)

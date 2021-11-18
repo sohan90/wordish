@@ -110,6 +110,7 @@ class SettingItemDialog : DialogFragment() {
 
     private fun initClickListener() {
         iv_cancel.setOnClickListener {
+            soundPlayer.stop()
             soundPlayer.play(SoundPlayer.Sound.Dismiss)
             dismiss()
         }
