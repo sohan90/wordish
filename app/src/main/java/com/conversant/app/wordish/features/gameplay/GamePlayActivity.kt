@@ -108,18 +108,6 @@ class GamePlayActivity : FullscreenActivity() {
         intent.extras?.getInt(EXTRA_GAME_THEME_ID).orZero()
     }
 
-    private val extraRowCount: Int by lazy {
-        intent.extras?.getInt(EXTRA_ROW_COUNT).orZero()
-    }
-
-    private val extraColumnCount: Int by lazy {
-        intent.extras?.getInt(EXTRA_COL_COUNT).orZero()
-    }
-
-    private val extraGameId: Int by lazy {
-        intent.extras?.getInt(EXTRA_GAME_DATA_ID).orZero()
-    }
-
     private var rowColListPair = arrayListOf<Pair<Int, Int>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -435,7 +423,9 @@ class GamePlayActivity : FullscreenActivity() {
     private fun saveGame() {
         lifecycleScope.launch {
             val scoreBoard = getScoreBoardDetails()
-            viewModel.stopGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList, scoreBoard)
+            viewModel.saveGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList,
+                letterAdapter!!.completedCell,
+                scoreBoard)
         }
     }
 
@@ -859,7 +849,6 @@ class GamePlayActivity : FullscreenActivity() {
         viewModel.generateNewGameRound(
             gameThemeId = extraGameThemeId,
             gameMode = extraGameMode,
-            difficulty = extraDifficulty,
             newGame, gameStatusList
         )
 

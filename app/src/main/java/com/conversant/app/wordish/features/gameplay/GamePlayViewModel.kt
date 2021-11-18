@@ -126,15 +126,16 @@ class GamePlayViewModel @Inject constructor(
         resetLiveData()
     }
 
-    suspend fun stopGame(
+    suspend fun saveGame(
         gridData: Array<CharArray>,
         fireList: Array<Array<FireInfo>>,
+        completedCellArray: Array<BooleanArray>,
         scoreBoard: ScoreBoard
     ) {
 
         disposable.dispose()
         saveScoreBoardToDb(scoreBoard)
-        saveBoardDataToDb(gridData, fireList)
+        saveBoardDataToDb(gridData, fireList, completedCellArray)
     }
 
     private suspend fun saveScoreBoardToDb(scoreBoard: ScoreBoard) {
@@ -160,13 +161,15 @@ class GamePlayViewModel @Inject constructor(
 
     private suspend fun saveBoardDataToDb(
         gridData: Array<CharArray>,
-        fireList: Array<Array<FireInfo>>
+        fireList: Array<Array<FireInfo>>,
+        completedCellArray: Array<BooleanArray>
     ) {
         val dbList = gameStatusDataSource.getGameStatus()
         wordDataSource.updateWordForUsedWord(currentGameData!!.wordsList)
 
         val fireBuilder = StringBuilder()
         val firCounterBuilder = StringBuilder()
+        val completeCellBuilder = StringBuilder()
 
         val list = mutableListOf<GameStatus>()
 
@@ -188,15 +191,26 @@ class GamePlayViewModel @Inject constructor(
                     firCounterBuilder.append(",")
 
                 }
+
+                val completeCell = completedCellArray[row][col]
+                if (completeCell){
+                    val complete = "[$row,$col]"
+                    completeCellBuilder.append(complete)
+
+                    completeCellBuilder.append(",,")
+                }
             }
 
             gameStatus.letterColumn = str
             gameStatus.fireColumn = fireBuilder.toString().removeSuffix(",,")
             gameStatus.fireCount = firCounterBuilder.toString().removeSuffix(",")
+
+            gameStatus.completedColumn = completeCellBuilder.toString().removeSuffix(",,")
             list.add(gameStatus)
 
             fireBuilder.clear()
             firCounterBuilder.clear()
+            completeCellBuilder.clear()
 
         }
 
@@ -241,7 +255,6 @@ class GamePlayViewModel @Inject constructor(
     fun generateNewGameRound(
         gameThemeId: Int,
         gameMode: GameMode,
-        difficulty: Difficulty,
         newGame: Boolean,
         gameStatusList: List<GameStatus>
     ) {
@@ -295,11 +308,11 @@ class GamePlayViewModel @Inject constructor(
         for (row in 0..5) {
 
             val gameStatus = dbGameStatusList[row]
-            Util.fillFireInfoSavedValue(
-                gameStatus.fireColumn,
-                gameStatus.fireCount,
-                grid.fireArray
-            ) // udpate fireinfo
+            Util.fillFireInfoSavedValue(gameStatus.fireColumn, gameStatus.fireCount,
+                grid.fireArray) // udpate fireinfo
+
+            Util.fillCompleteCellInfoFromDb(gameStatus.completedColumn,
+                grid.completedCellHighlight)// update completed cell
 
             val charArray = gameStatus.letterColumn.toCharArray()
             for (col in 0..5) {

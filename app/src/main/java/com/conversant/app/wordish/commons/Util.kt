@@ -154,6 +154,22 @@ object Util {
         }
     }
 
+    fun fillCompleteCellInfoFromDb(dbSaveCompleteCell: String, gridCompleteCellArr: Array<BooleanArray>){
+        if (!TextUtils.isEmpty(dbSaveCompleteCell)) {
+            val rowColArr = dbSaveCompleteCell.split(",,")
+            rowColArr.forEachIndexed { _, rowCol ->
+                val frC = rowCol.replace("[", "")
+                val srC = frC.replace("]", "")
+
+                val row = srC.split(",")[0].toInt()
+                val col = srC.split(",")[1].toInt()
+
+                gridCompleteCellArr[row][col] = true
+
+            }
+        }
+    }
+
 
     fun getRowProgression(row: Int): IntProgression {
         var startRow = row - 1
