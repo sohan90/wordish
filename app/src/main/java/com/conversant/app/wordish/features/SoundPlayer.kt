@@ -5,12 +5,8 @@ import android.media.SoundPool
 import android.util.SparseIntArray
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.features.settings.Preferences
-import javax.inject.Inject
 
-/**
- * Created by abdularis on 22/07/17.
- */
-class SoundPlayer @Inject constructor(context: Context, private val mPreferences: Preferences) {
+class SoundPlayer constructor(context: Context, private val mPreferences: Preferences) {
 
     enum class Sound {
         Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight, Siren, PowerUp,
@@ -20,13 +16,14 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
     private var streadId: Int = 0
 
     private var soundPool: SoundPool = SoundPool.Builder().setMaxStreams(2).build()
+
     private val soundPoolMap: SparseIntArray = SparseIntArray()
 
-    fun play(sound: Sound, loop:Int = 0) {
+    fun play(sound: Sound, priority: Int = 0, loop: Int = 0) {
         if (mPreferences.enableSound()) {
             streadId = soundPool.play(
                 soundPoolMap[sound.ordinal],
-                1.0f, 1.0f, 0, loop, 1.0f
+                1.0f, 1.0f, priority, loop, 1.0f
             )
         }
     }
@@ -37,7 +34,7 @@ class SoundPlayer @Inject constructor(context: Context, private val mPreferences
         }
     }
 
-    fun pause(){
+    fun pause() {
         if (streadId != 0) {
             soundPool.pause(streadId)
         }

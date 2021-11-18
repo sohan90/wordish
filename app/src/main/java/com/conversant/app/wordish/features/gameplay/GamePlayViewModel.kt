@@ -1,5 +1,6 @@
 package com.conversant.app.wordish.features.gameplay
 
+import android.animation.ValueAnimator
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -270,20 +271,10 @@ class GamePlayViewModel @Inject constructor(
                 val gameData: GameData = if (newGame) {
                     gameDataCreator.newGameData(words, 6, 6, gameName, gameMode)
                 } else {
-                    getGameDataForSavedGame(words, gameStatusList)
-                }
-                if (gameMode === GameMode.CountDown) {
-                    gameData.maxDuration =
-                        getMaxCountDownDuration(gameData.usedWords.size, difficulty)
-                } else if (gameMode === GameMode.Marathon) {
-                    val maxDuration = getMaxDurationPerWord(difficulty)
-                    for (usedWord in gameData.usedWords) {
-                        usedWord.maxDuration = maxDuration
-                    }
+                    createGameDataFromSavedGame(words, gameStatusList)
                 }
                 Observable.just(gameData)
             }
-            .doOnNext { }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { gameData: GameData? ->
@@ -295,7 +286,7 @@ class GamePlayViewModel @Inject constructor(
     }
 
 
-    private fun getGameDataForSavedGame(
+    private fun createGameDataFromSavedGame(
         words: List<Word>,
         dbGameStatusList: List<GameStatus>
     ): GameData {
@@ -403,22 +394,6 @@ class GamePlayViewModel @Inject constructor(
             preferences.incrementSavedGameDataCount()
             return "Puzzle - $num"
         }
-
-    private fun getMaxCountDownDuration(usedWordsCount: Int, difficulty: Difficulty): Int {
-        return when {
-            difficulty === Difficulty.Easy -> usedWordsCount * 19 // 19s per word
-            difficulty === Difficulty.Medium -> usedWordsCount * 10 // 10s per word
-            else -> usedWordsCount * 5 // 5s per word
-        }
-    }
-
-    private fun getMaxDurationPerWord(difficulty: Difficulty): Int {
-        return when {
-            difficulty === Difficulty.Easy -> 25 // 19s per word
-            difficulty === Difficulty.Medium -> 16 // 10s per word
-            else -> 10 // 5s per word
-        }
-    }
 
     private fun nextWord() {
         currentGameData?.let {
@@ -560,13 +535,31 @@ class GamePlayViewModel @Inject constructor(
 
     suspend fun quitGame(showQuitDialog: Boolean = true) {
         disposable.dispose()
-        wordDataSource.deleteAll()
+
+        val usedWordList = wordDataSource.getUsedWords()
+        for (word in usedWordList) {
+            word.usedWord = false
+        }
+        wordDataSource.resetUserWord(usedWordList)
+
         gameStatusDataSource.deleteAll()
         scoreBoardDataSource.deleteAll()
 
         if (showQuitDialog) {
             _quitGame.value = true
         }
+    }
+
+    fun animateGameOverTile(gameOverCell: Array<BooleanArray>) {
+        val valueAnimator = ValueAnimator.ofInt(0, 5)
+        valueAnimator.addUpdateListener {
+            val row:Int = it.animatedValue as Int
+            for (col in 0..5){
+                gameOverCell[row][col] = true
+            }
+        }
+        valueAnimator.duration = 5000
+        valueAnimator.start()
     }
 
     companion object {

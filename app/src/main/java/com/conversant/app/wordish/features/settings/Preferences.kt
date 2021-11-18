@@ -4,12 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.custom.StreakView.SnapType
-import javax.inject.Inject
 
 /**
  * Created by abdularis on 19/07/17.
  */
-class Preferences @Inject constructor(
+class Preferences  constructor(
     context: Context,
     private val preferences: SharedPreferences
 ) {

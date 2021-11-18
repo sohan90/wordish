@@ -11,7 +11,8 @@ class ArrayLetterGridDataAdapter internal constructor(
     val fireList: Array<Array<FireInfo>> = emptyArray(),
     private val highlight: Array<BooleanArray> = emptyArray(),
     private val waterDrop: Array<BooleanArray> = emptyArray(),
-    var completedCell: Array<BooleanArray> = emptyArray()
+    var completedCell: Array<BooleanArray> = emptyArray(),
+    var gameOverCell: Array<BooleanArray> = emptyArray()
 
 ) : LetterGridDataAdapter() {
 
@@ -85,5 +86,9 @@ class ArrayLetterGridDataAdapter internal constructor(
 
     override fun completedCell(row: Int, col: Int): Boolean {
         return completedCell[row][col]
+    }
+
+    override fun gameOverTileAnimation(row: Int, col: Int): Boolean {
+       return gameOverCell[row][col]
     }
 }

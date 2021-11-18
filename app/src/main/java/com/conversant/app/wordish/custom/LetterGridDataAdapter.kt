@@ -18,4 +18,5 @@ abstract class LetterGridDataAdapter : Observable() {
     abstract fun updateHighlight(row: Int, col: Int, select:Boolean)
     abstract fun initCompletedCell(row: Int, col: Int, select:Boolean)
     abstract fun completedCell(row: Int, col: Int):Boolean
+    abstract fun gameOverTileAnimation(row: Int, col: Int):Boolean
 }

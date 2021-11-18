@@ -46,5 +46,8 @@ internal class SampleLetterGridDataAdapter(
 
     override fun completedCell(row: Int, col: Int): Boolean {return false}
 
+    override fun gameOverTileAnimation(row: Int, col: Int): Boolean {
+        return false
+    }
 
 }

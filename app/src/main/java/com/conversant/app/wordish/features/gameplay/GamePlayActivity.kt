@@ -55,6 +55,8 @@ const val RESET_PENALTY_FIRE_VIEW: Int = -1
 
 class GamePlayActivity : FullscreenActivity() {
 
+    private  var gameOverDialogFragment: GameOverDialogFragment?= null
+
     private val adapterList: MutableList<String> = mutableListOf()
 
     private lateinit var adapter: ArrayAdapter<String>
@@ -138,6 +140,9 @@ class GamePlayActivity : FullscreenActivity() {
                 letter_board.streakView.isInteractive = false
                 lifecycleScope.launch {
                     showGameOverDialog()
+                    delay(2000)
+                    gameOverDialogFragment?.fadeOutAndDismiss()
+                    animateGameOverTile()
                     delay(5000)
                     restartGame()
                 }
@@ -145,8 +150,13 @@ class GamePlayActivity : FullscreenActivity() {
         })
     }
 
+    private fun animateGameOverTile() {
+        viewModel.animateGameOverTile(letterAdapter!!.gameOverCell)
+    }
+
     private fun showGameOverDialog() {
-        GameOverDialogFragment().show(supportFragmentManager, GAME_OVER_ITEM_DIALOG_TAG)
+        gameOverDialogFragment = GameOverDialogFragment()
+        gameOverDialogFragment!!.show(supportFragmentManager, GAME_OVER_ITEM_DIALOG_TAG)
     }
 
 
@@ -379,8 +389,6 @@ class GamePlayActivity : FullscreenActivity() {
     private fun initClickListener() {
         iv_setting.setOnClickListener {
             openSettingDialog()
-
-            //saveGame()
         }
 
         iv_fire.setOnTouchListener { view, event ->
@@ -743,7 +751,7 @@ class GamePlayActivity : FullscreenActivity() {
                         letterAdapter!!.completedCell, letterAdapter!!.fireList
                     )
 
-                    //Util.winGame(letterAdapter!!.completedCell)
+                   // Util.winGame(letterAdapter!!.completedCell)
 
                     Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid) {}
 
@@ -853,6 +861,7 @@ class GamePlayActivity : FullscreenActivity() {
             difficulty = extraDifficulty,
             newGame, gameStatusList
         )
+
     }
 
     override fun onStart() {
@@ -1001,7 +1010,8 @@ class GamePlayActivity : FullscreenActivity() {
             gameData.grid!!.fireArray,
             gameData.grid!!.highlight,
             gameData.grid!!.waterDrop,
-            gameData.grid!!.completedCellHighlight
+            gameData.grid!!.completedCellHighlight,
+            gameData.grid!!.gameOver
         )
         showDuration(gameData.duration)
         showWordsCount(gameData.usedWords.size)
@@ -1072,7 +1082,8 @@ class GamePlayActivity : FullscreenActivity() {
         fireArray: Array<Array<FireInfo>>,
         highlight: Array<BooleanArray>,
         waterDrop: Array<BooleanArray>,
-        completedCellHighlight: Array<BooleanArray>
+        completedCellHighlight: Array<BooleanArray>,
+        gameOver: Array<BooleanArray>
     ) {
         if (letterAdapter == null) {
             letterAdapter = ArrayLetterGridDataAdapter(
@@ -1080,7 +1091,8 @@ class GamePlayActivity : FullscreenActivity() {
                 fireArray,
                 highlight,
                 waterDrop,
-                completedCellHighlight
+                completedCellHighlight,
+                gameOver
             )
             letterAdapter?.let {
                 letter_board.dataAdapter = it

@@ -10,6 +10,7 @@ import android.view.Window
 import androidx.fragment.app.DialogFragment
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordishApp
+import kotlinx.android.synthetic.main.fragment_game_over_dialog.*
 import javax.inject.Inject
 
 
@@ -40,6 +41,13 @@ class GameOverDialogFragment : DialogFragment() {
     override fun onStart() {
         super.onStart()
         setStyleForAnimation()
+    }
+
+    fun fadeOutAndDismiss() {
+        tv_box.alpha = 1f
+        tv_box.animate().alpha(0f).setDuration(3000).withEndAction {
+            dismiss()
+        }.start()
     }
 
     private fun setStyleForAnimation() {

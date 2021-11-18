@@ -9,11 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by abdularis on 06/07/17.
- *
- * Try to pack all string list into grid array
- */
 
 public class StringListGridGenerator extends GridGenerator<List<Word>, List<Word>> {
 

@@ -11,12 +11,12 @@ import java.util.*
 import kotlin.math.abs
 
 
-
 const val SPREAD_FIRE_RATIO = 1
 const val FIRE_RATIO_2 = 3
 const val FIRE_RATIO_3 = 2
 const val FIRE_RATIO_4 = 1
 const val START_FIRE_RATIO = 4
+
 class LetterGrid @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -156,7 +156,7 @@ class LetterGrid @JvmOverloads constructor(
         //invalidate()
     }
 
-    fun releaseFire(){
+    fun releaseFire() {
         spotFireImage = false
         //invalidate()
     }
@@ -201,6 +201,19 @@ class LetterGrid @JvmOverloads constructor(
         for (i in 0 until gridRowCount) {
             cornerX = 0
             for (j in 0 until gridColCount) {
+
+                val gameOverAnimate = gridDataAdapter!!.gameOverTileAnimation(i, j)
+                if (gameOverAnimate) {
+                    greyWhiteBckColor.alpha = 0
+                    greenBorderColor.alpha = 0
+                    greyBorderColor.alpha = 0
+
+                } else {
+                    greyWhiteBckColor.alpha = 255
+                    greenBorderColor.alpha = 255
+                    greyBorderColor.alpha = 255
+                }
+
                 if (!bombCell[i][j].animate && !bombCell[i][j].replaceWordAnimate) {
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
@@ -237,6 +250,18 @@ class LetterGrid @JvmOverloads constructor(
             cornerX = 0
 
             for (j in 0 until gridColCount) {
+
+                val gameOverAnimate = gridDataAdapter!!.gameOverTileAnimation(i, j)
+                if (gameOverAnimate) {
+                    greyWhiteBckColor.alpha = 0
+                    greenBorderColor.alpha = 0
+                    greyBorderColor.alpha = 0
+
+                } else {
+                    greyWhiteBckColor.alpha = 255
+                    greenBorderColor.alpha = 255
+                    greyBorderColor.alpha = 255
+                }
 
                 val letter = gridDataAdapter?.getLetter(i, j)
                 paint.getTextBounds(letter.toString(), 0, 1, charBounds)
@@ -284,7 +309,11 @@ class LetterGrid @JvmOverloads constructor(
 
                 } else {
                     //border color since background cell already drawn in the background
-                    val paint = if (gridDataAdapter!!.completedCell(i, j)) greenBorderColor else greyBorderColor
+                    val paint = if (gridDataAdapter!!.completedCell(
+                            i,
+                            j
+                        )
+                    ) greenBorderColor else greyBorderColor
 
                     canvas.drawRoundRect(
                         cornerX.toFloat(),
@@ -335,8 +364,9 @@ class LetterGrid @JvmOverloads constructor(
                     rect.right = ((rect.left + abs(smallWidth)))
                     rect.bottom = (rect.top + abs(balanceHeightFromFireSize))
 
-
+                    if (!gameOverAnimate) {
                         canvas.drawBitmap(fireGif[fireGifIndex % 5], null, rect, null)
+                    }
 
                 }
 
@@ -349,27 +379,33 @@ class LetterGrid @JvmOverloads constructor(
                     }
                     bombCell[i][j].replaceWordAnimate -> { // replace new word animation
                         var yAxis = 0f
-                        if (bombCell[i][j].cellYaxis == 0f) yAxis = y - charBounds.exactCenterY() - letterSpace
+                        if (bombCell[i][j].cellYaxis == 0f) yAxis =
+                            y - charBounds.exactCenterY() - letterSpace
                         canvas.drawText(
                             letter.toString(),
-                            (x - charBounds.exactCenterX() - letterSpace), yAxis, paint)
+                            (x - charBounds.exactCenterX() - letterSpace), yAxis, paint
+                        )
                     }
                     else -> { // no animation
-                        if (fireInfo.fireCount >= 5) paint.color = Color.BLACK else paint.color = Color.WHITE
+                        if (fireInfo.fireCount >= 5) paint.color = Color.BLACK else paint.color =
+                            Color.WHITE
 
+                        if (!gameOverAnimate) {
                             canvas.drawText(
                                 letter.toString(),
                                 (x - charBounds.exactCenterX() - letterSpace),
                                 (y - charBounds.exactCenterY() - letterSpace),
                                 paint
                             )
+                        }
 
                     }
                 }
 
                 if (gridDataAdapter?.hasWaterDrop(i, j) == true) {
-                    val centerX = (waterX - borderSpace) + gridWidth/2
-                    rect.left =  centerX - waterDropBitmap!!.width//+ (halfWidth - waterDropBitmap!!.width)
+                    val centerX = (waterX - borderSpace) + gridWidth / 2
+                    rect.left =
+                        centerX - waterDropBitmap!!.width//+ (halfWidth - waterDropBitmap!!.width)
                     rect.top = waterY + borderSpace
                     rect.right = rect.left + (gridWidth - borderSpace)
                     rect.bottom = rect.top + (gridHeight - borderSpace)

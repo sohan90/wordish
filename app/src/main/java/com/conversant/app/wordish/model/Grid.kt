@@ -19,10 +19,13 @@ class Grid(rowCount: Int, colCount: Int) {
     var waterDrop: Array<BooleanArray>
         private set
 
-    val rowCount: Int
+    var gameOver: Array<BooleanArray>
+        private set
+
+    private val rowCount: Int
         get() = array.size
 
-    val colCount: Int
+    private val colCount: Int
         get() = array[0].size
 
     init {
@@ -32,6 +35,7 @@ class Grid(rowCount: Int, colCount: Int) {
         waterDrop = Array(rowCount) { BooleanArray(colCount) }
         highlight = Array(rowCount) { BooleanArray(colCount) }
         completedCellHighlight = Array(rowCount) { BooleanArray(colCount) }
+        gameOver = Array(rowCount) { BooleanArray(colCount) }
         reset()
 
     }
