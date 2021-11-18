@@ -335,7 +335,7 @@ class GamePlayViewModel @Inject constructor(
         return 0
     }
 
-    fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean) {
+    fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean = false) {
         var correct = false
 
         val correctWord = checkWordFromWordList(answerStr, reverseMatching)
@@ -350,7 +350,7 @@ class GamePlayViewModel @Inject constructor(
 
     }
 
-    fun checkWordFromWordList(answerStr: String, reverseMatching: Boolean): String? {
+    fun checkWordFromWordList(answerStr: String, reverseMatching: Boolean = false): String? {
 
         var correctWord1: String? = null
 

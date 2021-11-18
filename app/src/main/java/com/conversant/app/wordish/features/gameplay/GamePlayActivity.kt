@@ -293,8 +293,8 @@ class GamePlayActivity : FullscreenActivity() {
                     // bomb activated
                     explodeBomb()
                     disableOrEnableOtherPowerUps(1f, iv_bomb)
-                    val bombCount = tv_bomb_count.text.toString().toInt()
-                    updateBombCountTxt(bombCount - 1)
+                    updateBombCountTxt(0)
+                    animateBombProgress(0)
                     soundPlayer.play(SoundPlayer.Sound.Bomb)
                 }
             }
@@ -453,9 +453,10 @@ class GamePlayActivity : FullscreenActivity() {
         val waterCount = tv_water_count.text.toString().toInt()
         val bombCount = tv_bomb_count.text.toString().toInt()
         val firePlusCount = tv_fire_plus_count.text.toString().toInt()
-        val bombProgress = pg_bomb.progress
-        val waterProgress = pg_water.progress
-        val firePlusProgress = pg_fire_plus.progress
+
+        val bombProgress = pg_bomb.progress / 100
+        val waterProgress = pg_water.progress / 100
+        val firePlusProgress = pg_fire_plus.progress / 100
 
         return ScoreBoard(
             turns = turns, words = words, coins = coins, boardFireCount = fireCount,
@@ -528,7 +529,7 @@ class GamePlayActivity : FullscreenActivity() {
             clickedState = false
         } else {
             soundPlayer.play(SoundPlayer.Sound.PowerUp)
-            soundPlayer.play(SoundPlayer.Sound.Siren, -1)
+            soundPlayer.play(SoundPlayer.Sound.Siren, loop = -1)
             view.animate().scaleX(1.2f).scaleY(1.2f).start()
             if (view.id == iv_water.id) {
                 letter_board.shrinkFireWithWater(true)
@@ -557,7 +558,7 @@ class GamePlayActivity : FullscreenActivity() {
                     val letter = letterAdapter!!.getLetter(gridIndex.row, gridIndex.col)
                     buff[buffCount] = letter
                 }
-                val validWord = viewModel.checkWordFromWordList(String(buff), true)
+                val validWord = viewModel.checkWordFromWordList(String(buff))
                 if (validWord == null && !clickedState) {
                     soundPlayer.play(SoundPlayer.Sound.Highlight)
                 } else if (!clickedState) {
@@ -588,7 +589,7 @@ class GamePlayActivity : FullscreenActivity() {
 
             override fun onSelectionEnd(streakLine: StreakLine, str: String) {
                 endStreakLine = streakLine
-                viewModel.answerWord(str, streakLine, preferences.reverseMatching())
+                viewModel.answerWord(str, streakLine)
 
                 text_selection_layout.gone()
                 text_selection.text = str
@@ -644,10 +645,10 @@ class GamePlayActivity : FullscreenActivity() {
             tv_water_count.text = it.waterCount.toString()
             tv_fire_plus_count.text = it.boardFirePlusCount.toString()
 
-            pg_fire.progress = it.boardFireCount * 100
-            pg_bomb.progress = it.bombCountProgress
-            pg_water.progress = it.waterCountProgress
-            pg_fire_plus.progress = it.boardFirePlusCountProgress
+            animateFireProgress(it.boardFireCount)
+            animateWaterProgress(it.waterCountProgress)
+            animateBombProgress(it.bombCountProgress)
+            animateFirePlusProgress(it.boardFirePlusCountProgress)
 
             updateWaterCountTxt(it.waterCount)
             updateBombCountTxt(it.bombCount)
@@ -697,7 +698,7 @@ class GamePlayActivity : FullscreenActivity() {
                     }
 
                     val str = word.append(character.toString())
-                    validWord = viewModel.checkWordFromWordList(str.toString(), true)
+                    validWord = viewModel.checkWordFromWordList(str.toString())
 
                     if (word.isNotEmpty() && validWord != null) {
                         highlightCell(i, j..k, casCadeSide)
@@ -751,7 +752,7 @@ class GamePlayActivity : FullscreenActivity() {
                         letterAdapter!!.completedCell, letterAdapter!!.fireList
                     )
 
-                   // Util.winGame(letterAdapter!!.completedCell)
+                    //Util.winGame(letterAdapter!!.completedCell)
 
                     Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid) {}
 
@@ -1129,23 +1130,13 @@ class GamePlayActivity : FullscreenActivity() {
     private fun updateFireTxt(count: Int) {
         tv_fire_count.text = count.toString()
         pg_fire.max = 1800
+        animateFireProgress(count)
+    }
+
+    private fun animateFireProgress(count: Int) {
         val objectAnimator =
             ObjectAnimator.ofInt(pg_fire, "progress", pg_fire.progress, count * 100)
         objectAnimator.duration = 500
-        objectAnimator.addListener(object : Animator.AnimatorListener {
-            override fun onAnimationStart(animation: Animator?) {}
-
-            override fun onAnimationEnd(animation: Animator?) {
-                /*if (count > GAME_OVER_FIRE_COUNT) {
-                    showFinishGame(Finished(null, false))
-                }*/
-            }
-
-            override fun onAnimationCancel(animation: Animator?) {}
-
-            override fun onAnimationRepeat(animation: Animator?) {}
-
-        })
         objectAnimator.start()
     }
 
@@ -1157,22 +1148,25 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateWaterProgress(level: Int) {
         if (level > 5) {
-            var value = level % 5
-            value *= 100
+            val value = level % 5
             pg_water.max = 4 * 100
 
-            val objectAnimator = ObjectAnimator.ofInt(
-                pg_water, "progress",
-                pg_water.progress, value
-            )
-            objectAnimator.duration = 500
-            objectAnimator.start()
+            animateWaterProgress(value)
 
             if (value == 0) {
                 val waterDrop = tv_water_count.text.toString().toInt() + 1
                 updateWaterCountTxt(waterDrop)
             }
         }
+    }
+
+    private fun animateWaterProgress(value: Int) {
+        val objectAnimator = ObjectAnimator.ofInt(
+            pg_water, "progress",
+            pg_water.progress, value * 100
+        )
+        objectAnimator.duration = 500
+        objectAnimator.start()
     }
 
     private fun updateBombCountTxt(bombCount: Int) {
@@ -1182,9 +1176,8 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateBombProgress(level: Int) {
         var bombCount = tv_bomb_count.text.toString().toInt()
-        if (level > 5 && bombCount == 0) {
-            var value = level % 5
-            value *= 100
+        if (level > 5 &&bombCount == 0) {
+            val value = level % 5
             pg_bomb.max = 4 * 100
 
             if (value == 0) {
@@ -1193,32 +1186,40 @@ class GamePlayActivity : FullscreenActivity() {
                 iv_bomb.isEnabled = true
 
             } else {
-
-                val objectAnimator = ObjectAnimator.ofInt(
-                    pg_bomb, "progress",
-                    pg_bomb.progress, value
-                )
-
-                objectAnimator.duration = 500
-                objectAnimator.start()
+                animateBombProgress(value)
             }
         }
+    }
+
+    private fun animateBombProgress(value: Int) {
+        val objectAnimator = ObjectAnimator.ofInt(
+            pg_bomb, "progress",
+            pg_bomb.progress, value * 100
+        )
+
+        objectAnimator.duration = 500
+        objectAnimator.start()
     }
 
     private fun updateFirePlus(count: Int) {
         val value = count % 6
         pg_fire_plus.max = 500
+
+        animateFirePlusProgress(value)
+
+        if (value == 0) {
+            val firePlusCount = tv_fire_plus_count.text.toString().toInt() + 1
+            tv_fire_plus_count.text = firePlusCount.toString()
+        }
+    }
+
+    private fun animateFirePlusProgress(value: Int) {
         val objectAnimator = ObjectAnimator.ofInt(
             pg_fire_plus, "progress",
             pg_fire_plus.progress, value * 100
         )
         objectAnimator.duration = 500
         objectAnimator.start()
-
-        if (value == 0) {
-            val firePlusCount = tv_fire_plus_count.text.toString().toInt() + 1
-            tv_fire_plus_count.text = firePlusCount.toString()
-        }
     }
 
     private fun showFinishGame(state: Finished) {

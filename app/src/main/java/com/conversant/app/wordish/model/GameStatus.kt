@@ -13,6 +13,9 @@ open class GameStatus @JvmOverloads constructor(
     @ColumnInfo(name = "letter_column")
     var letterColumn: String = "",
 
+    @ColumnInfo(name = "completed_column")
+    var completedColumn: String = "",
+
     @ColumnInfo(name = "fire_column")
     var fireColumn: String = "",
 
