@@ -102,10 +102,6 @@ class GamePlayActivity : FullscreenActivity() {
         (intent.extras?.get(EXTRA_GAME_MODE) as? GameMode) ?: GameMode.Normal
     }
 
-    private val extraDifficulty: Difficulty by lazy {
-        (intent.extras?.get(EXTRA_GAME_DIFFICULTY) as? Difficulty) ?: Difficulty.Easy
-    }
-
     private val extraGameThemeId: Int by lazy {
         intent.extras?.getInt(EXTRA_GAME_THEME_ID).orZero()
     }
@@ -281,7 +277,7 @@ class GamePlayActivity : FullscreenActivity() {
 
                 } else {
                     // bomb activated
-                    explodeBomb()
+                    explodeBombAnimation()
                     disableOrEnableOtherPowerUps(1f, iv_bomb)
                     updateBombCountTxt(0)
                     animateBombProgress(0)
@@ -292,6 +288,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun allAnimationsEndListener() {
+        letter_board.streakView.isInteractive = true
         showListClickTutorial()
         val value = viewModel.getWaterForLongWordLength(viewModel.getCorrectWordLength())
         if (value > 0) {
@@ -350,7 +347,7 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun explodeBomb() {
+    private fun explodeBombAnimation() {
         val params: ConstraintLayout.LayoutParams =
             bomb.layoutParams as ConstraintLayout.LayoutParams
         params.width = WRAP_CONTENT
@@ -665,6 +662,7 @@ class GamePlayActivity : FullscreenActivity() {
 
         letter_board.letterGrid.setListener(letter_board.selectionListener!!)
         letter_board.streakView.isSnapToGrid = preferences.snapToGrid
+        letter_board.streakView.isInteractive = false
         text_game_finished.gone()
 
     }
@@ -887,6 +885,7 @@ class GamePlayActivity : FullscreenActivity() {
         viewModel.gameStatus.observe(this, {
             if (it.isNotEmpty()) {
                 generateNewGame(false, it) // load game
+                letter_board.streakView.isInteractive = true
             } else {
                 generateNewGame(true, emptyList()) // new game
             }
