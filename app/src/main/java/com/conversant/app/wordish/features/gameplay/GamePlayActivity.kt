@@ -4,7 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.animation.ValueAnimator.RESTART
+import android.animation.ValueAnimator.*
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
@@ -55,7 +55,9 @@ const val RESET_PENALTY_FIRE_VIEW: Int = -1
 
 class GamePlayActivity : FullscreenActivity() {
 
-    private  var gameOverDialogFragment: GameOverDialogFragment?= null
+    private var isClickTutorialShown: Boolean = false
+
+    private var gameOverDialogFragment: GameOverDialogFragment? = null
 
     private val adapterList: MutableList<String> = mutableListOf()
 
@@ -290,6 +292,7 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun allAnimationsEndListener() {
+        showListClickTutorial()
         val value = viewModel.getWaterForLongWordLength(viewModel.getCorrectWordLength())
         if (value > 0) {
             updateWaterCountTxt(value)
@@ -300,6 +303,49 @@ class GamePlayActivity : FullscreenActivity() {
             showFinishGame(Finished(null, false))
         } else {
             saveGame()
+        }
+    }
+
+    private fun showListClickTutorial() {
+        if (!isClickTutorialShown && adapterList.size > 0) {
+            iv_click.visibility = View.VISIBLE
+            val targetView = lv_used_word
+
+            val targetX  = (targetView.x + targetView.width)/2
+            val targetY  = targetView.y
+
+            val animSetXY = AnimatorSet()
+            val x: ObjectAnimator = ObjectAnimator.ofFloat(iv_click, "x", iv_click.x, targetX)
+            val y: ObjectAnimator = ObjectAnimator.ofFloat(iv_click, "y", iv_click.y, targetY)
+            animSetXY.playTogether(x, y)
+            animSetXY.duration = 1000
+            animSetXY.start()
+
+            animSetXY.addListener(object : Animator.AnimatorListener {
+                override fun onAnimationStart(animation: Animator?) {}
+
+                override fun onAnimationEnd(animation: Animator?) {
+                    isClickTutorialShown = true
+
+                    val valueAnimator = ofFloat(iv_click.y, 50f)
+                    valueAnimator.addUpdateListener {
+                        val yAxis:Float = it.animatedValue as Float
+                        iv_click.y = yAxis
+                    }
+                    valueAnimator.doOnEnd {
+                        iv_click.visibility = View.INVISIBLE
+                    }
+                    valueAnimator.repeatMode = REVERSE
+                    valueAnimator.repeatCount = INFINITE
+                    valueAnimator.duration = 350
+                    valueAnimator.start()
+                }
+
+                override fun onAnimationCancel(animation: Animator?) {}
+
+                override fun onAnimationRepeat(animation: Animator?) {}
+
+            })
         }
     }
 
@@ -423,9 +469,11 @@ class GamePlayActivity : FullscreenActivity() {
     private fun saveGame() {
         lifecycleScope.launch {
             val scoreBoard = getScoreBoardDetails()
-            viewModel.saveGame(letterAdapter!!.backedGrid, letterAdapter!!.fireList,
+            viewModel.saveGame(
+                letterAdapter!!.backedGrid, letterAdapter!!.fireList,
                 letterAdapter!!.completedCell,
-                scoreBoard)
+                scoreBoard
+            )
         }
     }
 
@@ -456,7 +504,7 @@ class GamePlayActivity : FullscreenActivity() {
         )
     }
 
-    private fun showMeaningInfoDialog(selectedWord: String) {
+    private fun showDefinitionInfoDialog(selectedWord: String) {
         soundPlayer.play(SoundPlayer.Sound.SwipeCorrect)
         soundPlayer.play(SoundPlayer.Sound.Open)
         DefinitionInfoDialog().show(supportFragmentManager, DEFINITION_DIALOG_TAG)
@@ -659,9 +707,11 @@ class GamePlayActivity : FullscreenActivity() {
         lv_used_word.adapter = adapter
 
         lv_used_word.setOnItemClickListener { _, _, position, _ ->
+            iv_click.visibility = View.INVISIBLE
             val value = adapter.getItem(position)
-            showMeaningInfoDialog(value!!)
+            showDefinitionInfoDialog(value!!)
         }
+
 
         viewModel.getUsedWordListForAdapter()
 
@@ -1165,7 +1215,7 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateBombProgress(level: Int) {
         var bombCount = tv_bomb_count.text.toString().toInt()
-        if (level > 5 &&bombCount == 0) {
+        if (level > 5 && bombCount == 0) {
             val value = level % 5
             pg_bomb.max = 4 * 100
 
