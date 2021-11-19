@@ -290,7 +290,7 @@ class GamePlayActivity : FullscreenActivity() {
     private fun allAnimationsEndListener() {
         letter_board.streakView.isInteractive = true
         showListClickTutorial()
-        enableOrDisableBombWater(true)
+        enableOrDisableBombWater()
         val value = viewModel.getWaterForLongWordLength(viewModel.getCorrectWordLength())
         if (value > 0) {
             updateWaterCountTxt(value)
@@ -670,9 +670,9 @@ class GamePlayActivity : FullscreenActivity() {
         text_game_finished.gone()
     }
 
-    private fun enableOrDisableBombWater(enable: Boolean){
-        iv_bomb.isEnabled = enable
-        iv_water.isEnabled = enable
+    private fun enableOrDisableBombWater(){
+        updateWaterCountTxt(tv_water_count.text.toString().toInt())
+        updateBombCountTxt(tv_bomb_count.text.toString().toInt())
     }
 
     private fun highlightSelectedTileRange(list: List<GridIndex>) {
@@ -705,7 +705,7 @@ class GamePlayActivity : FullscreenActivity() {
 
             updateWaterCountTxt(it.waterCount)
             updateBombCountTxt(it.bombCount)
-            enableOrDisableBombWater(false)
+
         })
         viewModel.getScoreBoardFromDb()
     }
@@ -903,8 +903,9 @@ class GamePlayActivity : FullscreenActivity() {
             if (it.isNotEmpty()) {
                 generateNewGame(false, it) // load game
                 letter_board.streakView.isInteractive = true
-                enableOrDisableBombWater(true)
             } else {
+                iv_water.isEnabled = false
+                iv_bomb.isEnabled = false
                 generateNewGame(true, emptyList()) // new game
             }
         })
