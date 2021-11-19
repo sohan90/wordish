@@ -153,12 +153,12 @@ class LetterGrid @JvmOverloads constructor(
 
     fun spotFire() {
         spotFireImage = true
-        //invalidate()
+
     }
 
     fun releaseFire() {
         spotFireImage = false
-        //invalidate()
+
     }
 
     override fun getColCount(): Int {
@@ -202,28 +202,26 @@ class LetterGrid @JvmOverloads constructor(
             cornerX = 0
             for (j in 0 until gridColCount) {
 
-                val gameOverAnimate = gridDataAdapter!!.gameOverTileAnimation(i, j)
-                if (gameOverAnimate) {
-                    greyWhiteBckColor.alpha = 0
-                    greenBorderColor.alpha = 0
-                    greyBorderColor.alpha = 0
-
-                } else {
-                    greyWhiteBckColor.alpha = 255
-                    greenBorderColor.alpha = 255
-                    greyBorderColor.alpha = 255
-                }
-
                 if (!bombCell[i][j].animate && !bombCell[i][j].replaceWordAnimate) {
-                    canvas.drawRoundRect(
-                        cornerX.toFloat(),
-                        cornerY.toFloat(),
-                        cornerX + gridWidth.toFloat() - borderSpace,
-                        cornerY + gridHeight.toFloat() - borderSpace,
-                        roundCornerSize.toFloat(),
-                        roundCornerSize.toFloat(),
-                        greyWhiteBckColor
-                    )
+
+                    if (gridDataAdapter!!.highlightSelectedTilesRange(i, j)) {
+                        greyWhiteBckColor.alpha = 255
+                    } else {
+                        greyWhiteBckColor.alpha = 150
+                    }
+
+                    val gameOverAnimate = gridDataAdapter!!.gameOverTileAnimation(i, j)
+                    if (!gameOverAnimate) {
+                        canvas.drawRoundRect(
+                            cornerX.toFloat(),
+                            cornerY.toFloat(),
+                            cornerX + gridWidth.toFloat() - borderSpace,
+                            cornerY + gridHeight.toFloat() - borderSpace,
+                            roundCornerSize.toFloat(),
+                            roundCornerSize.toFloat(),
+                            greyWhiteBckColor
+                        )
+                    }
 
                     if (startCalculateCellSize) {
                         cellRect.setEmpty()
@@ -252,16 +250,6 @@ class LetterGrid @JvmOverloads constructor(
             for (j in 0 until gridColCount) {
 
                 val gameOverAnimate = gridDataAdapter!!.gameOverTileAnimation(i, j)
-                if (gameOverAnimate) {
-                    greyWhiteBckColor.alpha = 0
-                    greenBorderColor.alpha = 0
-                    greyBorderColor.alpha = 0
-
-                } else {
-                    greyWhiteBckColor.alpha = 255
-                    greenBorderColor.alpha = 255
-                    greyBorderColor.alpha = 255
-                }
 
                 val letter = gridDataAdapter?.getLetter(i, j)
                 paint.getTextBounds(letter.toString(), 0, 1, charBounds)
@@ -309,21 +297,26 @@ class LetterGrid @JvmOverloads constructor(
 
                 } else {
                     //border color since background cell already drawn in the background
-                    val paint = if (gridDataAdapter!!.completedCell(
-                            i,
-                            j
-                        )
+                    val paint = if (gridDataAdapter!!.completedCell(i, j)
                     ) greenBorderColor else greyBorderColor
 
-                    canvas.drawRoundRect(
-                        cornerX.toFloat(),
-                        cornerY.toFloat(),
-                        cornerX + gridWidth.toFloat() - borderSpace,
-                        cornerY + gridHeight.toFloat() - borderSpace,
-                        roundCornerSize.toFloat(),
-                        roundCornerSize.toFloat(),
-                        paint
-                    )
+                    if (gridDataAdapter!!.highlightSelectedTilesRange(i, j)) {
+                        paint.alpha = 255
+                    } else {
+                        paint.alpha = 100
+                    }
+
+                    if (!gameOverAnimate) {
+                        canvas.drawRoundRect(
+                            cornerX.toFloat(),
+                            cornerY.toFloat(),
+                            cornerX + gridWidth.toFloat() - borderSpace,
+                            cornerY + gridHeight.toFloat() - borderSpace,
+                            roundCornerSize.toFloat(),
+                            roundCornerSize.toFloat(),
+                            paint
+                        )
+                    }
                 }
 
                 val fireInfo = gridDataAdapter?.getFireInfo(i, j)!!

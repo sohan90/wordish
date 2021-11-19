@@ -227,8 +227,24 @@ class LetterBoard @JvmOverloads constructor(
             } else {
                 isSameTile = false
                 endGridIndex = end.copy()
-                list.add(endGridIndex)
-                selectionListener?.onSelectionWord(start, list)
+
+                if (list.size > 0){
+
+                   val gridIndex =  list[list.size - 1]
+                   val rowProgression =  Util.getRowProgression(gridIndex.row)
+                   val colProgression =  Util.getColProgression(gridIndex.col)
+
+                    // selecting only from the current range tiles i,e top , left , right , bottom tile each
+                    if (endGridIndex.row in rowProgression && endGridIndex.col in colProgression){
+                        list.add(endGridIndex)
+                        selectionListener?.onSelectionWord(start, list)
+                    }
+
+                } else {
+                    list.add(endGridIndex)
+                    selectionListener?.onSelectionWord(start, list)
+                }
+
             }
 
             val buff = CharArray(list.size)
@@ -275,7 +291,9 @@ class LetterBoard @JvmOverloads constructor(
                     if (shrinkFire) return
 
                     it.onSelectionBegin(streakLine, str)
-                    dataAdapter.updateHighlight(idx.row, idx.col, true)
+
+                highlightSelectedTileRange(idx)
+                dataAdapter.updateHighlight(idx.row, idx.col, true)
 
             }
         }
@@ -306,6 +324,21 @@ class LetterBoard @JvmOverloads constructor(
 
             endGridIndex.row = -1
             endGridIndex.col = -1
+        }
+    }
+
+    private fun highlightSelectedTileRange(idx: GridIndex) {
+        val rowProg = Util.getRowProgression(idx.row)
+        val colProg = Util.getColProgression(idx.col)
+
+        for (row in 0..5) {
+            for (col in 0..5) {
+                if (row in rowProg && col in colProg) {
+                    dataAdapter.initHiglightSelectedTileRange(row, col, true)
+                } else {
+                    dataAdapter.initHiglightSelectedTileRange(row, col, false)
+                }
+            }
         }
     }
 

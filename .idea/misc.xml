@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="app/src/main/res/layout/activity_game_play.xml" value="0.13632246376811594" />
+        <entry key="app/src/main/res/layout/fragment_game_over_dialog.xml" value="0.12943262411347517" />
+        <entry key="app/src/main/res/layout/fragment_settings_dialog.xml" value="0.13632246376811594" />
+      </map>
+    </option>
+  </component>
+  <component name="ExternalStorageConfigurationManager" enabled="true" />
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_15" project-jdk-name="15" project-jdk-type="JavaSDK" />
+</project>

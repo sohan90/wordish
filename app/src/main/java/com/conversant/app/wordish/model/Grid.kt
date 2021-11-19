@@ -22,6 +22,9 @@ class Grid(rowCount: Int, colCount: Int) {
     var gameOver: Array<BooleanArray>
         private set
 
+    var highlightSelectedTilesRange: Array<BooleanArray>
+        private set
+
     private val rowCount: Int
         get() = array.size
 
@@ -36,6 +39,7 @@ class Grid(rowCount: Int, colCount: Int) {
         highlight = Array(rowCount) { BooleanArray(colCount) }
         completedCellHighlight = Array(rowCount) { BooleanArray(colCount) }
         gameOver = Array(rowCount) { BooleanArray(colCount) }
+        highlightSelectedTilesRange = Array(rowCount) { BooleanArray(colCount){true} }
         reset()
 
     }

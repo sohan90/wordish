@@ -12,7 +12,8 @@ class ArrayLetterGridDataAdapter internal constructor(
     private val highlight: Array<BooleanArray> = emptyArray(),
     private val waterDrop: Array<BooleanArray> = emptyArray(),
     var completedCell: Array<BooleanArray> = emptyArray(),
-    var gameOverCell: Array<BooleanArray> = emptyArray()
+    var gameOverCell: Array<BooleanArray> = emptyArray(),
+    var highlightSelectedTilesRange: Array<BooleanArray> = emptyArray()
 
 ) : LetterGridDataAdapter() {
 
@@ -90,5 +91,13 @@ class ArrayLetterGridDataAdapter internal constructor(
 
     override fun gameOverTileAnimation(row: Int, col: Int): Boolean {
        return gameOverCell[row][col]
+    }
+
+    override fun highlightSelectedTilesRange(row: Int, col: Int): Boolean {
+        return this.highlightSelectedTilesRange[row][col]
+    }
+
+    override fun initHiglightSelectedTileRange(row: Int, col: Int, select: Boolean) {
+        this.highlightSelectedTilesRange[row][col]= select
     }
 }

@@ -290,6 +290,7 @@ class GamePlayActivity : FullscreenActivity() {
     private fun allAnimationsEndListener() {
         letter_board.streakView.isInteractive = true
         showListClickTutorial()
+        enableOrDisableBombWater(true)
         val value = viewModel.getWaterForLongWordLength(viewModel.getCorrectWordLength())
         if (value > 0) {
             updateWaterCountTxt(value)
@@ -586,6 +587,8 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.selectionListener = object : OnLetterSelectionListener {
 
             override fun onSelectionWord(start: GridIndex, list: List<GridIndex>) {
+                highlightSelectedTileRange(list)
+
                 val buff = CharArray(list.size)
                 for ((buffCount, gridIndex) in list.withIndex()) {
                     if (buffCount == 0) {
@@ -624,6 +627,7 @@ class GamePlayActivity : FullscreenActivity() {
             }
 
             override fun onSelectionEnd(streakLine: StreakLine, str: String) {
+                resetTileRange()
                 endStreakLine = streakLine
                 viewModel.answerWord(str, streakLine)
 
@@ -664,7 +668,19 @@ class GamePlayActivity : FullscreenActivity() {
         letter_board.streakView.isSnapToGrid = preferences.snapToGrid
         letter_board.streakView.isInteractive = false
         text_game_finished.gone()
+    }
 
+    private fun enableOrDisableBombWater(enable: Boolean){
+        iv_bomb.isEnabled = enable
+        iv_water.isEnabled = enable
+    }
+
+    private fun highlightSelectedTileRange(list: List<GridIndex>) {
+        viewModel.highlightSelectedTileRange(letterAdapter!!.highlightSelectedTilesRange, list)
+    }
+
+    private fun resetTileRange() {
+        viewModel.resetHighlightedTileRange(letterAdapter!!.highlightSelectedTilesRange)
     }
 
     private fun initScoreBoardView() {
@@ -689,6 +705,7 @@ class GamePlayActivity : FullscreenActivity() {
 
             updateWaterCountTxt(it.waterCount)
             updateBombCountTxt(it.bombCount)
+            enableOrDisableBombWater(false)
         })
         viewModel.getScoreBoardFromDb()
     }
@@ -886,6 +903,7 @@ class GamePlayActivity : FullscreenActivity() {
             if (it.isNotEmpty()) {
                 generateNewGame(false, it) // load game
                 letter_board.streakView.isInteractive = true
+                enableOrDisableBombWater(true)
             } else {
                 generateNewGame(true, emptyList()) // new game
             }
@@ -1051,7 +1069,8 @@ class GamePlayActivity : FullscreenActivity() {
             gameData.grid!!.highlight,
             gameData.grid!!.waterDrop,
             gameData.grid!!.completedCellHighlight,
-            gameData.grid!!.gameOver
+            gameData.grid!!.gameOver,
+            gameData.grid!!.highlightSelectedTilesRange
         )
         showDuration(gameData.duration)
         showWordsCount(gameData.usedWords.size)
@@ -1123,7 +1142,8 @@ class GamePlayActivity : FullscreenActivity() {
         highlight: Array<BooleanArray>,
         waterDrop: Array<BooleanArray>,
         completedCellHighlight: Array<BooleanArray>,
-        gameOver: Array<BooleanArray>
+        gameOver: Array<BooleanArray>,
+        fadeOutOfScopeTile: Array<BooleanArray>
     ) {
         if (letterAdapter == null) {
             letterAdapter = ArrayLetterGridDataAdapter(
@@ -1132,7 +1152,8 @@ class GamePlayActivity : FullscreenActivity() {
                 highlight,
                 waterDrop,
                 completedCellHighlight,
-                gameOver
+                gameOver,
+                fadeOutOfScopeTile
             )
             letterAdapter?.let {
                 letter_board.dataAdapter = it

@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.conversant.app.wordish.commons.GridIndex
 import com.conversant.app.wordish.commons.SingleLiveEvent
 import com.conversant.app.wordish.commons.Timer
 import com.conversant.app.wordish.commons.Util
@@ -573,6 +574,30 @@ class GamePlayViewModel @Inject constructor(
         }
         valueAnimator.duration = 5000
         valueAnimator.start()
+    }
+
+    fun highlightSelectedTileRange(
+        highlightSelectedTilesRange: Array<BooleanArray>,
+        list: List<GridIndex>) {
+
+        val endGridIndex = list[list.size - 1]
+        val rowProgression = Util.getRowProgression(endGridIndex.row)
+        val colProgression = Util.getColProgression(endGridIndex.col)
+
+        for (row in 0..5) {
+            for (col in 0..5) {
+                highlightSelectedTilesRange[row][col] =
+                    row in rowProgression && col in colProgression
+            }
+        }
+    }
+
+    fun resetHighlightedTileRange(highlightSelectedTilesRange: Array<BooleanArray>) {
+        for (row in 0..5){
+            for (col in 0..5){
+                highlightSelectedTilesRange[row][col] = true
+            }
+        }
     }
 
     companion object {

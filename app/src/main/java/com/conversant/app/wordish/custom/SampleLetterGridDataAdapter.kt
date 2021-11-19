@@ -50,4 +50,11 @@ internal class SampleLetterGridDataAdapter(
         return false
     }
 
+    override fun highlightSelectedTilesRange(row: Int, col: Int): Boolean {
+        return false
+    }
+
+    override fun initHiglightSelectedTileRange(row: Int, col: Int, select: Boolean) {
+
+    }
 }
