@@ -327,17 +327,18 @@ class GamePlayActivity : FullscreenActivity() {
                 override fun onAnimationEnd(animation: Animator?) {
                     isClickTutorialShown = true
 
-                    val valueAnimator = ofFloat(iv_click.y, 50f)
+                    val valueAnimator = ofFloat(1f, 0.7f)
                     valueAnimator.addUpdateListener {
-                        val yAxis:Float = it.animatedValue as Float
-                        iv_click.y = yAxis
+                        val scale:Float = it.animatedValue as Float
+                        iv_click.scaleX = scale
+                        iv_click.scaleY = scale
                     }
                     valueAnimator.doOnEnd {
                         iv_click.visibility = View.INVISIBLE
                     }
                     valueAnimator.repeatMode = REVERSE
                     valueAnimator.repeatCount = INFINITE
-                    valueAnimator.duration = 350
+                    valueAnimator.duration = 500
                     valueAnimator.start()
                 }
 
