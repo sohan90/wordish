@@ -7,14 +7,18 @@ import io.reactivex.Maybe
 
 @Dao
 interface WordDataSource {
-    @Query("SELECT * FROM words WHERE LENGTH(string) < :maxChar")
+    @Query("SELECT * FROM words WHERE LENGTH(string) <= :maxChar")
     fun getWords(maxChar: Int): Flowable<List<Word>>
 
-    @Query("SELECT * FROM words WHERE LENGTH(string) <= :maxChar")
-    fun getWordsMayBe(maxChar: Int): Maybe<List<Word>>
 
-    @Query("SELECT * FROM words WHERE game_theme_id=:themeId AND LENGTH(string) < :maxChar")
-    fun getWords(themeId: Int, maxChar: Int): Flowable<List<Word>>
+    @Query("SELECT * FROM words")
+    fun getWordsMayBe(): Maybe<List<Word>>
+
+    @Query("SELECT * FROM words")
+    fun getWords(): Flowable<List<Word>>
+
+    @Query("SELECT * FROM words WHERE LENGTH(string) <= :maxChar")
+    suspend fun getWordListForMax(maxChar: Int): List<Word>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun insertAll(words: List<Word>)
@@ -34,4 +38,6 @@ interface WordDataSource {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun resetUserWord(word:List<Word>)
 
+    @Query("SELECT * FROM words WHERE string like :answer" )
+    suspend fun getValidWord(answer:String):Word?
 }

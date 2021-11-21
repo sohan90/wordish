@@ -36,7 +36,7 @@ class SplashScreenActivity : AppCompatActivity() {
 
     private fun start() {
         currenTime = System.currentTimeMillis()
-        disposable = wordDataSource.getWordsMayBe(20)
+        disposable = wordDataSource.getWordsMayBe()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe {

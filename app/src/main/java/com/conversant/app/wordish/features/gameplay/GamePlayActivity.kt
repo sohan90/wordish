@@ -293,7 +293,9 @@ class GamePlayActivity : FullscreenActivity() {
         enableOrDisableBombWater()
         val value = viewModel.getWaterForLongWordLength(viewModel.getCorrectWordLength())
         if (value > 0) {
-            updateWaterCountTxt(value)
+            val waterCount = tv_water_count.text.toString().toInt()
+            val totalWaterCount = waterCount + value
+            updateWaterCountTxt(totalWaterCount)
         }
 
         val count = tv_fire_count.text.toString().toInt()

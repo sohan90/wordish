@@ -1,10 +1,7 @@
 package com.conversant.app.wordish.di.modules
 
 import android.content.Context
-import com.conversant.app.wordish.data.room.GameDatabase
-import com.conversant.app.wordish.data.room.GameStatusSource
-import com.conversant.app.wordish.data.room.ScoreBoardDataSource
-import com.conversant.app.wordish.data.room.WordDataSource
+import com.conversant.app.wordish.data.room.*
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -35,5 +32,11 @@ class DataSourceModule {
     @Singleton
     fun provideScoreBoardSource(gameDatabase: GameDatabase): ScoreBoardDataSource {
         return gameDatabase.scoreBoard
+    }
+
+    @Provides
+    @Singleton
+    fun provideTopScoreSource(gameDatabase: GameDatabase): TopScoreSource {
+        return gameDatabase.topScoreSource
     }
 }

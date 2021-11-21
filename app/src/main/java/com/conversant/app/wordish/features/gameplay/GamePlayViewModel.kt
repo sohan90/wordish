@@ -13,6 +13,7 @@ import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.StreakView
 import com.conversant.app.wordish.data.room.GameStatusSource
 import com.conversant.app.wordish.data.room.ScoreBoardDataSource
+import com.conversant.app.wordish.data.room.TopScoreSource
 import com.conversant.app.wordish.data.room.WordDataSource
 import com.conversant.app.wordish.features.settings.Preferences
 import com.conversant.app.wordish.model.*
@@ -24,12 +25,13 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
-import kotlin.math.max
+import kotlin.collections.HashMap
 
 class GamePlayViewModel @Inject constructor(
     private val wordDataSource: WordDataSource,
     private val gameStatusDataSource: GameStatusSource,
     private val scoreBoardDataSource: ScoreBoardDataSource,
+    private val topScoreSource: TopScoreSource,
     private val preferences: Preferences
 ) : ViewModel() {
 
@@ -82,6 +84,8 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var _usedWordListForAdapter: MutableLiveData<List<String>>
     private lateinit var _scoreBoardLiveData: MutableLiveData<ScoreBoard>
     private lateinit var _quitGame: MutableLiveData<Boolean>
+
+    private val mapWord = HashMap<Int, List<Word>>()
 
 
     val onTimer: LiveData<Int>
@@ -137,6 +141,29 @@ class GamePlayViewModel @Inject constructor(
         disposable.dispose()
         saveScoreBoardToDb(scoreBoard)
         saveBoardDataToDb(gridData, fireList, completedCellArray)
+        saveTopScore(scoreBoard)
+    }
+
+    private suspend fun saveTopScore(scoreBoard: ScoreBoard) {
+        val topScore = topScoreSource.getTopScore()
+        if (topScore != null) {
+            if (scoreBoard.turns > topScore.turns) {
+                topScore.turns = scoreBoard.turns
+            }
+            if (scoreBoard.coins > topScore.coins) {
+                topScore.coins = scoreBoard.coins
+            }
+            if (scoreBoard.words > topScore.words) {
+                topScore.words = scoreBoard.words
+            }
+            topScoreSource.update(topScore)
+        } else {
+            val score = TopScore(
+                turns = scoreBoard.turns, coins = scoreBoard.coins,
+                words = scoreBoard.words
+            )
+            topScoreSource.insert(score)
+        }
     }
 
     private suspend fun saveScoreBoardToDb(scoreBoard: ScoreBoard) {
@@ -194,7 +221,7 @@ class GamePlayViewModel @Inject constructor(
                 }
 
                 val completeCell = completedCellArray[row][col]
-                if (completeCell){
+                if (completeCell) {
                     val complete = "[$row,$col]"
                     completeCellBuilder.append(complete)
 
@@ -264,12 +291,7 @@ class GamePlayViewModel @Inject constructor(
 
         val gameName = gameDataName
         setGameState(Generating(6, 6, gameName))
-        val maxChar = max(6, 6)
-        val flowableWords: Flowable<List<Word>> = if (gameThemeId == GameTheme.NONE.id) {
-            wordDataSource.getWords(maxChar)
-        } else {
-            wordDataSource.getWords(gameThemeId, maxChar)
-        }
+        val flowableWords: Flowable<List<Word>> = wordDataSource.getWords(6)
         disposable = flowableWords.toObservable()
             .flatMap { words: List<Word> ->
                 Flowable.fromIterable(words)
@@ -299,6 +321,14 @@ class GamePlayViewModel @Inject constructor(
 
     }
 
+    private suspend fun chunkWord() {
+        var i = 4
+        while (i <= 15) {
+            val wordList = wordDataSource.getWordListForMax(i)
+            mapWord[i] = wordList
+            i++
+        }
+    }
 
     private fun createGameDataFromSavedGame(
         words: List<Word>,
@@ -309,11 +339,15 @@ class GamePlayViewModel @Inject constructor(
         for (row in 0..5) {
 
             val gameStatus = dbGameStatusList[row]
-            Util.fillFireInfoSavedValue(gameStatus.fireColumn, gameStatus.fireCount,
-                grid.fireArray) // udpate fireinfo
+            Util.fillFireInfoSavedValue(
+                gameStatus.fireColumn, gameStatus.fireCount,
+                grid.fireArray
+            ) // udpate fireinfo
 
-            Util.fillCompleteCellInfoFromDb(gameStatus.completedColumn,
-                grid.completedCellHighlight)// update completed cell
+            Util.fillCompleteCellInfoFromDb(
+                gameStatus.completedColumn,
+                grid.completedCellHighlight
+            )// update completed cell
 
             val charArray = gameStatus.letterColumn.toCharArray()
             for (col in 0..5) {
@@ -328,28 +362,23 @@ class GamePlayViewModel @Inject constructor(
 
     private fun startGame() {
         setGameState(Playing(currentGameData))
-        currentGameData?.let {
-            if (!it.isFinished && !it.isGameOver) {
-                if (it.gameMode == GameMode.Marathon) {
-                    nextWord()
-                }
-
-                timer.start()
-            }
-        }
     }
 
     fun getCorrectWordLength(): Int = correctWordLength
 
     fun getWaterForLongWordLength(wordLength: Int): Int {
-        val value = wordLength % 7
         if (wordLength >= 7) {
+            val value = wordLength % 7
             return value + 1
         }
         return 0
     }
 
-    fun answerWord(answerStr: String, streakLine: StreakView.StreakLine, reverseMatching: Boolean = false) {
+    fun answerWord(
+        answerStr: String,
+        streakLine: StreakView.StreakLine,
+        reverseMatching: Boolean = false
+    ) {
         var correct = false
 
         val correctWord = checkWordFromWordList(answerStr, reverseMatching)
@@ -370,17 +399,29 @@ class GamePlayViewModel @Inject constructor(
 
         if (answerStr.length >= MINIMUM_LENGTH) {
             val answerStrRev = Util.getReverseString(answerStr)
-            for (word in currentGameData?.wordsList.orEmpty()) {
 
-                val dictionaryWord = word.string
-                if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
-                    dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching
-                ) {
-                    word.usedWord = true
-                    correctWord1 = dictionaryWord
-                    break
-                }
-            }
+
+           /* val worList = mapWord[answerStr.length]
+
+            val word = currentGameData!!.wordsList
+                .find { it.string.equals(answerStr, ignoreCase = true) }
+
+            if (word != null) {
+                word.usedWord = true
+                correctWord1 = word.string
+            }*/
+
+             for (word in currentGameData?.wordsList.orEmpty()) {
+
+                 val dictionaryWord = word.string
+                 if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
+                     dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching
+                 ) {
+                     word.usedWord = true
+                     correctWord1 = dictionaryWord
+                     break
+                 }
+             }
         }
         return correctWord1
     }
@@ -409,26 +450,6 @@ class GamePlayViewModel @Inject constructor(
             return "Puzzle - $num"
         }
 
-    private fun nextWord() {
-        currentGameData?.let {
-            if (it.gameMode === GameMode.Marathon) {
-                currentUsedWord = null
-
-                for (usedWord in it.usedWords) {
-                    if (!usedWord.isAnswered && !usedWord.isTimeout) {
-                        currentUsedWord = usedWord
-                        break
-                    }
-                }
-
-                currentUsedWord?.let {
-                    timer.stop()
-                    timer.start()
-                    onCurrentWordChangedLiveData.value = currentUsedWord
-                }
-            }
-        }
-    }
 
     private fun finishGame(win: Boolean) {
         setGameState(Finished(currentGameData, win))
@@ -567,8 +588,8 @@ class GamePlayViewModel @Inject constructor(
     fun animateGameOverTile(gameOverCell: Array<BooleanArray>) {
         val valueAnimator = ValueAnimator.ofInt(0, 5)
         valueAnimator.addUpdateListener {
-            val row:Int = it.animatedValue as Int
-            for (col in 0..5){
+            val row: Int = it.animatedValue as Int
+            for (col in 0..5) {
                 gameOverCell[row][col] = true
             }
         }
@@ -578,7 +599,8 @@ class GamePlayViewModel @Inject constructor(
 
     fun highlightSelectedTileRange(
         highlightSelectedTilesRange: Array<BooleanArray>,
-        list: List<GridIndex>) {
+        list: List<GridIndex>
+    ) {
 
         val endGridIndex = list[list.size - 1]
         val rowProgression = Util.getRowProgression(endGridIndex.row)
@@ -593,8 +615,8 @@ class GamePlayViewModel @Inject constructor(
     }
 
     fun resetHighlightedTileRange(highlightSelectedTilesRange: Array<BooleanArray>) {
-        for (row in 0..5){
-            for (col in 0..5){
+        for (row in 0..5) {
+            for (col in 0..5) {
                 highlightSelectedTilesRange[row][col] = true
             }
         }
