@@ -89,10 +89,12 @@ class AchievmentDialog : DialogFragment() {
                 val turnsStr = getString(R.string.highest_turns, topScore.turns)
                 val wordsStr = getString(R.string.highest_words, topScore.words)
                 val coinsStr = getString(R.string.highest_coins, topScore.coins)
+                val wonStr = getString(R.string.won, topScore.won)
 
                 tv_turns.text = turnsStr
                 tv_words.text = wordsStr
                 tv_coins.text = coinsStr
+                tv_win.text = wonStr
             }
         }
     }

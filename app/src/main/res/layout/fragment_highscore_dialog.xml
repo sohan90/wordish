@@ -91,6 +91,30 @@
                 app:layout_constraintStart_toStartOf="@id/iv_banner_coins"
                 app:layout_constraintTop_toTopOf="@id/iv_banner_coins" />
 
+
+            <ImageView
+                android:id="@+id/iv_banner_win"
+                android:layout_width="0dp"
+                android:layout_height="150dp"
+                android:gravity="center"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_big"
+                app:layout_constraintEnd_toEndOf="@id/iv_banner_coins"
+                app:layout_constraintStart_toStartOf="@id/iv_banner_coins"
+                app:layout_constraintTop_toBottomOf="@id/iv_banner_coins" />
+
+            <TextView
+                android:id="@+id/tv_win"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:gravity="center"
+                android:text="@string/won"
+                android:textSize="20sp"
+                android:textStyle="italic|bold"
+                app:layout_constraintBottom_toBottomOf="@id/iv_banner_win"
+                app:layout_constraintEnd_toEndOf="@id/iv_banner_win"
+                app:layout_constraintStart_toStartOf="@id/iv_banner_win"
+                app:layout_constraintTop_toTopOf="@id/iv_banner_win" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 

@@ -811,7 +811,7 @@ class GamePlayActivity : FullscreenActivity() {
                         letterAdapter!!.completedCell, letterAdapter!!.fireList
                     )
 
-                    //Util.winGame(letterAdapter!!.completedCell)
+                   // Util.winGame(letterAdapter!!.completedCell)
 
                     Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid) {}
 
@@ -1294,6 +1294,7 @@ class GamePlayActivity : FullscreenActivity() {
                 lifecycleScope.launch {
                     showFireWorks()
                     delay(8000)
+                    viewModel.updateWinCountToTopScore()
                     viewModel.quitGame(false)
                     restartGame()
                 }

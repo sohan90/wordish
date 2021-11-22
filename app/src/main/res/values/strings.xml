@@ -83,4 +83,5 @@
     <string name="highest_turns">Highest Turns - %d</string>
     <string name="highest_words">Highest Words - %d</string>
     <string name="highest_coins">Highest Coins - %d</string>
+    <string name="won">Won - %d</string>
 </resources>

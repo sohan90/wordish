@@ -17,5 +17,8 @@ open class TopScore @JvmOverloads constructor(
     var words: Int = 0,
 
     @ColumnInfo(name = "coins")
-    var coins: Int = 0
+    var coins: Int = 0,
+
+    @ColumnInfo(name = "won")
+    var won: Int = 0
 )

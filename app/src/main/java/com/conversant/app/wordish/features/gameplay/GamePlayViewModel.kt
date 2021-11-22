@@ -555,6 +555,14 @@ class GamePlayViewModel @Inject constructor(
         topScoreSource.getTopScore()
     }
 
+    suspend fun updateWinCountToTopScore() {
+        val topScore = topScoreSource.getTopScore()
+        if (topScore != null) {
+            topScore.won = topScore.won + 1
+            topScoreSource.update(topScore)
+        }
+    }
+
     companion object {
         private const val TIMER_TIMEOUT = 1000
     }

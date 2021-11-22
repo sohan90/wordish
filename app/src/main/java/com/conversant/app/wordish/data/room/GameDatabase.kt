@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Database(entities = [Word::class, GameStatus::class, ScoreBoard::class, TopScore::class,
-    WordDefinition::class], version = 1)
+    WordDefinition::class], version = 2)
 
 abstract class GameDatabase : RoomDatabase() {
     abstract val wordDataSource: WordDataSource
@@ -24,7 +24,9 @@ abstract class GameDatabase : RoomDatabase() {
         private var INSTANCE: GameDatabase? = null
         fun getInstance(context: Context): GameDatabase {
             if (INSTANCE == null) {
-                INSTANCE = Room.databaseBuilder(context, GameDatabase::class.java, DB_NAME).build()
+                INSTANCE = Room.databaseBuilder(context, GameDatabase::class.java, DB_NAME).
+                    fallbackToDestructiveMigration().
+                build()
             }
             return INSTANCE!!
         }
