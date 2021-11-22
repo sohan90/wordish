@@ -22,5 +22,4 @@
         <item name="android:windowExitAnimation">@anim/slide_down</item>
         <!--You can set other style items also, such as animations and etc-->
     </style>
-
 </resources>

@@ -20,11 +20,12 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+const val MAXIMUM_WORD_LENGTH = 15
 class SplashScreenActivity : AppCompatActivity() {
 
     private lateinit var disposable: Disposable
 
-    private var currenTime: Long = 0
+    private var currentTime: Long = 0
 
     @Inject
     lateinit var wordDataSource: WordDataSource
@@ -37,7 +38,7 @@ class SplashScreenActivity : AppCompatActivity() {
     }
 
     private fun start() {
-        currenTime = System.currentTimeMillis()
+        currentTime = System.currentTimeMillis()
         disposable = wordDataSource.getWordsMayBe()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -61,20 +62,20 @@ class SplashScreenActivity : AppCompatActivity() {
     private fun loadDefinitionAndMap(word: List<Word>) {
         lifecycleScope.launch {
             GameDatabase.loadDefinition(this@SplashScreenActivity)
-            chunkWord(word)
+            mapChunkWordList(word)
             nextScreen()
         }
     }
 
-    private fun chunkWord(word: List<Word>) {
+    private fun mapChunkWordList(word: List<Word>) {
         var i = 4
-        while (i <= 15) {
+        while (i <= MAXIMUM_WORD_LENGTH) {
             val wordList = word.filter { it.string.length == i }
             mapWord[i] = wordList
             i++
         }
 
-        val difference = (System.currentTimeMillis() - currenTime) / 1000
+        val difference = (System.currentTimeMillis() - currentTime) / 1000
         Log.d("Difference..", "$difference")
     }
 

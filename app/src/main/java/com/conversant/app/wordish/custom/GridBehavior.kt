@@ -3,7 +3,6 @@ package com.conversant.app.wordish.custom
 import android.content.Context
 import android.graphics.Rect
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
 import com.conversant.app.wordish.R
 import kotlin.math.max
@@ -133,8 +132,6 @@ abstract class GridBehavior @JvmOverloads constructor(
 
         }
         if (filterMap != null){
-            Log.d(GridBehavior.javaClass.canonicalName, filterMap.toString())
-
             val row = filterMap.value.split(",")[0].toInt()
             val col = filterMap.value.split(",")[1].toInt()
             return Pair(row, col)
