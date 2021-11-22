@@ -4,17 +4,13 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-
-@Entity(tableName = "words")
-open class Word @JvmOverloads constructor (
+@Entity(tableName = "word_definition")
+open class WordDefinition @JvmOverloads constructor(
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "id")
     var id: Int = 0,
 
-    @ColumnInfo(name = "game_theme_id")
-    var gameThemeId: Int = 0,
-
-    @ColumnInfo(name = "string")
-    var string: String = "",
+    @ColumnInfo(name = "used_words")
+    var usedWord: String = ""
 
 )

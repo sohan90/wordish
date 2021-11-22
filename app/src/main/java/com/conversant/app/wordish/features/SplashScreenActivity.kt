@@ -9,9 +9,11 @@ import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.data.room.GameDatabase
 import com.conversant.app.wordish.data.room.WordDataSource
+import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader.Companion.mapWord
 import com.conversant.app.wordish.features.gameplay.GamePlayActivity
 import com.conversant.app.wordish.model.Difficulty
 import com.conversant.app.wordish.model.GameMode
+import com.conversant.app.wordish.model.Word
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -43,7 +45,7 @@ class SplashScreenActivity : AppCompatActivity() {
                 if (it.isEmpty()) {
                     insertWord()
                 } else {
-                    nextScreen()
+                    loadDefinitionAndMap(it)
                 }
             }
     }
@@ -51,12 +53,32 @@ class SplashScreenActivity : AppCompatActivity() {
     private fun insertWord() {
         lifecycleScope.launch {
             GameDatabase.prepopulateDatabase(this@SplashScreenActivity)
+            val wordList = wordDataSource.getWordListForMax(15)
+            loadDefinitionAndMap(wordList)
+        }
+    }
+
+    private fun loadDefinitionAndMap(word: List<Word>) {
+        lifecycleScope.launch {
+            GameDatabase.loadDefinition(this@SplashScreenActivity)
+            chunkWord(word)
             nextScreen()
         }
     }
 
+    private fun chunkWord(word: List<Word>) {
+        var i = 4
+        while (i <= 15) {
+            val wordList = word.filter { it.string.length == i }
+            mapWord[i] = wordList
+            i++
+        }
+
+        val difference = (System.currentTimeMillis() - currenTime) / 1000
+        Log.d("Difference..", "$difference")
+    }
+
     private fun nextScreen() {
-        loadDefinition()
         val dim = 6
         val intent = Intent(this, GamePlayActivity::class.java)
         intent.putExtra(GamePlayActivity.EXTRA_GAME_DIFFICULTY, Difficulty.Easy)
@@ -66,15 +88,6 @@ class SplashScreenActivity : AppCompatActivity() {
         intent.putExtra(GamePlayActivity.EXTRA_COL_COUNT, dim)
         startActivity(intent)
         finish()
-
-    }
-
-    private fun loadDefinition() {
-        lifecycleScope.launch {
-              GameDatabase.loadDefinition(this@SplashScreenActivity)
-        }
-        val difference = (System.currentTimeMillis() - currenTime) / 1000
-        Log.d("Difference..", "$difference")
     }
 
     override fun onDestroy() {

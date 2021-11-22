@@ -78,4 +78,9 @@
     <string name="rules_amp_tips" ><![CDATA[Rules & Tips]]></string>
     <string name="credits" >Credits</string>
     <string name="better_luck_next_time" >Game Over. Better \n luck next time!</string>
+    <string name="highestscores">Achievements</string>
+
+    <string name="highest_turns">Highest Turns - %d</string>
+    <string name="highest_words">Highest Words - %d</string>
+    <string name="highest_coins">Highest Coins - %d</string>
 </resources>

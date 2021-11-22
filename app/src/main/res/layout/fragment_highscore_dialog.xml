@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:id="@+id/content_lyt"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="20dp"
+        android:background="@drawable/round_corner_highscore"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+
+            <ImageView
+                android:id="@+id/iv_banner_turns"
+                android:layout_width="wrap_content"
+                android:layout_height="150dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_big"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_turns"
+                android:layout_width="0dp"
+                android:layout_height="150dp"
+                android:gravity="center"
+                android:text="@string/highest_turns"
+                android:textSize="20sp"
+                android:textStyle="italic|bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:id="@+id/iv_banner_words"
+                android:layout_width="0dp"
+                android:layout_height="150dp"
+                android:gravity="center"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_big"
+                app:layout_constraintEnd_toEndOf="@id/iv_banner_turns"
+                app:layout_constraintStart_toStartOf="@id/iv_banner_turns"
+                app:layout_constraintTop_toBottomOf="@id/iv_banner_turns" />
+
+            <TextView
+                android:id="@+id/tv_words"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:gravity="center"
+                android:text="@string/highest_words"
+                android:textSize="20sp"
+                android:textStyle="italic|bold"
+                app:layout_constraintBottom_toBottomOf="@id/iv_banner_words"
+                app:layout_constraintEnd_toEndOf="@id/iv_banner_words"
+                app:layout_constraintStart_toStartOf="@id/iv_banner_words"
+                app:layout_constraintTop_toTopOf="@id/iv_banner_words" />
+
+
+            <ImageView
+                android:id="@+id/iv_banner_coins"
+                android:layout_width="0dp"
+                android:layout_height="150dp"
+                android:gravity="center"
+                android:scaleType="centerCrop"
+                android:src="@drawable/banner_big"
+                app:layout_constraintEnd_toEndOf="@id/iv_banner_words"
+                app:layout_constraintStart_toStartOf="@id/iv_banner_words"
+                app:layout_constraintTop_toBottomOf="@id/iv_banner_words" />
+
+            <TextView
+                android:id="@+id/tv_coins"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:gravity="center"
+                android:text="@string/highest_coins"
+                android:textSize="20sp"
+                android:textStyle="italic|bold"
+                app:layout_constraintBottom_toBottomOf="@id/iv_banner_coins"
+                app:layout_constraintEnd_toEndOf="@id/iv_banner_coins"
+                app:layout_constraintStart_toStartOf="@id/iv_banner_coins"
+                app:layout_constraintTop_toTopOf="@id/iv_banner_coins" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <FrameLayout
+        android:id="@+id/iv_cancel"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:background="@drawable/cancel_back"
+        app:layout_constraintBottom_toTopOf="@id/content_lyt"
+        app:layout_constraintEnd_toEndOf="@id/content_lyt"
+        app:layout_constraintStart_toEndOf="@id/content_lyt"
+        app:layout_constraintTop_toTopOf="@id/content_lyt">
+
+        <ImageView
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_baseline_close_24" />
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

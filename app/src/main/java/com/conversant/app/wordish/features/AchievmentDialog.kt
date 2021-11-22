@@ -14,25 +14,19 @@ import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.data.room.WordDataSource
-import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader.Companion.ASSET_BASE_FOLDER2
 import com.conversant.app.wordish.features.gameplay.GamePlayViewModel
-import com.conversant.app.wordish.features.settings.Preferences
+import kotlinx.android.synthetic.main.fragment_highscore_dialog.*
 import kotlinx.android.synthetic.main.fragment_meanin_dialog.iv_cancel
-import kotlinx.android.synthetic.main.fragment_settings_dialog.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 
-const val SETTINGS_DIALOG_TAG = "definition_tag"
+const val ACHIEVMENT_ITEM_DIALOG_TAG = "definition_tag"
 
-class SettingsDialog : DialogFragment() {
-    private  var settingItemDialog: SettingItemDialog = SettingItemDialog()
+class AchievmentDialog : DialogFragment() {
 
     @Inject
     lateinit var wordDataSource: WordDataSource
-
-    @Inject
-    lateinit var preferences: Preferences
 
     @Inject
     lateinit var soundPlayer: SoundPlayer
@@ -49,7 +43,7 @@ class SettingsDialog : DialogFragment() {
             dialog?.window?.requestFeature(Window.FEATURE_NO_TITLE);
         }
         injectDependency()
-        return inflater.inflate(R.layout.fragment_settings_dialog, container, false)
+        return inflater.inflate(R.layout.fragment_highscore_dialog, container, false)
     }
 
     private fun injectDependency() {
@@ -76,7 +70,7 @@ class SettingsDialog : DialogFragment() {
         val height = displayMetrics.heightPixels
 
         val widhtPadding = resources.getDimension(R.dimen.dialog_width_padding).toInt()
-        val heightPadding = resources.getDimension(R.dimen.setting_height_padding).toInt()
+        val heightPadding = resources.getDimension(R.dimen.dialog_heigh_padding).toInt()
 
         dialog?.window?.setLayout(width - widhtPadding, height - heightPadding)
     }
@@ -85,49 +79,29 @@ class SettingsDialog : DialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         initViews()
         initClickListener()
+
     }
 
     private fun initViews() {
-        switch_sound.isChecked = !preferences.enableSound()
-        switch_sound.setOnCheckedChangeListener { _, isChecked ->
-            preferences.enableOrDisableSound(!isChecked)
+        lifecycleScope.launch {
+            val topScore = gameViewModel.getTopScore()
+            if (topScore != null) {
+                val turnsStr = getString(R.string.highest_turns, topScore.turns)
+                val wordsStr = getString(R.string.highest_words, topScore.words)
+                val coinsStr = getString(R.string.highest_coins, topScore.coins)
+
+                tv_turns.text = turnsStr
+                tv_words.text = wordsStr
+                tv_coins.text = coinsStr
+            }
         }
     }
 
     private fun initClickListener() {
-        tv_rules.setOnClickListener {
-            openItemDialog(1)
-        }
-        tv_credits.setOnClickListener {
-            openItemDialog(0)
-        }
-
-        tv_quit.setOnClickListener {
-            soundPlayer.play(SoundPlayer.Sound.GameOver)
-            lifecycleScope.launch {
-                gameViewModel.quitGame()
-                dismiss()
-            }
-        }
-
-        tv_achievement.setOnClickListener {
-            soundPlayer.play(SoundPlayer.Sound.Open)
-            AchievmentDialog().show(childFragmentManager, ACHIEVMENT_ITEM_DIALOG_TAG)
-        }
-
         iv_cancel.setOnClickListener {
             soundPlayer.stop()
             soundPlayer.play(SoundPlayer.Sound.Dismiss)
             dismiss()
-        }
-    }
-
-    private fun openItemDialog(index: Int) {
-        soundPlayer.play(SoundPlayer.Sound.Open)
-        val fileName = requireContext().assets.list(ASSET_BASE_FOLDER2)!![index]
-        gameViewModel.setHtmlFileName("${ASSET_BASE_FOLDER2}/$fileName")
-        if (!settingItemDialog.isAdded) {
-            settingItemDialog.show(childFragmentManager, SETTING_ITEM_DIALOG_TAG)
         }
     }
 

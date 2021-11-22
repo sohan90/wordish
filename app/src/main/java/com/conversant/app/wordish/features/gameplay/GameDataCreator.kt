@@ -10,9 +10,9 @@ import kotlin.math.min
 
 class GameDataCreator {
 
-    fun newGameData(words: MutableList<Word>,
+    fun newGameData(words: MutableList<Word> = mutableListOf(),
                     rowCount: Int, colCount: Int,
-                    name: String?,
+                    name: String = "",
                     gameMode: GameMode
     ): GameData {
         Util.randomizeList(words)

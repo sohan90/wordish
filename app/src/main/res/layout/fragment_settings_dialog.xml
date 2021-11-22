@@ -71,6 +71,21 @@
 
 
         <TextView
+            android:id="@+id/tv_achievement"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/round_corner_settings"
+            android:text="@string/highestscores"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:padding="10dp"
+            android:layout_marginTop="20dp"
+            app:layout_constraintEnd_toEndOf="@id/switch_sound"
+            app:layout_constraintStart_toStartOf="@id/tv_mute_sound"
+            app:layout_constraintTop_toBottomOf="@id/tv_rules" />
+
+        <TextView
             android:id="@+id/tv_credits"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -80,10 +95,10 @@
             android:textSize="18sp"
             android:gravity="center"
             android:padding="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="20dp"
             app:layout_constraintEnd_toEndOf="@id/switch_sound"
             app:layout_constraintStart_toStartOf="@id/tv_mute_sound"
-            app:layout_constraintTop_toBottomOf="@id/tv_rules" />
+            app:layout_constraintTop_toBottomOf="@id/tv_achievement" />
 
         <TextView
             android:id="@+id/tv_quit"
@@ -95,7 +110,7 @@
             android:textSize="18sp"
             android:gravity="center"
             android:padding="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="20dp"
             app:layout_constraintEnd_toEndOf="@id/switch_sound"
             app:layout_constraintStart_toStartOf="@id/tv_mute_sound"
             app:layout_constraintTop_toBottomOf="@id/tv_credits" />

@@ -5,19 +5,19 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader
-import com.conversant.app.wordish.model.GameStatus
-import com.conversant.app.wordish.model.ScoreBoard
-import com.conversant.app.wordish.model.TopScore
-import com.conversant.app.wordish.model.Word
+import com.conversant.app.wordish.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-@Database(entities = [Word::class, GameStatus::class, ScoreBoard::class, TopScore::class], version = 1)
+@Database(entities = [Word::class, GameStatus::class, ScoreBoard::class, TopScore::class,
+    WordDefinition::class], version = 1)
+
 abstract class GameDatabase : RoomDatabase() {
     abstract val wordDataSource: WordDataSource
     abstract val gameStatusSource: GameStatusSource
     abstract val scoreBoard: ScoreBoardDataSource
     abstract val topScoreSource: TopScoreSource
+    abstract val wordDefinitionSource: WordDefinitionSource
 
     companion object {
         private const val DB_NAME = "game_data.db"

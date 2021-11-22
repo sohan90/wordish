@@ -311,8 +311,8 @@ class GamePlayActivity : FullscreenActivity() {
             iv_click.visibility = View.VISIBLE
             val targetView = lv_used_word
 
-            val targetX  = (targetView.x + targetView.width)/2
-            val targetY  = targetView.y
+            val targetX = (targetView.x + targetView.width) / 2
+            val targetY = targetView.y
 
             val animSetXY = AnimatorSet()
             val x: ObjectAnimator = ObjectAnimator.ofFloat(iv_click, "x", iv_click.x, targetX)
@@ -329,7 +329,7 @@ class GamePlayActivity : FullscreenActivity() {
 
                     val valueAnimator = ofFloat(1f, 0.7f)
                     valueAnimator.addUpdateListener {
-                        val scale:Float = it.animatedValue as Float
+                        val scale: Float = it.animatedValue as Float
                         iv_click.scaleX = scale
                         iv_click.scaleY = scale
                     }
@@ -471,6 +471,7 @@ class GamePlayActivity : FullscreenActivity() {
         lifecycleScope.launch {
             val scoreBoard = getScoreBoardDetails()
             viewModel.saveGame(
+                adapterList,
                 letterAdapter!!.backedGrid, letterAdapter!!.fireList,
                 letterAdapter!!.completedCell,
                 scoreBoard
@@ -672,7 +673,7 @@ class GamePlayActivity : FullscreenActivity() {
         text_game_finished.gone()
     }
 
-    private fun enableOrDisableBombWater(){
+    private fun enableOrDisableBombWater() {
         updateWaterCountTxt(tv_water_count.text.toString().toInt())
         updateBombCountTxt(tv_bomb_count.text.toString().toInt())
     }
@@ -917,12 +918,8 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun generateNewGame(newGame: Boolean, gameStatusList: List<GameStatus>) {
-        viewModel.generateNewGameRound(
-            gameThemeId = extraGameThemeId,
-            gameMode = extraGameMode,
-            newGame, gameStatusList
-        )
-
+        // viewModel.generateNewGameRound(gameMode = extraGameMode, newGame, gameStatusList)
+        viewModel.createGame(newGame = newGame, gameStatusList, extraGameMode)
     }
 
     override fun onStart() {
@@ -1168,9 +1165,8 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun updateFireCountTxt(fireArray: Array<Array<FireInfo>>) {
         val count = viewModel.getTotalFireCountFromBoard(fireArray)
-        if (letter_board.streakView.isInteractive) {// if not then its game is already  lost
-            updateFireTxt(count)
-        }
+        updateFireTxt(count)
+
     }
 
     private fun showDuration(duration: Int) {
@@ -1315,6 +1311,7 @@ class GamePlayActivity : FullscreenActivity() {
 
         } else {
             lifecycleScope.launch {
+                viewModel.saveTopScore(getScoreBoardDetails())
                 viewModel.quitGame()
                 soundPlayer.play(SoundPlayer.Sound.Lose)
             }
@@ -1346,7 +1343,6 @@ class GamePlayActivity : FullscreenActivity() {
 
     companion object {
         const val EXTRA_GAME_DIFFICULTY = "game_max_duration"
-        const val EXTRA_GAME_DATA_ID = "game_data_id"
         const val EXTRA_GAME_MODE = "game_mode"
         const val EXTRA_GAME_THEME_ID = "game_theme_id"
         const val EXTRA_ROW_COUNT = "row_count"

@@ -140,6 +140,7 @@ class WordThemeDataXmlLoader(val context: Context) {
           const val ASSET_BASE_FOLDER2 = "help"
          var definitionsMap = mutableMapOf<String, String>()
          val appendWordsMap = mutableMapOf<String, List<String>>()
+         val mapWord = hashMapOf<Int, List<Word>>()
     }
 
 

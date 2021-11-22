@@ -10,4 +10,5 @@
 
     <color name="gray">#aa808080</color>
     <color name="gridLine">#FFCA28</color>
+    <color name="app_grey">#D8BD96</color>
 </resources>

@@ -39,4 +39,10 @@ class DataSourceModule {
     fun provideTopScoreSource(gameDatabase: GameDatabase): TopScoreSource {
         return gameDatabase.topScoreSource
     }
+
+    @Provides
+    @Singleton
+    fun provideWordDefinitionSource(gameDatabase: GameDatabase): WordDefinitionSource {
+        return gameDatabase.wordDefinitionSource
+    }
 }

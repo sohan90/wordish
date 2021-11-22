@@ -14,24 +14,21 @@ import com.conversant.app.wordish.custom.StreakView
 import com.conversant.app.wordish.data.room.GameStatusSource
 import com.conversant.app.wordish.data.room.ScoreBoardDataSource
 import com.conversant.app.wordish.data.room.TopScoreSource
-import com.conversant.app.wordish.data.room.WordDataSource
+import com.conversant.app.wordish.data.room.WordDefinitionSource
+import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader.Companion.mapWord
 import com.conversant.app.wordish.features.settings.Preferences
 import com.conversant.app.wordish.model.*
-import io.reactivex.Flowable
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.*
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.collections.HashMap
 
 class GamePlayViewModel @Inject constructor(
-    private val wordDataSource: WordDataSource,
     private val gameStatusDataSource: GameStatusSource,
     private val scoreBoardDataSource: ScoreBoardDataSource,
     private val topScoreSource: TopScoreSource,
+    private val wordDefinitionSource: WordDefinitionSource,
     private val preferences: Preferences
 ) : ViewModel() {
 
@@ -47,12 +44,6 @@ class GamePlayViewModel @Inject constructor(
     internal class Paused : GameState()
     internal class Playing(var gameData: GameData?) : GameState()
 
-    class AnswerResult(
-        var correct: Boolean,
-        var usedWord: UsedWord?,
-        var totalAnsweredWord: Int
-    )
-
     class AnswerResultWord(
         var correct: Boolean,
         var correctWord: String?,
@@ -67,15 +58,12 @@ class GamePlayViewModel @Inject constructor(
     private val gameDataCreator: GameDataCreator = GameDataCreator()
     private var currentGameData: GameData? = null
     private val timer: Timer = Timer(TIMER_TIMEOUT.toLong())
-    private var currentDuration = 0
-    private var currentUsedWord: UsedWord? = null
     private var currentState: GameState? = null
 
     private lateinit var onTimerLiveData: MutableLiveData<Int>
     private lateinit var onCountDownLiveData: MutableLiveData<Int>
     private lateinit var onCurrentWordCountDownLiveData: MutableLiveData<Int>
     private lateinit var onGameStateLiveData: MutableLiveData<GameState>
-    private lateinit var onAnswerResultLiveData: SingleLiveEvent<AnswerResult>
     private lateinit var onAnswerResultWordLiveData: SingleLiveEvent<AnswerResultWord>
     private lateinit var onCurrentWordChangedLiveData: MutableLiveData<UsedWord>
     private lateinit var foundedWord: MutableLiveData<String>
@@ -84,9 +72,6 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var _usedWordListForAdapter: MutableLiveData<List<String>>
     private lateinit var _scoreBoardLiveData: MutableLiveData<ScoreBoard>
     private lateinit var _quitGame: MutableLiveData<Boolean>
-
-    private val mapWord = HashMap<Int, List<Word>>()
-
 
     val onTimer: LiveData<Int>
         get() = onTimerLiveData
@@ -97,8 +82,6 @@ class GamePlayViewModel @Inject constructor(
     val onGameState: LiveData<GameState>
         get() = onGameStateLiveData
 
-    val onAnswerResult: LiveData<AnswerResult>
-        get() = onAnswerResultLiveData
 
     val onAnswerResultWord: LiveData<AnswerResultWord>
         get() = onAnswerResultWordLiveData
@@ -132,19 +115,30 @@ class GamePlayViewModel @Inject constructor(
     }
 
     suspend fun saveGame(
+        adapterList: MutableList<String>,
         gridData: Array<CharArray>,
         fireList: Array<Array<FireInfo>>,
         completedCellArray: Array<BooleanArray>,
         scoreBoard: ScoreBoard
     ) {
 
-        disposable.dispose()
         saveScoreBoardToDb(scoreBoard)
         saveBoardDataToDb(gridData, fireList, completedCellArray)
         saveTopScore(scoreBoard)
+        saveUserWordToDb(adapterList)
     }
 
-    private suspend fun saveTopScore(scoreBoard: ScoreBoard) {
+    private suspend fun saveUserWordToDb(adapterList: MutableList<String>) {
+        val list = adapterList.map {
+            val wordDefinition = WordDefinition()
+            wordDefinition.usedWord = it
+            wordDefinition
+        }
+        wordDefinitionSource.deleteAll()
+        wordDefinitionSource.insertAll(list)
+    }
+
+    suspend fun saveTopScore(scoreBoard: ScoreBoard) {
         val topScore = topScoreSource.getTopScore()
         if (topScore != null) {
             if (scoreBoard.turns > topScore.turns) {
@@ -193,7 +187,6 @@ class GamePlayViewModel @Inject constructor(
         completedCellArray: Array<BooleanArray>
     ) {
         val dbList = gameStatusDataSource.getGameStatus()
-        wordDataSource.updateWordForUsedWord(currentGameData!!.wordsList)
 
         val fireBuilder = StringBuilder()
         val firCounterBuilder = StringBuilder()
@@ -277,61 +270,22 @@ class GamePlayViewModel @Inject constructor(
                 _gameStatusData.value = emptyList()
             }
         }
-
     }
 
-    fun generateNewGameRound(
-        gameThemeId: Int,
-        gameMode: GameMode,
-        newGame: Boolean,
-        gameStatusList: List<GameStatus>
-    ) {
-
-        if (currentState is Generating) return
-
-        val gameName = gameDataName
-        setGameState(Generating(6, 6, gameName))
-        val flowableWords: Flowable<List<Word>> = wordDataSource.getWords(6)
-        disposable = flowableWords.toObservable()
-            .flatMap { words: List<Word> ->
-                Flowable.fromIterable(words)
-                    .distinct(Word::string)
-                    .map { word: Word ->
-                        word.string = word.string.toUpperCase(Locale.getDefault())
-                        word
-                    }
-                    .toList()
-                    .toObservable()
+    fun createGame(newGame: Boolean,gameStatusList: List<GameStatus>, gameMode: GameMode){
+        setGameState(Generating(6, 6, gameDataName))
+        viewModelScope.launch {
+            val gameData: GameData = if (newGame) {
+                gameDataCreator.newGameData(rowCount = 6, colCount = 6, gameMode = gameMode)
+            } else {
+                createGameDataFromSavedGame(gameStatusList)
             }
-            .flatMap { words: MutableList<Word> ->
-                val gameData: GameData = if (newGame) {
-                    gameDataCreator.newGameData(words, 6, 6, gameName, gameMode)
-                } else {
-                    createGameDataFromSavedGame(words, gameStatusList)
-                }
-                Observable.just(gameData)
-            }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe { gameData: GameData? ->
-                currentDuration = 0
-                currentGameData = gameData
-                startGame()
-            }
-
-    }
-
-    private suspend fun chunkWord() {
-        var i = 4
-        while (i <= 15) {
-            val wordList = wordDataSource.getWordListForMax(i)
-            mapWord[i] = wordList
-            i++
+            currentGameData = gameData
+            startGame()
         }
     }
 
     private fun createGameDataFromSavedGame(
-        words: List<Word>,
         dbGameStatusList: List<GameStatus>
     ): GameData {
 
@@ -355,9 +309,7 @@ class GamePlayViewModel @Inject constructor(
                 grid.array[row][col] = ch // update grid array
             }
         }
-        val gameData = GameData(grid = grid, newGame = false)
-        gameData.addAllWords(words)
-        return gameData
+        return GameData(grid = grid, newGame = false)
     }
 
     private fun startGame() {
@@ -376,12 +328,10 @@ class GamePlayViewModel @Inject constructor(
 
     fun answerWord(
         answerStr: String,
-        streakLine: StreakView.StreakLine,
-        reverseMatching: Boolean = false
-    ) {
+        streakLine: StreakView.StreakLine) {
         var correct = false
 
-        val correctWord = checkWordFromWordList(answerStr, reverseMatching)
+        val correctWord = checkWordFromWordList(answerStr)
 
         if (correctWord != null && correctWord.isNotEmpty()) {
             correct = true
@@ -393,35 +343,21 @@ class GamePlayViewModel @Inject constructor(
 
     }
 
-    fun checkWordFromWordList(answerStr: String, reverseMatching: Boolean = false): String? {
-
+    fun checkWordFromWordList(answerStr: String): String? {
         var correctWord1: String? = null
 
         if (answerStr.length >= MINIMUM_LENGTH) {
-            val answerStrRev = Util.getReverseString(answerStr)
 
+             val worList = mapWord[answerStr.length]
 
-           /* val worList = mapWord[answerStr.length]
+            if (worList != null) {
+                val word = worList
+                    .find { it.string.equals(answerStr, ignoreCase = true) }
 
-            val word = currentGameData!!.wordsList
-                .find { it.string.equals(answerStr, ignoreCase = true) }
-
-            if (word != null) {
-                word.usedWord = true
-                correctWord1 = word.string
-            }*/
-
-             for (word in currentGameData?.wordsList.orEmpty()) {
-
-                 val dictionaryWord = word.string
-                 if (dictionaryWord.equals(answerStr, ignoreCase = true) ||
-                     dictionaryWord.equals(answerStrRev, ignoreCase = true) && reverseMatching
-                 ) {
-                     word.usedWord = true
-                     correctWord1 = dictionaryWord
-                     break
-                 }
-             }
+                if (word != null) {
+                    correctWord1 = word.string
+                }
+            }
         }
         return correctWord1
     }
@@ -459,7 +395,6 @@ class GamePlayViewModel @Inject constructor(
         onTimerLiveData = MutableLiveData()
         onCountDownLiveData = MutableLiveData()
         onGameStateLiveData = MutableLiveData()
-        onAnswerResultLiveData = SingleLiveEvent()
         onAnswerResultWordLiveData = SingleLiveEvent()
         onCurrentWordChangedLiveData = MutableLiveData()
         onCurrentWordCountDownLiveData = MutableLiveData()
@@ -487,7 +422,8 @@ class GamePlayViewModel @Inject constructor(
         for (row in fireArray.indices) {
             for (col in fireArray.indices) {
                 val fireInfo = fireArray[row][col]
-                if (fireInfo.hasFire && fireInfo.fireCount == 5) { // spread fire to its adjacent sides each top left right bottom
+                if (fireInfo.hasFire && fireInfo.fireCount == 5) { // spread fire to its adjacent
+                                                                  // sides each top left right bottom
                     val rowSides = getAdjacentSides(row)
                     val colSides = getAdjacentSides(col)
 
@@ -540,8 +476,8 @@ class GamePlayViewModel @Inject constructor(
 
     fun getUsedWordListForAdapter() {
         viewModelScope.launch {
-            val list = wordDataSource.getUsedWordsList()
-            if (list.isNotEmpty()) {
+            val list = wordDefinitionSource.getUsedWordList()
+            if (list != null && list.isNotEmpty()) {
                 _usedWordListForAdapter.value = list
             } else {
                 _usedWordListForAdapter.value = mutableListOf()
@@ -569,14 +505,7 @@ class GamePlayViewModel @Inject constructor(
     }
 
     suspend fun quitGame(showQuitDialog: Boolean = true) {
-        disposable.dispose()
-
-        val usedWordList = wordDataSource.getUsedWords()
-        for (word in usedWordList) {
-            word.usedWord = false
-        }
-        wordDataSource.resetUserWord(usedWordList)
-
+        wordDefinitionSource.deleteAll()
         gameStatusDataSource.deleteAll()
         scoreBoardDataSource.deleteAll()
 
@@ -620,6 +549,10 @@ class GamePlayViewModel @Inject constructor(
                 highlightSelectedTilesRange[row][col] = true
             }
         }
+    }
+
+    suspend fun getTopScore() = withContext(Dispatchers.Main){
+        topScoreSource.getTopScore()
     }
 
     companion object {
