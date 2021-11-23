@@ -21,6 +21,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ArrayAdapter
 import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -32,13 +33,14 @@ import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.commons.*
-import com.conversant.app.wordish.commons.DurationFormatter.fromInteger
 import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.LetterBoard.OnLetterSelectionListener
 import com.conversant.app.wordish.custom.StreakView.StreakLine
 import com.conversant.app.wordish.data.room.WordDataSource
+import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader
 import com.conversant.app.wordish.features.*
 import com.conversant.app.wordish.features.gameplay.GamePlayViewModel.*
+import com.conversant.app.wordish.features.settings.Preferences
 import com.conversant.app.wordish.model.*
 import kotlinx.android.synthetic.main.activity_game_play.*
 import kotlinx.android.synthetic.main.partial_game_complete.*
@@ -54,6 +56,8 @@ const val MINIMUM_LENGTH = 4
 const val RESET_PENALTY_FIRE_VIEW: Int = -1
 
 class GamePlayActivity : FullscreenActivity() {
+
+    private var settingItemDialog: SettingItemDialog = SettingItemDialog()
 
     private var isClickTutorialShown: Boolean = false
 
@@ -89,6 +93,9 @@ class GamePlayActivity : FullscreenActivity() {
     lateinit var soundPlayer: SoundPlayer
 
     @Inject
+    lateinit var preference: Preferences
+
+    @Inject
     lateinit var wordDataSource: WordDataSource
 
     @Inject
@@ -100,10 +107,6 @@ class GamePlayActivity : FullscreenActivity() {
 
     private val extraGameMode: GameMode by lazy {
         (intent.extras?.get(EXTRA_GAME_MODE) as? GameMode) ?: GameMode.Normal
-    }
-
-    private val extraGameThemeId: Int by lazy {
-        intent.extras?.getInt(EXTRA_GAME_THEME_ID).orZero()
     }
 
     private var rowColListPair = arrayListOf<Pair<Int, Int>>()
@@ -118,6 +121,89 @@ class GamePlayActivity : FullscreenActivity() {
         initClickListener()
         loadOrGenerateNewGame()
         registerLiveDataForQuitGame()
+        registerSettingItemDialog()
+        Handler(Looper.myLooper()!!).postDelayed({
+            if (preference.isRuleEnabled()) {
+                openRulesDialog()
+            }
+        }, 1000)
+
+    }
+
+    private fun initViewModel() {
+        viewModel.onCountDown.observe(this, { countDown: Int -> showCountDown(countDown) })
+        viewModel.onGameState.observe(
+            this,
+            { gameState: GameState -> onGameStateChanged(gameState) })
+
+        viewModel.onAnswerResultWord.observe(this, {
+            onAnswerResult(it)
+        })
+        viewModel.onCurrentWordChanged.observe(this, { usedWord: UsedWord ->
+            text_current_selected_word.setText(usedWord.string)
+            progress_word_duration.max = usedWord.maxDuration * 100
+            animateProgress(progress_word_duration, usedWord.remainingDuration * 100)
+        })
+        viewModel.onCurrentWordCountDown.observe(
+            this,
+            { duration: Int -> animateProgress(progress_word_duration, duration * 100) })
+    }
+
+    private fun initClickListener() {
+        iv_setting.setOnClickListener {
+            openSettingDialog()
+        }
+
+        iv_fire.setOnTouchListener { view, event ->
+            view.performClick()
+            when (event?.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    letter_board.letterGrid.spotFire()
+                    return@setOnTouchListener true
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    letter_board.letterGrid.releaseFire()
+                    return@setOnTouchListener true
+                }
+            }
+
+            return@setOnTouchListener false
+        }
+
+        iv_water.setOnClickListener {
+            clickedState = if (!clickedState) {
+                disableOrEnableOtherPowerUps(0.2f, it)
+                tv_bomb_count.alpha = 0.2f
+                tv_water_count.alpha = 1f
+                true
+            } else {
+                disableOrEnableOtherPowerUps(1f, it)
+                tv_bomb_count.alpha = 1f
+                false
+            }
+        }
+        iv_bomb.setOnClickListener {
+            clickedState = if (!clickedState) {
+                disableOrEnableOtherPowerUps(0.2f, it)
+                tv_bomb_count.alpha = 1f
+                true
+            } else {
+                disableOrEnableOtherPowerUps(1f, it)
+                false
+            }
+        }
+    }
+
+    private fun registerSettingItemDialog() {
+        viewModel.openSettingItemDialog.observe(this, {
+            soundPlayer.play(SoundPlayer.Sound.Open)
+            val fileName = assets.list(WordThemeDataXmlLoader.ASSET_BASE_FOLDER2)!![it]
+            viewModel.setHtmlFileName("${WordThemeDataXmlLoader.ASSET_BASE_FOLDER2}/$fileName")
+            if (!settingItemDialog.isAdded) {
+                settingItemDialog.show(supportFragmentManager, SETTING_ITEM_DIALOG_TAG)
+            }
+        })
     }
 
     private fun registerLiveDataForQuitGame() {
@@ -399,10 +485,9 @@ class GamePlayActivity : FullscreenActivity() {
                 letterAdapter!!.backedGrid[i][j] = Util.randomChar
                 letterAdapter!!.fireList[i][j].hasFire = true
                 letterAdapter!!.fireList[i][j].fireCount = 0
-                //letterAdapter!!.updateFire(i, j, true)
             }
         }
-        updateFireCountTxt(letterAdapter!!.fireList)
+        updateFireCountTxt(letterAdapter!!.fireList, false)
     }
 
     private fun resetBombImage() {
@@ -421,52 +506,6 @@ class GamePlayActivity : FullscreenActivity() {
 
     }
 
-    private fun initClickListener() {
-        iv_setting.setOnClickListener {
-            openSettingDialog()
-        }
-
-        iv_fire.setOnTouchListener { view, event ->
-            view.performClick()
-            when (event?.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    letter_board.letterGrid.spotFire()
-                    return@setOnTouchListener true
-                }
-
-                MotionEvent.ACTION_UP -> {
-                    letter_board.letterGrid.releaseFire()
-                    return@setOnTouchListener true
-                }
-            }
-
-            return@setOnTouchListener false
-        }
-
-        iv_water.setOnClickListener {
-            clickedState = if (!clickedState) {
-                disableOrEnableOtherPowerUps(0.2f, it)
-                tv_bomb_count.alpha = 0.2f
-                tv_water_count.alpha = 1f
-                true
-            } else {
-                disableOrEnableOtherPowerUps(1f, it)
-                tv_bomb_count.alpha = 1f
-                false
-            }
-        }
-        iv_bomb.setOnClickListener {
-            clickedState = if (!clickedState) {
-                disableOrEnableOtherPowerUps(0.2f, it)
-                tv_bomb_count.alpha = 1f
-                true
-            } else {
-                disableOrEnableOtherPowerUps(1f, it)
-                false
-            }
-        }
-    }
-
     private fun saveGame() {
         lifecycleScope.launch {
             val scoreBoard = getScoreBoardDetails()
@@ -483,6 +522,10 @@ class GamePlayActivity : FullscreenActivity() {
         soundPlayer.stop()
         soundPlayer.play(SoundPlayer.Sound.Open)
         SettingsDialog().show(supportFragmentManager, SETTINGS_DIALOG_TAG)
+    }
+
+    private fun openRulesDialog() {
+        viewModel.openSettingItemDialog(1)
     }
 
     private fun getScoreBoardDetails(): ScoreBoard {
@@ -674,8 +717,8 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun enableOrDisableBombWater() {
-        updateWaterCountTxt(tv_water_count.text.toString().toInt())
-        updateBombCountTxt(tv_bomb_count.text.toString().toInt())
+        updateWaterCountTxt(tv_water_count.text.toString().toInt(), false)
+        updateBombCountTxt(tv_bomb_count.text.toString().toInt(), false)
     }
 
     private fun highlightSelectedTileRange(list: List<GridIndex>) {
@@ -721,7 +764,7 @@ class GamePlayActivity : FullscreenActivity() {
         lv_used_word.visibility = View.INVISIBLE
         adapter = ArrayAdapter<String>(
             this,
-            android.R.layout.simple_list_item_1, android.R.id.text1, adapterList
+            R.layout.listview_item, android.R.id.text1, adapterList
         )
         lv_used_word.adapter = adapter
 
@@ -811,7 +854,7 @@ class GamePlayActivity : FullscreenActivity() {
                         letterAdapter!!.completedCell, letterAdapter!!.fireList
                     )
 
-                   // Util.winGame(letterAdapter!!.completedCell)
+                    // Util.winGame(letterAdapter!!.completedCell)
 
                     Util.animateReplaceWordCell(selectionCellList, letter_board!!.letterGrid) {}
 
@@ -879,26 +922,6 @@ class GamePlayActivity : FullscreenActivity() {
 
             animateFireMove(bomb, X!! - 50, Y - 100)
         }
-    }
-
-    private fun initViewModel() {
-        viewModel.onTimer.observe(this, { duration: Int -> showDuration(duration) })
-        viewModel.onCountDown.observe(this, { countDown: Int -> showCountDown(countDown) })
-        viewModel.onGameState.observe(
-            this,
-            { gameState: GameState -> onGameStateChanged(gameState) })
-
-        viewModel.onAnswerResultWord.observe(this, {
-            onAnswerResult(it)
-        })
-        viewModel.onCurrentWordChanged.observe(this, { usedWord: UsedWord ->
-            text_current_selected_word.setText(usedWord.string)
-            progress_word_duration.max = usedWord.maxDuration * 100
-            animateProgress(progress_word_duration, usedWord.remainingDuration * 100)
-        })
-        viewModel.onCurrentWordCountDown.observe(
-            this,
-            { duration: Int -> animateProgress(progress_word_duration, duration * 100) })
     }
 
     private fun loadOrGenerateNewGame() {
@@ -990,7 +1013,7 @@ class GamePlayActivity : FullscreenActivity() {
         // for cascade word-match turn count is not calculated
         if (onAnswerWord.streakLine.startIndex.row != -1) {
             turns += 1
-            updateTurnCount(turns)
+            updateTextValueWithScaleAnim(tv_turn, turns)
             viewModel.growFireCell(letterAdapter!!.fireList, letterAdapter!!.backedGrid)
 
             updateFirePlus(turns)
@@ -1016,10 +1039,10 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun updateTurnCount(count: Int) {
+    private fun updateTextValueWithScaleAnim(text: TextView, count: Int) {
         val animation = AnimationUtils.loadAnimation(this, R.anim.score_board)
-        tv_turn.text = "$count"
-        tv_turn.startAnimation(animation)
+        text.text = "$count"
+        text.startAnimation(animation)
     }
 
     private fun onGameStateChanged(gameState: GameState) {
@@ -1072,9 +1095,7 @@ class GamePlayActivity : FullscreenActivity() {
             gameData.grid!!.gameOver,
             gameData.grid!!.highlightSelectedTilesRange
         )
-        showDuration(gameData.duration)
-        showWordsCount(gameData.usedWords.size)
-        showAnsweredWordsCount(gameData.answeredWordsCount)
+
         doneLoadingContent()
         when {
             gameData.gameMode === GameMode.CountDown -> {
@@ -1163,30 +1184,20 @@ class GamePlayActivity : FullscreenActivity() {
         }
     }
 
-    private fun updateFireCountTxt(fireArray: Array<Array<FireInfo>>) {
+    private fun updateFireCountTxt(fireArray: Array<Array<FireInfo>>, animate: Boolean = true) {
         val count = viewModel.getTotalFireCountFromBoard(fireArray)
-        updateFireTxt(count)
-
+        updateFireTxt(count, animate)
     }
 
-    private fun showDuration(duration: Int) {
-        text_overall_duration.text = fromInteger(duration)
-    }
 
     private fun showCountDown(countDown: Int) {
         animateProgress(progress_overall_duration, countDown * PROGRESS_SCALE)
     }
 
-
-    private fun showAnsweredWordsCount(count: Int) {
-        text_answered_string_count.text = count.toString()
-    }
-
-    private fun showWordsCount(count: Int) {
-        text_words_count.text = count.toString()
-    }
-
-    private fun updateFireTxt(count: Int) {
+    private fun updateFireTxt(count: Int, animate: Boolean = true) {
+        if (animate) {
+            updateTextValueWithScaleAnim(tv_fire_count, count)
+        }
         tv_fire_count.text = count.toString()
         pg_fire.max = 1800
         animateFireProgress(count)
@@ -1199,7 +1210,10 @@ class GamePlayActivity : FullscreenActivity() {
         objectAnimator.start()
     }
 
-    private fun updateWaterCountTxt(waterDrop: Int) {
+    private fun updateWaterCountTxt(waterDrop: Int, animate: Boolean = true) {
+        if (animate) {
+            updateTextValueWithScaleAnim(tv_water_count, waterDrop)
+        }
         tv_water_count.text = waterDrop.toString()
         iv_water.isEnabled = waterDrop != 0
     }
@@ -1228,7 +1242,10 @@ class GamePlayActivity : FullscreenActivity() {
         objectAnimator.start()
     }
 
-    private fun updateBombCountTxt(bombCount: Int) {
+    private fun updateBombCountTxt(bombCount: Int, animate:Boolean = true) {
+        if (animate) {
+            updateTextValueWithScaleAnim(tv_bomb_count, bombCount)
+        }
         tv_bomb_count.text = bombCount.toString()
         iv_bomb.isEnabled = bombCount != 0
     }
@@ -1269,6 +1286,7 @@ class GamePlayActivity : FullscreenActivity() {
         if (value == 0) {
             val firePlusCount = tv_fire_plus_count.text.toString().toInt() + 1
             tv_fire_plus_count.text = firePlusCount.toString()
+            updateTextValueWithScaleAnim(tv_fire_plus_count, firePlusCount)
         }
     }
 
@@ -1328,7 +1346,7 @@ class GamePlayActivity : FullscreenActivity() {
 
     private fun showFireWorks() {
         iv_fire_works.visibility = View.VISIBLE
-        val valueAnimator = ValueAnimator.ofInt(1, 26)
+        val valueAnimator = ofInt(1, 26)
         valueAnimator.addUpdateListener {
             val i = it.animatedValue as Int
             val imageName = "paper_frame_${i}"

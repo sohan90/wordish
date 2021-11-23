@@ -14,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import com.conversant.app.wordish.R
 import com.conversant.app.wordish.WordishApp
 import com.conversant.app.wordish.data.room.WordDataSource
-import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader.Companion.ASSET_BASE_FOLDER2
 import com.conversant.app.wordish.features.gameplay.GamePlayViewModel
 import com.conversant.app.wordish.features.settings.Preferences
 import kotlinx.android.synthetic.main.fragment_meanin_dialog.iv_cancel
@@ -26,8 +25,6 @@ import javax.inject.Inject
 const val SETTINGS_DIALOG_TAG = "definition_tag"
 
 class SettingsDialog : DialogFragment() {
-    private  var settingItemDialog: SettingItemDialog = SettingItemDialog()
-
     @Inject
     lateinit var wordDataSource: WordDataSource
 
@@ -88,9 +85,14 @@ class SettingsDialog : DialogFragment() {
     }
 
     private fun initViews() {
-        switch_sound.isChecked = !preferences.enableSound()
+        switch_sound.isChecked = preferences.isMutedSound()
+        switch_rules.isChecked = preferences.isRuleEnabled()
+
         switch_sound.setOnCheckedChangeListener { _, isChecked ->
-            preferences.enableOrDisableSound(!isChecked)
+            preferences.muteSound(isChecked)
+        }
+        switch_rules.setOnCheckedChangeListener { _, isChecked ->
+            preferences.showRules(isChecked)
         }
     }
 
@@ -123,12 +125,6 @@ class SettingsDialog : DialogFragment() {
     }
 
     private fun openItemDialog(index: Int) {
-        soundPlayer.play(SoundPlayer.Sound.Open)
-        val fileName = requireContext().assets.list(ASSET_BASE_FOLDER2)!![index]
-        gameViewModel.setHtmlFileName("${ASSET_BASE_FOLDER2}/$fileName")
-        if (!settingItemDialog.isAdded) {
-            settingItemDialog.show(childFragmentManager, SETTING_ITEM_DIALOG_TAG)
-        }
+       gameViewModel.openSettingItemDialog(index)
     }
-
 }

@@ -30,11 +30,16 @@ class LetterGrid @JvmOverloads constructor(
 
     private val roundCornerSize = resources.getDimension(R.dimen.round_corner).toInt()
 
+    private val strokeWidth = resources.getDimension(R.dimen.stroke_width).toInt()
+
     private val borderSpace = resources.getDimension(R.dimen.border_space).toInt()
 
     private val letterSpace = borderSpace / 2
 
-    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f, false, false) } }
+    var bombCell = Array(6) { Array(6) { BombCell(0f, 0f,
+        animate = false,
+        replaceWordAnimate = false
+    ) } }
 
     private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
@@ -77,7 +82,7 @@ class LetterGrid @JvmOverloads constructor(
     }
 
     private fun initPaintObject() {
-        greyWhiteBckColor.color = Color.parseColor("#D8BD96")//Color.BLACK //
+        greyWhiteBckColor.color = Color.parseColor("#D8BD96")//white grey background
         greyWhiteBckColor.style = Paint.Style.FILL
         greyWhiteBckColor.strokeWidth = 15f
         greyWhiteBckColor.isAntiAlias = true
@@ -86,14 +91,14 @@ class LetterGrid @JvmOverloads constructor(
         redBckColor.style = Paint.Style.FILL
         redBckColor.isAntiAlias = true
 
-        greyBorderColor.color = Color.parseColor("#800000")//grey border
+        greyBorderColor.color = Color.parseColor("#800000")// grey border
         greyBorderColor.style = Paint.Style.STROKE
-        greyBorderColor.strokeWidth = 7f
+        greyBorderColor.strokeWidth = strokeWidth.toFloat()
         greyBorderColor.isAntiAlias = true
 
         greenBorderColor.color = Color.GREEN //green border
         greenBorderColor.style = Paint.Style.STROKE
-        greenBorderColor.strokeWidth = 7f
+        greenBorderColor.strokeWidth = strokeWidth.toFloat()
         greenBorderColor.isAntiAlias = true
 
 

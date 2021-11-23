@@ -20,7 +20,7 @@ class SoundPlayer constructor(context: Context, private val mPreferences: Prefer
     private val soundPoolMap: SparseIntArray = SparseIntArray()
 
     fun play(sound: Sound, priority: Int = 0, loop: Int = 0) {
-        if (mPreferences.enableSound()) {
+        if (!mPreferences.isMutedSound()) {
             streadId = soundPool.play(
                 soundPoolMap[sound.ordinal],
                 1.0f, 1.0f, priority, loop, 1.0f

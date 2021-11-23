@@ -72,6 +72,8 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var _usedWordListForAdapter: MutableLiveData<List<String>>
     private lateinit var _scoreBoardLiveData: MutableLiveData<ScoreBoard>
     private lateinit var _quitGame: MutableLiveData<Boolean>
+    private lateinit var _openSettingItemDialog: MutableLiveData<Int>
+
 
     val onTimer: LiveData<Int>
         get() = onTimerLiveData
@@ -109,6 +111,9 @@ class GamePlayViewModel @Inject constructor(
 
     val quitGame: LiveData<Boolean>
         get() = _quitGame
+
+    val openSettingItemDialog: LiveData<Int>
+        get() = _openSettingItemDialog
 
     init {
         resetLiveData()
@@ -404,6 +409,7 @@ class GamePlayViewModel @Inject constructor(
         _scoreBoardLiveData = MutableLiveData()
         _htmlFileName = MutableLiveData()
         _quitGame = MutableLiveData()
+        _openSettingItemDialog = MutableLiveData()
     }
 
     fun getTotalFireCountFromBoard(fireArray: Array<Array<FireInfo>>): Int {
@@ -561,6 +567,11 @@ class GamePlayViewModel @Inject constructor(
             topScore.won = topScore.won + 1
             topScoreSource.update(topScore)
         }
+    }
+
+
+    fun openSettingItemDialog(int: Int){
+        _openSettingItemDialog.value = int
     }
 
     companion object {

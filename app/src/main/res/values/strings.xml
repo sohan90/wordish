@@ -6,6 +6,7 @@
     <string tools:ignore="MissingTranslation" name="pref_showGridLine" >showGridLine</string>
     <string tools:ignore="MissingTranslation" name="pref_snapToGrid" >snapToGrid</string>
     <string tools:ignore="MissingTranslation" name="pref_enableSound" >enableSound</string>
+    <string tools:ignore="MissingTranslation" name="pref_enableRules" >enableRules</string>
     <string tools:ignore="MissingTranslation" name="pref_deleteAfterFinish" >deleteAfterFinish</string>
     <string tools:ignore="MissingTranslation" name="pref_enableFullscreen" >enableFullscreen</string>
     <string tools:ignore="MissingTranslation" name="pref_autoScaleGrid" >autoScaleGrid</string>
@@ -80,8 +81,10 @@
     <string name="better_luck_next_time" >Game Over. Better \n luck next time!</string>
     <string name="highestscores">Achievements</string>
 
-    <string name="highest_turns">Highest Turns - %d</string>
-    <string name="highest_words">Highest Words - %d</string>
-    <string name="highest_coins">Highest Coins - %d</string>
+    <string name="highest_turns">Highest Turn - %d</string>
+    <string name="highest_words">Highest Word - %d</string>
+    <string name="highest_coins">Highest Coin - %d</string>
     <string name="won">Won - %d</string>
+    <string name="show_rules">Show Rules</string>
+    <string name="mute_sound">Mute Sound</string>
 </resources>

@@ -4,12 +4,6 @@ import android.view.MotionEvent
 import kotlin.math.abs
 import kotlin.math.max
 
-/**
- * Created by abdularis on 15/06/17.
- *
- * Digunakan untuk memproses data dari MouseEvent agar lebih mudah digunakan,
- * memiliki movement threshold untuk mengubah sensitivitas perpindahan sentuhan
- */
 internal class TouchProcessor(
     private val mListener: OnTouchProcessed, moveThreshold: Float
 ) {

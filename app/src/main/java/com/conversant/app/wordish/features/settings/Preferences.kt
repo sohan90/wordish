@@ -22,8 +22,12 @@ class Preferences  constructor(
             return SnapType.valueOf(str!!)
         }
 
-    fun enableSound(): Boolean {
-        return preferences.getBoolean(KEY_ENABLE_SOUND, true)
+    fun isMutedSound(): Boolean {
+        return preferences.getBoolean(KEY_ENABLE_SOUND, false)
+    }
+
+    fun isRuleEnabled(): Boolean {
+        return preferences.getBoolean(KEY_ENABLE_RULES, true)
     }
 
     fun enableFullscreen(): Boolean {
@@ -46,9 +50,15 @@ class Preferences  constructor(
         return preferences.getBoolean(KEY_GRAYSCALE, false)
     }
 
-    fun enableOrDisableSound(isEnable:Boolean){
+    fun muteSound(isEnable:Boolean){
         preferences.edit()
             .putBoolean(KEY_ENABLE_SOUND, isEnable)
+            .apply()
+    }
+
+    fun showRules(isEnable:Boolean){
+        preferences.edit()
+            .putBoolean(KEY_ENABLE_RULES, isEnable)
             .apply()
     }
 
@@ -71,6 +81,7 @@ class Preferences  constructor(
         private lateinit var KEY_SHOW_GRID_LINE: String
         private lateinit var KEY_SNAP_TO_GRID: String
         private lateinit var KEY_ENABLE_SOUND: String
+        private lateinit var KEY_ENABLE_RULES: String
         private lateinit var KEY_DELETE_AFTER_FINISH: String
         private lateinit var KEY_ENABLE_FULLSCREEN: String
         private lateinit var KEY_AUTO_SCALE_GRID: String
@@ -84,6 +95,7 @@ class Preferences  constructor(
         KEY_SHOW_GRID_LINE = context.getString(R.string.pref_showGridLine)
         KEY_SNAP_TO_GRID = context.getString(R.string.pref_snapToGrid)
         KEY_ENABLE_SOUND = context.getString(R.string.pref_enableSound)
+        KEY_ENABLE_RULES = context.getString(R.string.pref_enableRules)
         KEY_DELETE_AFTER_FINISH = context.getString(R.string.pref_deleteAfterFinish)
         KEY_ENABLE_FULLSCREEN = context.getString(R.string.pref_enableFullscreen)
         KEY_AUTO_SCALE_GRID = context.getString(R.string.pref_autoScaleGrid)
