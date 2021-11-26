@@ -10,7 +10,7 @@ class SoundPlayer constructor(context: Context, private val mPreferences: Prefer
 
     enum class Sound {
         Correct, Wrong, Winning, Lose, Bomb, Fire, WaterDroplets, Highlight, Siren, PowerUp,
-        SwipeCorrect, Dismiss, Open, GameOver
+        SwipeCorrect, Dismiss, Open, GameOver,
     }
 
     private var streadId: Int = 0

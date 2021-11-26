@@ -61,8 +61,7 @@ class SettingsDialog : DialogFragment() {
 
     private fun setStyleForAnimation() {
         dialog!!.window!!.setWindowAnimations(
-            R.style.DialogTheme_transparent
-        );
+            R.style.DialogTheme_transparent)
     }
 
     private fun setWidthHeight() {

@@ -131,7 +131,6 @@ class GamePlayActivity : FullscreenActivity() {
     }
 
     private fun initViewModel() {
-        viewModel.onCountDown.observe(this, { countDown: Int -> showCountDown(countDown) })
         viewModel.onGameState.observe(
             this,
             { gameState: GameState -> onGameStateChanged(gameState) })
@@ -317,6 +316,7 @@ class GamePlayActivity : FullscreenActivity() {
         col: Int = 0,
         answerWordLength: Int = 0
     ) {
+        soundPlayer.play(SoundPlayer.Sound.Fire)
         val animSetXY = AnimatorSet()
         val x: ObjectAnimator = ObjectAnimator.ofFloat(v, "x", v.x, targetX)
 
@@ -331,6 +331,7 @@ class GamePlayActivity : FullscreenActivity() {
             override fun onAnimationCancel(animation: Animator?) {}
             override fun onAnimationRepeat(animation: Animator?) {}
             override fun onAnimationEnd(animation: Animator?) {
+                soundPlayer.stop()
                 if (iv_bomb.scaleX != 1.2f) {
                     letterAdapter!!.updateFire(row, col, true)
                     updateFireCountTxt(letterAdapter!!.fireList)
@@ -462,7 +463,7 @@ class GamePlayActivity : FullscreenActivity() {
 
                 resetNewCharacters()
 
-                viewModel.growFireCell(letterAdapter!!.fireList, letterAdapter!!.backedGrid)
+                viewModel.growFireCell(letterAdapter!!.fireList)
                 addFireToCellFromBank()
                 animateFireMoveFromBank()
 
@@ -1014,7 +1015,7 @@ class GamePlayActivity : FullscreenActivity() {
         if (onAnswerWord.streakLine.startIndex.row != -1) {
             turns += 1
             updateTextValueWithScaleAnim(tv_turn, turns)
-            viewModel.growFireCell(letterAdapter!!.fireList, letterAdapter!!.backedGrid)
+            viewModel.growFireCell(letterAdapter!!.fireList)
 
             updateFirePlus(turns)
             updateWaterProgress(turns)

@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.conversant.app.wordish.commons.GridIndex
 import com.conversant.app.wordish.commons.SingleLiveEvent
-import com.conversant.app.wordish.commons.Timer
 import com.conversant.app.wordish.commons.Util
 import com.conversant.app.wordish.custom.FireInfo
 import com.conversant.app.wordish.custom.StreakView
@@ -18,7 +17,6 @@ import com.conversant.app.wordish.data.room.WordDefinitionSource
 import com.conversant.app.wordish.data.xml.WordThemeDataXmlLoader.Companion.mapWord
 import com.conversant.app.wordish.features.settings.Preferences
 import com.conversant.app.wordish.model.*
-import io.reactivex.disposables.Disposable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -51,17 +49,13 @@ class GamePlayViewModel @Inject constructor(
         var coins: Int = 0
     )
 
-    private lateinit var disposable: Disposable
 
     private var correctWordLength: Int = 0
 
     private val gameDataCreator: GameDataCreator = GameDataCreator()
     private var currentGameData: GameData? = null
-    private val timer: Timer = Timer(TIMER_TIMEOUT.toLong())
     private var currentState: GameState? = null
 
-    private lateinit var onTimerLiveData: MutableLiveData<Int>
-    private lateinit var onCountDownLiveData: MutableLiveData<Int>
     private lateinit var onCurrentWordCountDownLiveData: MutableLiveData<Int>
     private lateinit var onGameStateLiveData: MutableLiveData<GameState>
     private lateinit var onAnswerResultWordLiveData: SingleLiveEvent<AnswerResultWord>
@@ -74,12 +68,6 @@ class GamePlayViewModel @Inject constructor(
     private lateinit var _quitGame: MutableLiveData<Boolean>
     private lateinit var _openSettingItemDialog: MutableLiveData<Int>
 
-
-    val onTimer: LiveData<Int>
-        get() = onTimerLiveData
-
-    val onCountDown: LiveData<Int>
-        get() = onCountDownLiveData
 
     val onGameState: LiveData<GameState>
         get() = onGameStateLiveData
@@ -253,7 +241,6 @@ class GamePlayViewModel @Inject constructor(
 
         currentGameData?.let {
             if (!it.isFinished && !it.isGameOver) {
-                timer.stop()
                 setGameState(Paused())
             }
         }
@@ -261,7 +248,6 @@ class GamePlayViewModel @Inject constructor(
 
     fun resumeGame() {
         if (currentState is Paused) {
-            timer.start()
             setGameState(Playing(currentGameData))
         }
     }
@@ -391,14 +377,7 @@ class GamePlayViewModel @Inject constructor(
             return "Puzzle - $num"
         }
 
-
-    private fun finishGame(win: Boolean) {
-        setGameState(Finished(currentGameData, win))
-    }
-
     private fun resetLiveData() {
-        onTimerLiveData = MutableLiveData()
-        onCountDownLiveData = MutableLiveData()
         onGameStateLiveData = MutableLiveData()
         onAnswerResultWordLiveData = SingleLiveEvent()
         onCurrentWordChangedLiveData = MutableLiveData()
@@ -424,7 +403,7 @@ class GamePlayViewModel @Inject constructor(
         return count
     }
 
-    fun growFireCell(fireArray: Array<Array<FireInfo>>, backedGrid: Array<CharArray>) {
+    fun growFireCell(fireArray: Array<Array<FireInfo>>) {
         for (row in fireArray.indices) {
             for (col in fireArray.indices) {
                 val fireInfo = fireArray[row][col]
@@ -572,9 +551,5 @@ class GamePlayViewModel @Inject constructor(
 
     fun openSettingItemDialog(int: Int){
         _openSettingItemDialog.value = int
-    }
-
-    companion object {
-        private const val TIMER_TIMEOUT = 1000
     }
 }
