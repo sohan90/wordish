@@ -23,7 +23,7 @@ class Preferences  constructor(
         }
 
     fun isMutedSound(): Boolean {
-        return preferences.getBoolean(KEY_ENABLE_SOUND, true)
+        return preferences.getBoolean(KEY_ENABLE_SOUND, false)
     }
 
     fun isRuleEnabled(): Boolean {
