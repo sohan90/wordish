@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.conversant.app.wordish">
 
-    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name="com.conversant.app.wordish.WordishApp"
@@ -14,10 +13,12 @@
 
         <activity
             android:name="com.conversant.app.wordish.features.gameplay.GamePlayActivity"
+            android:exported="true"
             android:screenOrientation="portrait"/>
 
         <activity
             android:name="com.conversant.app.wordish.features.SplashScreenActivity"
+            android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
